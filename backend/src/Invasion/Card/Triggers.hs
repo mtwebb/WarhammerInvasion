@@ -347,6 +347,30 @@ onYouPlaySupport handler = onReceive $ Receive \msg owner self -> case msg of
     | pk == self.controller -> handler owner self uk
   _ -> pure ()
 
+-- | "When you play a development from your hand." Fires off the
+-- 'PlayDevelopment' message (the active player's once-per-turn develop),
+-- guarded to the host's controller. Used by the Morrslieb-cycle
+-- token-engine units and quests ("When you play a development from your
+-- hand, put a resource token …").
+onYouPlayDevelopment
+  :: forall k
+   . HasField "controller" (InPlay k) PlayerKey
+  => (forall m. TriggerM m => Player -> InPlay k -> m ())
+  -> CardBuilder k ()
+onYouPlayDevelopment handler = onReceive $ Receive \msg owner self -> case msg of
+  PlayDevelopment pk _uk _zone
+    | pk == self.controller -> handler owner self
+  _ -> pure ()
+
+-- | "Action: When you play a development from your hand, put a resource
+-- token on this card if a unit is questing here." The development-driven
+-- mirror of 'accrueTokenWhileQuesting'; shared by Malekith's Rage,
+-- Follow the Portent, and the rest of the Morrslieb token quests.
+accrueTokenOnDevelopmentWhileQuesting :: CardBuilder Quest ()
+accrueTokenOnDevelopmentWhileQuesting = onYouPlayDevelopment \_owner self ->
+  withQuest self.key \q ->
+    when (isJust q.questingUnit) $ addQuestToken self.key 1
+
 -- | The shared second half of the "…for War" quest cycle: "When you
 -- play a [Race] non-Attachment support card from your hand, <payoff>
 -- if a unit is questing here." Filters the played support on race and

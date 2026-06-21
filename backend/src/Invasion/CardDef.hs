@@ -119,6 +119,12 @@ data Trait
   | Epic
     -- ^ Half of the printed "Epic Spell." trait line. Epic spells are
     -- excluded from cost-reduction effects like Runefang of Solland.
+  | Troll
+    -- ^ Troll creature trait (River Troll).
+  | WitchElf
+    -- ^ Witch Elf trait (Frenzied Witch Elf).
+  | Disease
+    -- ^ Disease trait on disease spells (Plague Bomb).
   deriving stock (Show, Eq)
 
 mconcat

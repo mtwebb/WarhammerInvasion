@@ -1244,3 +1244,61 @@ doomBearer = unitCard "the-inevitable-city-005" "Doom Bearer" do
   body "Action: When a unit enters this zone, corrupt target unit you control."
   onUnitEnterMyZone \_owner self _uk ->
     withTarget self.controller ownUnit (push . CorruptUnit)
+
+-- The Morrslieb cycle (additional) -------------------------------------
+
+desecratedTemple :: CardDef Support
+desecratedTemple = supportCard "the-chaos-moon-033" "Desecrated Temple" do
+  race Chaos
+  cost 2
+  loyalty 1
+  power 1
+  trait Building
+  body "Action: When a [Chaos] unit you control leaves play, destroy target development."
+  forced \self -> onUnitOfLeavesPlay self.controller \du ->
+    when (Chaos `elem` du.cardDef.races) $
+      withTarget self.controller AnyDevelopmentZone \(o, z) -> destroyDevelopment o z
+
+plagueBomb :: CardDef Tactic
+plagueBomb = tacticCard "the-chaos-moon-034" "Plague Bomb" do
+  race Chaos
+  cost 3
+  loyalty 3
+  traits [Spell, Disease]
+  body
+    "Action: Deal 1 damage to target unit. Deal 2 damage to another target unit. \
+    \Deal 3 damage to a third target unit."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk AnyUnit \k -> dealDamage k 1
+    withTarget pk AnyUnit \k -> dealDamage k 2
+    withTarget pk AnyUnit \k -> dealDamage k 3
+
+ungorRaiders :: CardDef Unit
+ungorRaiders = unitCard "omens-of-ruin-012" "Ungor Raiders" do
+  race Chaos
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Warrior
+  body "Action: When this unit leaves play, destroy target development."
+  onSelfDestroyed \_owner self ->
+    withTarget self.controller AnyDevelopmentZone \(o, z) -> destroyDevelopment o z
+
+sorcererOfTzeentch :: CardDef Unit
+sorcererOfTzeentch = unitCard "the-twin-tailed-comet-053" "Sorcerer of Tzeentch" do
+  race Chaos
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Sorceror
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this unit. Then, deal X damage to target unit. X is the number of resource \
+    \tokens on this unit."
+  onYouPlayDevelopment \_owner self -> do
+    push (AdjustUnitTokens self.key 1)
+    let n = self.tokens + 1
+    withTarget self.controller AnyUnit \k -> dealDamage k n

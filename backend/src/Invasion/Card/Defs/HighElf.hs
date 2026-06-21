@@ -570,3 +570,89 @@ inflame = tacticCard "realm-of-the-phoenix-king-033" "Inflame" do
     withTarget self.controller AnyUnit \k ->
       discardForLoyalty self.controller \x ->
         when (x > 0) $ until EndOfTurn $ buffPower k x
+
+-- The Morrslieb cycle ---------------------------------------------------
+
+valorousMage :: CardDef Unit
+valorousMage = unitCard "the-eclipse-of-hope-089" "Valorous Mage" do
+  race HighElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Mage
+  body
+    "Action: When this unit enters play, search the top five cards of your deck \
+    \for a Spell card, reveal it, and put it into your hand. Then, shuffle your deck."
+  onEnterPlay \_owner self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 5 \result -> do
+      let spells = [c | c <- result.cards, Just cd <- [asTactic c.def], Spell `elem` cd.traits]
+      chooseFromCards pk 0 1 spells "Choose a Spell to add to your hand." \chosen ->
+        for_ chosen \c -> push (TakeCardsFromDeckToHand pk [c.key])
+      shuffleDeck pk
+
+trueMage :: CardDef Unit
+trueMage = unitCard "the-twin-tailed-comet-051" "True Mage" do
+  race HighElf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Mage
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this unit. Then, deal X indirect damage to each player. X is the number of \
+    \resource tokens on this card."
+  onYouPlayDevelopment \_owner self -> do
+    push (AdjustUnitTokens self.key 1)
+    let n = self.tokens + 1
+    eachPlayer \pk -> indirectDamage pk n
+
+whiteLionVanguard :: CardDef Unit
+whiteLionVanguard = unitCard "the-twin-tailed-comet-050" "White Lion Vanguard" do
+  race HighElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  traits [Warrior, Elite]
+  body
+    "Redirect the first point of damage dealt to this unit each turn to target \
+    \unit in any corresponding zone."
+  preDamageRedirectHook (redirectFirstDamageEachTurn 1)
+
+bladelord :: CardDef Unit
+bladelord = unitCard "signs-in-the-stars-070" "Bladelord" do
+  race HighElf
+  cost 5
+  loyalty 2
+  power 3
+  hitPoints 4
+  traits [Warrior, Elite]
+  body
+    "Redirect the first 2 damage dealt to this unit each turn to another target \
+    \unit in any corresponding zone."
+  preDamageRedirectHook (redirectFirstDamageEachTurn 2)
+
+-- | Shared "redirect the first N damage dealt to this unit each turn to
+-- another target unit" hook (White Lion Vanguard, Bladelord). Mirrors
+-- the Warrior Priests pattern: claim up to N of the first hit each turn
+-- provided some other unit exists to receive it.
+redirectFirstDamageEachTurn
+  :: Int -> Game -> UnitDetails -> Int -> Maybe PreDamageRedirect
+redirectFirstDamageEachTurn n g self inbound =
+  let used =
+        any (\m -> m.details == RedirectedThisTurn)
+          (Map.findWithDefault [] (UnitRef self.key) g.modifiers)
+      anyTarget = any (\u -> u.key /= self.key) g.units
+   in if not used && anyTarget && inbound > 0
+        then Just PreDamageRedirect
+          { amount = min n inbound
+          , run = ActionEffect \usage -> do
+              until EndOfTurn (PendingBuff usage.self.key RedirectedThisTurn)
+              withTarget usage.user
+                (UnitMatching \_ _ u -> u.key /= usage.self.key)
+                \k -> dealDamage k (min n inbound)
+          }
+        else Nothing

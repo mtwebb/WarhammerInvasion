@@ -914,3 +914,70 @@ bannaThief = unitCard "the-iron-rock-042" "Banna Thief" do
   body "Action: When a unit enters this zone, target unit gains power until the end of the turn."
   onUnitEnterMyZone \_owner self _uk ->
     withTarget self.controller AnyUnit \k -> until EndOfTurn $ buffPower k 1
+
+-- The Morrslieb cycle ---------------------------------------------------
+
+lootedUmieTown :: CardDef Support
+lootedUmieTown = supportCard "the-chaos-moon-025" "Looted Umie Town" do
+  race Orc
+  cost 3
+  loyalty 2
+  power 1
+  trait Building
+  body "This card gains {power} for each unit in this zone."
+  zonePowerAura \g s z ->
+    if z == s.zone
+      then length [u | u <- g.units, u.controller == s.controller, u.zone == s.zone]
+      else 0
+
+poisonousWyvern :: CardDef Unit
+poisonousWyvern = unitCard "omens-of-ruin-003" "Poisonous Wyvern" do
+  race Orc
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 6
+  trait Creature
+
+riverTroll :: CardDef Unit
+riverTroll = unitCard "omens-of-ruin-004" "River Troll" do
+  race Orc
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  trait Troll
+  body "Forced: At the beginning of your turn, heal all damage from this unit."
+  onMyTurnBegin \_owner self -> healUnit self.key 99
+
+squigHopper :: CardDef Unit
+squigHopper = unitCard "signs-in-the-stars-065" "Squig Hopper" do
+  race Orc
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  traits [Goblin, Warrior]
+  body "This unit gains {power} as long as you control another Goblin unit."
+  selfPower \g self ->
+    if any (\u -> u.controller == self.controller && u.key /= self.key && Goblin `elem` u.cardDef.traits) g.units
+      then 1
+      else 0
+
+bigBoss :: CardDef Unit
+bigBoss = unitCard "the-eclipse-of-hope-084" "Big Boss" do
+  race Orc
+  cost 6
+  loyalty 3
+  power 3
+  hitPoints 5
+  trait Warrior
+  body
+    "Forced: At the beginning of your turn, the unit with the lowest printed \
+    \cost must be sacrificed. You choose in case of a tie."
+  onMyTurnBegin \_owner self -> do
+    g <- getGame
+    let costOf u = case u.cardDef.cost of Fixed v -> v; _ -> maxBound
+        m = minimum (maxBound : map costOf g.units)
+        cands = [u.key | u <- g.units, costOf u == m]
+    forcePickUnit self.controller cands "Big Boss: sacrifice the lowest-cost unit." destroyUnit

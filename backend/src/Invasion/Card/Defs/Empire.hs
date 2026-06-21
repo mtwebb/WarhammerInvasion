@@ -952,3 +952,95 @@ doublingOfTheGuard = tacticCard "the-imperial-throne-112" "Doubling of the Guard
   playableWhen \g pk -> not (null (playerOf pk g).hand)
   whenResolved \self ->
     discardForLoyalty self.controller \x -> when (x > 0) $ drawCards self.controller x
+
+-- The Morrslieb cycle ---------------------------------------------------
+
+chainLightning :: CardDef Tactic
+chainLightning = tacticCard "the-chaos-moon-028" "Chain Lightning" do
+  race Empire
+  cost 2
+  loyalty 3
+  trait Spell
+  body "Action: Destroy up to two target attacking units, each with a printed cost 3 or lower."
+  whenResolved \self ->
+    withUpTo self.controller 2
+      (UnitMatching \_pk g u -> unitIsAttacking g u && costAtMost 3 u.cardDef)
+      (traverse_ destroyUnit)
+
+steamTank :: CardDef Unit
+steamTank = unitCard "omens-of-ruin-006" "Steam Tank" do
+  race Empire
+  cost 4
+  loyalty 3
+  power 0
+  hitPoints 7
+  trait WarMachine
+  body
+    "This unit gains {power} for each resource token on it. Action: At the \
+    \beginning of your turn, put a resource token on this unit."
+  selfPower \_g self -> self.tokens
+  onMyTurnBegin \_owner self -> push (AdjustUnitTokens self.key 1)
+
+gloriousPreceptor :: CardDef Unit
+gloriousPreceptor = unitCard "the-eclipse-of-hope-086" "Glorious Preceptor" do
+  race Empire
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Knight
+  body "Action: When this unit enters or leaves play, draw a card."
+  onEnterPlay \_owner self -> drawCard self.controller
+  onSelfLeavesPlay \_owner self -> drawCard self.controller
+
+osterknachtElite :: CardDef Unit
+osterknachtElite = unitCard "the-eclipse-of-hope-087" "Osterknacht Elite" do
+  race Empire
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  traits [Knight, Elite]
+  body
+    "Action: When this unit enters play, return another target unit you control \
+    \and target unit an opponent controls to their owner's hands."
+  onEnterPlay \_owner self -> do
+    withTarget self.controller
+      (UnitMatching \pk _ u -> u.controller == pk && u.key /= self.key)
+      returnUnitToHand
+    withTarget self.controller enemyUnit returnUnitToHand
+
+innerCircleKnight :: CardDef Unit
+innerCircleKnight = unitCard "signs-in-the-stars-068" "Inner Circle Knight" do
+  race Empire
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Knight
+
+rallyPoint :: CardDef Support
+rallyPoint = supportCard "the-twin-tailed-comet-048" "Rally Point" do
+  race Empire
+  cost 1
+  loyalty 2
+  trait Location
+  body
+    "Action: At the beginning of your turn, move target unit you control from \
+    \its current zone to this zone."
+  onMyTurnBegin \_owner self ->
+    withTarget self.controller ownUnit \k -> moveUnit k self.zone
+
+theSealedVaults :: CardDef Tactic
+theSealedVaults = tacticCard "portent-of-doom-088" "The Sealed Vaults" do
+  race Empire
+  cost 0
+  loyalty 2
+  body "Action: Discard the top 3 cards of your deck. Gain 1 resource for each discarded card with a Quest ability."
+  whenResolved \self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 3 \result -> do
+      let top3 = take 3 result.cards
+          quests = length [c | c <- top3, isJust (asQuest c.def)]
+      push (DiscardCardsFromDeck pk (map (.key) top3))
+      when (quests > 0) $ gainResources pk quests

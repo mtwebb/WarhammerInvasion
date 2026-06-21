@@ -852,3 +852,78 @@ leaveNoTrace = tacticCard "karaz-a-karak-070" "Leave No Trace" do
   whenResolved \self ->
     withTarget self.controller defendingUnit \k ->
       discardForLoyalty self.controller \x -> when (x > 0) $ dealDamage k x
+
+-- The Morrslieb cycle ---------------------------------------------------
+
+bugmansRangers :: CardDef Unit
+bugmansRangers = unitCard "the-chaos-moon-022" "Bugman's Rangers" do
+  race Dwarf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  trait Ranger
+  body "This unit gains {power} for each Attachment support card attached to it."
+  selfPower \_g self -> length self.attachments
+
+bugmansTankard :: CardDef Support
+bugmansTankard = supportCard "the-chaos-moon-023" "Bugman's Tankard" do
+  race Dwarf
+  cost 1
+  loyalty 2
+  trait Attachment
+  body
+    "Attach to a target [Dwarf] unit you control. Attached unit gains +1 hit \
+    \points for each development in this zone."
+  supportHPAura \g s u ->
+    if Just u.key == s.attachedTo then devsInZone g u else 0
+
+mountainGuard :: CardDef Unit
+mountainGuard = unitCard "the-eclipse-of-hope-081" "Mountain Guard" do
+  race Dwarf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Warrior
+
+daemonslayer :: CardDef Unit
+daemonslayer = unitCard "the-twin-tailed-comet-041" "Daemonslayer" do
+  race Dwarf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  trait Slayer
+  body
+    "Toughness X. X is the number of resource tokens on this unit. Action: \
+    \When you play a development from your hand, put a resource token on this card."
+  selfToughness \_g self -> self.tokens
+  onYouPlayDevelopment \_owner self -> push (AdjustUnitTokens self.key 1)
+
+karakAzulForge :: CardDef Support
+karakAzulForge = supportCard "signs-in-the-stars-062" "Karak Azul Forge" do
+  race Dwarf
+  cost 4
+  loyalty 2
+  power 2
+  trait Building
+  body
+    "Each unit you control with at least one Attachment support card attached \
+    \to it gains Toughness 1."
+  supportToughnessAura \_g s u ->
+    if u.controller == s.controller && not (null u.attachments) then 1 else 0
+
+theSlayerOath :: CardDef Tactic
+theSlayerOath = tacticCard "the-twin-tailed-comet-043" "The Slayer Oath" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  body
+    "Action: Target unit you control gains a {power} for each unit in your \
+    \discard pile until the end of the turn."
+  playableWhen \g pk -> any (\u -> u.controller == pk) g.units
+  whenResolved \self -> do
+    let pk = self.controller
+    n <- (\g -> length [c | c <- (playerOf pk g).discard, isJust (asUnit c.def)]) <$> getGame
+    withTarget pk ownUnit \k -> until EndOfTurn $ buffPower k n

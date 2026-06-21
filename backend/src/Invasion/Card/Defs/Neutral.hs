@@ -720,3 +720,18 @@ willpower = tacticCard "the-inevitable-city-019" "Willpower" do
       g <- getGame
       whenJust (findUnit k g) \u ->
         until EndOfTurn $ buffPower k u.cardDef.loyalty
+
+-- The Morrslieb cycle ---------------------------------------------------
+
+viciousClanrat :: CardDef Unit
+viciousClanrat = unitCard "the-chaos-moon-040" "Vicious Clanrat" do
+  cost 4
+  power 1
+  hitPoints 3
+  trait Skaven
+  destructionOnly
+  body "While attacking, this unit gains {power} for each corrupted Skaven unit you control."
+  combatPower \g self ->
+    if self.key `elem` maybe [] (.attackers) g.combat
+      then length [u | u <- g.units, u.controller == self.controller, u.corrupted, Skaven `elem` u.cardDef.traits]
+      else 0

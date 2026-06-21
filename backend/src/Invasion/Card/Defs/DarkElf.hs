@@ -7,6 +7,7 @@
 module Invasion.Card.Defs.DarkElf (module Invasion.Card.Defs.DarkElf) where
 
 import Data.Map.Strict qualified as Map
+import Invasion.Capital
 import Invasion.Card.Builder
 import Invasion.Card.Effects
 import Invasion.Card.Triggers
@@ -636,3 +637,147 @@ sacrificialPyre = supportCard "the-imperial-throne-115" "Sacrificial Pyre" do
   -- sacrifice from death / return-to-hand.
   onFriendlyUnitLeavePlay \_owner self _uk _zone _code ->
     withTarget self.controller AnyUnit (push . CorruptUnit)
+
+-- The Morrslieb cycle ---------------------------------------------------
+
+frenziedWitchElf :: CardDef Unit
+frenziedWitchElf = unitCard "the-chaos-moon-035" "Frenzied Witch Elf" do
+  race DarkElf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait WitchElf
+  body "Action: When this unit attacks, discard the top 2 cards of target player's deck."
+  onMyAttackDeclared \_owner self _z _atk ->
+    millFromDeck self.controller.next 2
+
+sacrificeToKhaine :: CardDef Tactic
+sacrificeToKhaine = tacticCard "the-chaos-moon-037" "Sacrifice to Khaine" do
+  race DarkElf
+  cost 2
+  loyalty 2
+  trait Spell
+  body "Action: Each opponent must sacrifice a unit he controls."
+  whenResolved \self -> do
+    let opp = self.controller.next
+    cands <- unitsMatching opp ownUnit
+    forcePickUnit opp (map (.key) cands) "Sacrifice a unit." destroyUnit
+
+witchHag :: CardDef Unit
+witchHag = unitCard "omens-of-ruin-015" "Witch Hag" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Sorceror
+  body "Action: Corrupt this unit to discard the top card of target player's deck."
+  actionWith "Hex" 0 [CorruptSelf] \usage ->
+    millFromDeck usage.user.next 1
+
+darkElfInfiltrator :: CardDef Unit
+darkElfInfiltrator = unitCard "omens-of-ruin-016" "Dark Elf Infiltrator" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Warrior
+  body "Action: When this unit enters play, take up to 2 resources from target opponent."
+  onEnterPlay \_owner self -> do
+    let pk = self.controller
+        opp = pk.next
+    g <- getGame
+    let Resources r = (playerOf opp g).resources
+        n = min 2 r
+    when (n > 0) $ do
+      payResources opp n
+      gainResources pk n
+
+toxicHydra :: CardDef Unit
+toxicHydra = unitCard "the-eclipse-of-hope-095" "Toxic Hydra" do
+  race DarkElf
+  cost 5
+  loyalty 3
+  power 2
+  hitPoints 4
+  trait Creature
+  body
+    "Action: When this unit enters play, each unit in any corresponding zone gets \
+    \-2 hit points until the end of the turn."
+  onEnterPlay \_owner self -> do
+    g <- getGame
+    let opp = self.controller.next
+    for_ [u | u <- g.units, u.controller == opp, u.zone == self.zone] \u ->
+      until EndOfTurn $ debuffHP u.key 2
+
+enragedManticore :: CardDef Unit
+enragedManticore = unitCard "signs-in-the-stars-076" "Enraged Manticore" do
+  race DarkElf
+  cost 6
+  loyalty 3
+  power 3
+  hitPoints 5
+  trait Creature
+  body
+    "While attacking, this unit gains {power}{power}{power} if there are 3 or more \
+    \developments in the defending zone."
+  combatPower \g self -> case g.combat of
+    Just cs
+      | self.key `elem` cs.attackers ->
+          let p = playerOf cs.defendingPlayer g
+              Developments d = case cs.targetZone of
+                KingdomZone -> p.capital.kingdom.developments
+                QuestZone -> p.capital.quest.developments
+                BattlefieldZone -> p.capital.battlefield.developments
+           in if d >= 3 then 3 else 0
+    _ -> 0
+
+bloodcallSorceress :: CardDef Unit
+bloodcallSorceress = unitCard "the-twin-tailed-comet-055" "Bloodcall Sorceress" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  trait Sorceror
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this unit. Then, up to X target units lose {power}{power} until the end of \
+    \the turn. X is the number of resource tokens on this unit."
+  onYouPlayDevelopment \_owner self -> do
+    push (AdjustUnitTokens self.key 1)
+    let n = self.tokens + 1
+    withUpTo self.controller n (unitWhere (const True)) \ks ->
+      for_ ks \k -> until EndOfTurn $ buffPower k (-2)
+
+malekithsRage :: CardDef Quest
+malekithsRage = questCard "the-eclipse-of-hope-097" "Malekith's Rage" do
+  race DarkElf
+  cost 0
+  loyalty 2
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this card if a unit is questing here. Action: Discard 2 resources on this \
+    \card to have target unit get -1 hit points until the end of the turn."
+  accrueTokenOnDevelopmentWhileQuesting
+  spendTokens "Weaken" 2 \u ->
+    withTarget u.user AnyUnit \k -> until EndOfTurn $ debuffHP k 1
+
+anointedCauldron :: CardDef Support
+anointedCauldron = supportCard "the-twin-tailed-comet-057" "Anointed Cauldron" do
+  race DarkElf
+  cost 3
+  loyalty 1
+  power 1
+  trait Siege
+  body "Action: When this zone is attacked, the attacking player discards a card from his hand."
+  onMyZoneAttacked \_owner _self cs -> do
+    let atk = cs.attackingPlayer
+    g <- getGame
+    let h = (playerOf atk g).hand
+    unless (null h) $
+      chooseFromCards atk 1 1 h "Anointed Cauldron: discard a card." \case
+        [c] -> push (DiscardCardsFromHand atk [c.key])
+        _ -> pure ()

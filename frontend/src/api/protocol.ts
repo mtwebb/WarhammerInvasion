@@ -109,6 +109,7 @@ export type Trait =
   | 'Skill' | 'Warpstone' | 'Zealot'
   | 'Skaven' | 'WitchHunter' | 'Hex' | 'Vault' | 'Berserker' | 'Dragon'
   | 'WarMachine' | 'Musician' | 'StandardBearer' | 'Location' | 'Fortification' | 'Epic'
+  | 'Troll' | 'WitchElf' | 'Disease'
 
 // Card definition as serialized by Invasion.CardDef.ToJSON. The 'receive'
 // function field is dropped on the wire — see CardDef.hs.
