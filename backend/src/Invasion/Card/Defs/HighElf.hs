@@ -826,3 +826,29 @@ flamesOfThePhoenix = tacticCard "assault-on-ulthuan-017" "Flames of the Phoenix"
   whenResolved \_self -> do
     g <- getGame
     for_ g.units \u -> returnUnitToHand u.key
+
+swordMastersOfHoeth :: CardDef Unit
+swordMastersOfHoeth = unitCard "assault-on-ulthuan-003" "Sword Masters of Hoeth" do
+  race HighElf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 3
+  traits [Warrior, Elite]
+  body "Battlefield. Cancel all combat damage assigned to this unit."
+  -- Approximation: the engine's 'cancelAllDamageWhen' slot cancels ALL
+  -- cancellable damage, not strictly combat damage; gated to the
+  -- battlefield zone to match the printed "Battlefield." line.
+  damageImmuneWhen \_g self -> self.zone == BattlefieldZone
+
+templeOfVaul :: CardDef Support
+templeOfVaul = supportCard "assault-on-ulthuan-015" "Temple of Vaul" do
+  race HighElf
+  cost 3
+  loyalty 1
+  power 3
+  trait Building
+  body "Forced: At the beginning of your turn, deal 2 damage to your capital (you choose which section(s))."
+  onMyTurnBegin \_owner self ->
+    withTarget self.controller (CapitalMatching \pk (owner, _) -> owner == pk) \(owner, zk) ->
+      dealZoneDamage owner zk 2

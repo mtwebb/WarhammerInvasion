@@ -1032,3 +1032,12 @@ chillwind = tacticCard "assault-on-ulthuan-039" "Chillwind" do
     withTarget pk AnyUnit corrupt
     may pk "Restore one corrupted unit?" $
       push (RestoreOneCorruptCard pk)
+
+mindKiller :: CardDef Support
+mindKiller = supportCard "assault-on-ulthuan-033" "Mind Killer" do
+  race DarkElf
+  cost 0
+  loyalty 2
+  traits [Attachment, Hex]
+  body "Attach to a target unit. Attached unit loses {power}."
+  attachmentPower (-1)
