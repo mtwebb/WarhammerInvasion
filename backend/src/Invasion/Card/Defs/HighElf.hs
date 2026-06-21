@@ -747,3 +747,82 @@ doYouKnowWhoIAm = tacticCard "the-burning-of-derricksburg-008" "'Do You Know Who
     g <- getGame
     for_ [u | u <- g.units, HighElf `notElem` u.cardDef.races] \u ->
       until EndOfTurn $ buffPower u.key (-1)
+
+-- Assault on Ulthuan ---------------------------------------------------
+
+envoyFromAverlorn :: CardDef Unit
+envoyFromAverlorn = unitCard "assault-on-ulthuan-001" "Envoy from Averlorn" do
+  race HighElf
+  cost 1
+  loyalty 1
+  power 1
+  hitPoints 1
+  traits [Messenger]
+  questOnly
+  body "Quest zone only."
+
+highElfSpearmen :: CardDef Unit
+highElfSpearmen = unitCard "assault-on-ulthuan-004" "High Elf Spearmen" do
+  race HighElf
+  cost 3
+  loyalty 1
+  power 2
+  hitPoints 1
+  trait Warrior
+
+initiateOfSaphery :: CardDef Unit
+initiateOfSaphery = unitCard "assault-on-ulthuan-006" "Initiate of Saphery" do
+  race HighElf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  traits [Initiate, Mage]
+  body "Kingdom. Action: At the beginning of your turn, heal 1 damage from each unit you control."
+  kingdom $ onMyTurnBegin \_owner self -> do
+    g <- getGame
+    for_ [u | u <- g.units, u.controller == self.controller] \u ->
+      healUnit u.key 1
+
+loremasterOfHoeth :: CardDef Unit
+loremasterOfHoeth = unitCard "assault-on-ulthuan-007" "Loremaster of Hoeth" do
+  race HighElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Mage
+  body "Forced: After this unit enters play, each player takes 2 indirect damage. (Players assign their own indirect damage.)"
+  onEnterPlay \_owner _self -> eachPlayer \pk -> indirectDamage pk 2
+
+dragonMageWakening :: CardDef Support
+dragonMageWakening = supportCard "assault-on-ulthuan-012" "Dragon Mage Wakening" do
+  race HighElf
+  cost 0
+  loyalty 1
+  trait Attachment
+  body "Attach to a target unit. Attached unit gets +3 hit points."
+  attachmentHp 3
+
+tearOfIsha :: CardDef Tactic
+tearOfIsha = tacticCard "assault-on-ulthuan-016" "Tear of Isha" do
+  race HighElf
+  cost 1
+  loyalty 1
+  trait Spell
+  body "Action: Heal all damage on one target unit."
+  playableWhen $ hasTarget AnyUnit
+  whenResolved \self ->
+    withTarget self.controller AnyUnit \k -> healUnit k 999
+
+flamesOfThePhoenix :: CardDef Tactic
+flamesOfThePhoenix = tacticCard "assault-on-ulthuan-017" "Flames of the Phoenix" do
+  race HighElf
+  cost 4
+  loyalty 3
+  trait Spell
+  body "Play during your turn. Action: Return all units in play to their owner's hands."
+  playableWhen \g pk -> g.currentPlayer == pk
+  whenResolved \_self -> do
+    g <- getGame
+    for_ g.units \u -> returnUnitToHand u.key

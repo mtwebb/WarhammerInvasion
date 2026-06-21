@@ -1160,3 +1160,27 @@ douseTheFlames = tacticCard "the-fourth-waystone-084" "Douse the Flames" do
     withTarget pk (unitWhere isDamaged) \src ->
       withTarget pk (unitWhere (\u -> u.key /= src)) \dst ->
         moveDamage src dst 1
+
+-- Assault on Ulthuan ---------------------------------------------------
+
+goldWizardAcolyte :: CardDef Unit
+goldWizardAcolyte = unitCard "assault-on-ulthuan-046" "Gold Wizard Acolyte" do
+  race Empire
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Mage
+  body "Battlefield. Action: When you declare this unit as an attacker, one target unit cannot defend against this attack."
+  battlefield $ onMyAttackDeclared \_owner self _zone _attackers ->
+    withTarget self.controller enemyUnit \k -> until EndOfTurn $ disableDefend k
+
+surrender :: CardDef Tactic
+surrender = tacticCard "assault-on-ulthuan-048" "Surrender!" do
+  race Empire
+  cost 1
+  loyalty 2
+  body "Action: Return target defending unit to its owner's hand."
+  playableWhen $ hasTarget defendingUnit
+  whenResolved \self ->
+    withTarget self.controller defendingUnit returnUnitToHand

@@ -1125,3 +1125,42 @@ disStuffBurnsGud = tacticCard "the-fourth-waystone-090" "Dis Stuff Burns Gud" do
         (SupportMatching \_pk _g s -> Building `elem` s.cardDef.traits)
         destroySupport
       eachPlayer \pk -> indirectDamage pk 3
+
+-- Assault on Ulthuan ---------------------------------------------------
+
+wyvernRider :: CardDef Unit
+wyvernRider = unitCard "assault-on-ulthuan-049" "Wyvern Rider" do
+  race Orc
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Cavalry
+  body "Battlefield. This unit gains {power} if you have no developments in this zone."
+  battlefield $ constant \self -> do
+    g <- getGame
+    when (devsInZone g self == 0) $ gainPower self 1
+
+scrapHeap :: CardDef Support
+scrapHeap = supportCard "assault-on-ulthuan-050" "Scrap Heap" do
+  race Orc
+  cost 1
+  loyalty 2
+  power 0
+  trait Siege
+  body "[Orc] units in this zone get +1 hit points."
+  supportHPAura \_g s u ->
+    if u.controller == s.controller && u.zone == s.zone && Orc `elem` u.cardDef.races
+      then 1
+      else 0
+
+footOfGork :: CardDef Tactic
+footOfGork = tacticCard "assault-on-ulthuan-051" "Foot of Gork" do
+  race Orc
+  cost 2
+  loyalty 3
+  body "Play during your turn. Action: Destroy one target unit with printed cost 2 or lower."
+  playableWhen \g pk ->
+    g.currentPlayer == pk && hasTarget (unitWhere (costAtMost 2 . (.cardDef))) g pk
+  whenResolved \self ->
+    withTarget self.controller (unitWhere (costAtMost 2 . (.cardDef))) destroyUnit

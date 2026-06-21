@@ -890,3 +890,145 @@ standardOfClarKarond = supportCard "the-silent-forge-056" "Standard of Clar Karo
       withTarget self.controller
         (UnitMatching \_pk _g u -> u.controller == cs.defendingPlayer && u.zone == cs.targetZone)
         \k -> until EndOfTurn $ buffPower k (-1)
+
+-- Assault on Ulthuan ---------------------------------------------------
+
+darkInitiate :: CardDef Unit
+darkInitiate = unitCard "assault-on-ulthuan-022" "Dark Initiate" do
+  race DarkElf
+  cost 1
+  loyalty 1
+  power 1
+  hitPoints 1
+  traits [Initiate, Priest]
+  body "This unit does not count its power unless you have at least 2 developments in this zone."
+  selfPower \g self ->
+    if devsInZone g self >= 2 then 0 else negate self.cardDef.power
+
+walkingSacrifice :: CardDef Unit
+walkingSacrifice = unitCard "assault-on-ulthuan-023" "Walking Sacrifice" do
+  race DarkElf
+  cost 0
+  loyalty 1
+  power 0
+  hitPoints 1
+  trait Martyr
+  body "Forced: When this unit leaves play, draw a card."
+  onSelfLeavesPlay \_owner self -> drawCard self.controller
+
+shades :: CardDef Unit
+shades = unitCard "assault-on-ulthuan-025" "Shades" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 1
+  trait Warrior
+  scout
+  body "Scout (discard one card at random from an opponent's hand if this unit survives combat)."
+
+coldOneKnight :: CardDef Unit
+coldOneKnight = unitCard "assault-on-ulthuan-026" "Cold One Knight" do
+  race DarkElf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Warrior
+  toughness 1
+  body "Toughness 1 (whenever this unit is assigned damage, cancel 1 of that damage)."
+
+darkSorceress :: CardDef Unit
+darkSorceress = unitCard "assault-on-ulthuan-028" "Dark Sorceress" do
+  race DarkElf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 2
+  trait Sorceror
+  body "Reduce the cost to play this unit by 1 for each corrupted unit controlled by your opponents."
+  selfCostAdjust \g pk ->
+    negate (length [u | u <- g.units, u.controller /= pk, u.corrupted])
+
+corsairsOfGhrond :: CardDef Unit
+corsairsOfGhrond = unitCard "assault-on-ulthuan-029" "Corsairs of Ghrond" do
+  race DarkElf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Warrior
+  body "Battlefield. Forced: When this unit leaves play, one target unit gets -2 hit points until the end of the turn."
+  battlefield $ onSelfLeavesPlay \_owner self ->
+    withTarget self.controller AnyUnit \k -> until EndOfTurn $ debuffHP k 2
+
+lokhirFellheart :: CardDef Unit
+lokhirFellheart = unitCard "assault-on-ulthuan-030" "Lokhir Fellheart" do
+  hero
+  trait Warrior
+  race DarkElf
+  cost 5
+  loyalty 5
+  power 3
+  hitPoints 4
+  body
+    "Limit 1 Hero per zone. Battlefield. Action: At the beginning of your turn, one target unit \
+    \in any battlefield gets -1 hit points until the end of the turn for each development in this zone."
+  battlefield $ onMyTurnBegin \_owner self -> do
+    g <- getGame
+    let n = devsInZone g self
+    when (n > 0) $
+      withTarget self.controller
+        (UnitMatching \_pk _g u -> u.zone == BattlefieldZone)
+        \k -> until EndOfTurn $ debuffHP k n
+
+harGaneth :: CardDef Support
+harGaneth = supportCard "assault-on-ulthuan-035" "Har Ganeth" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  power 0
+  trait Building
+  body "Kingdom. Action: At the beginning of your turn, return one target unit with less than 2 hit points to its owner's hand."
+  kingdom $ onMyTurnBegin \_owner self ->
+    withTarget self.controller (unitWhere (\u -> u.effectiveMaxHP < 2)) returnUnitToHand
+
+lashThePrisoner :: CardDef Tactic
+lashThePrisoner = tacticCard "assault-on-ulthuan-037" "Lash the Prisoner!" do
+  race DarkElf
+  cost 0
+  loyalty 3
+  body "Action: Sacrifice a unit. If you do, gain 2 resources."
+  playableWhen \g pk -> any (\u -> u.controller == pk) g.units
+  whenResolved \self ->
+    sacrificeOwnUnit self.controller "Sacrifice a unit to gain 2 resources." \_ ->
+      gainResources self.controller 2
+
+darkVisions :: CardDef Tactic
+darkVisions = tacticCard "assault-on-ulthuan-038" "Dark Visions" do
+  race DarkElf
+  cost 1
+  loyalty 2
+  trait Spell
+  body "Play during your turn. Action: Search the top 5 cards of your deck for a card and put it into your hand. Then, shuffle your deck."
+  playableWhen \g pk -> g.currentPlayer == pk
+  whenResolved \self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 5 \result -> do
+      chooseFromCards pk 0 1 result.cards "Choose a card to add to your hand." \chosen ->
+        for_ chosen \c -> push (TakeCardsFromDeckToHand pk [c.key])
+      shuffleDeck pk
+
+chillwind :: CardDef Tactic
+chillwind = tacticCard "assault-on-ulthuan-039" "Chillwind" do
+  race DarkElf
+  cost 1
+  loyalty 1
+  trait Spell
+  body "Action: Corrupt one target unit. Then, you may restore one corrupted unit."
+  playableWhen $ hasTarget AnyUnit
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk AnyUnit corrupt
+    may pk "Restore one corrupted unit?" $
+      push (RestoreOneCorruptCard pk)

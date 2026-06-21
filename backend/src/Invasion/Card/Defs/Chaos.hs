@@ -1454,3 +1454,52 @@ embersToInferno = tacticCard "the-silent-forge-053" "Embers to Inferno" do
   where
     unitInBurning = UnitMatching \_pk g u -> zoneBurning g u.controller u.zone
     supportInBurning = SupportMatching \_pk g s -> zoneBurning g s.controller s.zone
+
+-- Assault on Ulthuan ---------------------------------------------------
+
+maledictorOfTzeentch :: CardDef Unit
+maledictorOfTzeentch = unitCard "assault-on-ulthuan-052" "Maledictor of Tzeentch" do
+  race Chaos
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 3
+  trait Mage
+  body "Forced: At the beginning of your turn, this unit and one other target unit each take 1 damage."
+  onMyTurnBegin \_owner self -> do
+    dealDamage self.key 1
+    withTarget self.controller (unitWhere (\u -> u.key /= self.key)) \k ->
+      dealDamage k 1
+
+bloodFrenzy :: CardDef Support
+bloodFrenzy = supportCard "assault-on-ulthuan-053" "Blood Frenzy" do
+  race Chaos
+  cost 1
+  loyalty 3
+  trait Attachment
+  body
+    "Attach to a target unit in your battlefield. Attached unit gains {power} for each \
+    \resource token on this card. Forced: Each time an opponent's unit enters a discard \
+    \pile from play, put a resource token on this attachment."
+  -- Approximation: 'onOpponentUnitLeavePlay' fires for any departure
+  -- (destruction, sacrifice, AND bounce-to-hand), so a bounced enemy
+  -- unit also banks a token; the printed text counts only units that
+  -- enter a discard pile.
+  attachedTo \self unit ->
+    when (self.tokens > 0) $ gainPower unit self.tokens
+  onOpponentUnitLeavePlay \_owner self _uk _zone _code ->
+    adjustSupportTokens self.key 1
+
+tzeentchsFirestorm :: CardDef Tactic
+tzeentchsFirestorm = tacticCard "assault-on-ulthuan-054" "Tzeentch's Firestorm" do
+  race Chaos
+  cost 4
+  loyalty 2
+  trait Spell
+  body "Action: Deal 2 damage to 2 different target units."
+  playableWhen $ hasTarget AnyUnit
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk AnyUnit \k1 -> do
+      dealDamage k1 2
+      withTarget pk (unitWhere (\u -> u.key /= k1)) \k2 -> dealDamage k2 2

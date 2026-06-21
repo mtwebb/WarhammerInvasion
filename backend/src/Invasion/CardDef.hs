@@ -135,6 +135,12 @@ data Trait
     -- ^ Slave trait (Dwarf Slaves).
   | Environment
     -- ^ Environment support trait (Higher Ground).
+  | Messenger
+    -- ^ Messenger trait (Envoy from Averlorn).
+  | Martyr
+    -- ^ Martyr trait (Walking Sacrifice).
+  | Initiate
+    -- ^ Initiate trait (Initiate of Saphery).
   deriving stock (Show, Eq)
 
 mconcat

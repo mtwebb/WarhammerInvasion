@@ -1080,3 +1080,32 @@ runesmithApprentice = unitCard "the-fall-of-karak-grimaz-022" "Runesmith Apprent
       chooseFromCards pk 0 (length runes) runes "Choose Rune cards to add to your hand." \chosen ->
         unless (null chosen) $ push (TakeCardsFromDeckToHand pk (map (.key) chosen))
       shuffleDeck pk
+
+-- Assault on Ulthuan ---------------------------------------------------
+
+slayersOfKarakKadrin :: CardDef Unit
+slayersOfKarakKadrin = unitCard "assault-on-ulthuan-043" "Slayers of Karak Kadrin" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  traits [Warrior, Slayer]
+  body "Battlefield. Action: Sacrifice this unit to destroy one target attacking unit."
+  battlefield $ action "Sacrifice to destroy attacker" 0 \usage ->
+    withTarget usage.user attackingUnit \k -> do
+      destroyUnit k
+      destroyUnit usage.self.key
+
+mountainBarracks :: CardDef Support
+mountainBarracks = supportCard "assault-on-ulthuan-044" "Mountain Barracks" do
+  race Dwarf
+  cost 2
+  loyalty 1
+  power 1
+  trait Building
+  body "Your [Dwarf] units in this zone gain Toughness 1 (whenever this unit is assigned damage, cancel 1 of that damage)."
+  supportToughnessAura \_g s u ->
+    if u.controller == s.controller && u.zone == s.zone && Dwarf `elem` u.cardDef.races
+      then 1
+      else 0

@@ -835,3 +835,29 @@ evilAlliance = supportCard "redemption-of-a-mage-079" "Evil Alliance" do
   destructionOnly
   limited
   body "Destruction only. Limited. (This Alliance provides a Chaos, a Dark Elf, and an Orc Loyalty symbol.)"
+
+-- Assault on Ulthuan ---------------------------------------------------
+
+ancientMap :: CardDef Tactic
+ancientMap = tacticCard "assault-on-ulthuan-056" "Ancient Map" do
+  cost 1
+  loyalty 1
+  body "Action: Search your deck for a quest card, reveal it to each player, and add it to your hand. Then, shuffle your deck."
+  whenResolved \self -> do
+    let pk = self.controller
+    me <- playerOf pk <$> getGame
+    searchTopOfDeck pk (length me.deck) \result -> do
+      let quests = [c | c <- result.cards, isJust (asQuest c.def)]
+      chooseFromCards pk 0 1 quests "Choose a quest card to add to your hand." \chosen ->
+        for_ chosen \c -> push (TakeCardsFromDeckToHand pk [c.key])
+      shuffleDeck pk
+
+innovation :: CardDef Tactic
+innovation = tacticCard "assault-on-ulthuan-057" "Innovation" do
+  cost 0
+  loyalty 1
+  body "Action: Gain 1 resource for each development in your kingdom."
+  whenResolved \self -> do
+    me <- playerOf self.controller <$> getGame
+    let Developments d = me.capital.kingdom.developments
+    when (d > 0) $ gainResources self.controller d
