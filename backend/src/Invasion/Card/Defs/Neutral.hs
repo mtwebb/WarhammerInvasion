@@ -735,3 +735,56 @@ viciousClanrat = unitCard "the-chaos-moon-040" "Vicious Clanrat" do
     if self.key `elem` maybe [] (.attackers) g.combat
       then length [u | u <- g.units, u.controller == self.controller, u.corrupted, Skaven `elem` u.cardDef.traits]
       else 0
+
+-- The Enemy cycle -------------------------------------------------------
+
+mountainBrigands :: CardDef Unit
+mountainBrigands = unitCard "the-fourth-waystone-100" "Mountain Brigands" do
+  cost 2
+  power 1
+  hitPoints 2
+  trait Thief
+  body "Action: When this unit enters play, target opponent must give you 1 resource."
+  onEnterPlay \_owner self -> do
+    let opp = self.controller.next
+    payResources opp 1
+    gainResources self.controller 1
+
+entropy :: CardDef Tactic
+entropy = tacticCard "the-burning-of-derricksburg-019" "Entropy" do
+  cost 1
+  destructionOnly
+  body "Destruction only. Action: Discard the top two cards of target player's deck."
+  whenResolved \self -> millFromDeck self.controller.next 2
+
+muck :: CardDef Tactic
+muck = tacticCard "the-silent-forge-060" "Muck!" do
+  cost 2
+  body "Action: Discard your hand. Then, draw as many cards as you just discarded."
+  whenResolved \self -> do
+    let pk = self.controller
+    n <- (\g -> length (playerOf pk g).hand) <$> getGame
+    discardHand pk
+    drawCards pk n
+
+grailKnight :: CardDef Unit
+grailKnight = unitCard "bleeding-sun-118" "Grail Knight" do
+  cost 4
+  power 2
+  hitPoints 2
+  traits [Bretonnian, Knight]
+  orderOnly
+  body "Order only. Lower the cost to play this unit by 2 while you have a quest in play."
+  selfCostAdjust \g pk -> if any (\q -> q.controller == pk) g.quests then -2 else 0
+
+battlePilgrims :: CardDef Unit
+battlePilgrims = unitCard "the-silent-forge-058" "Battle Pilgrims" do
+  cost 2
+  power 1
+  hitPoints 2
+  traits [Bretonnian, Warrior]
+  orderOnly
+  body "Order only. Action: Sacrifice this unit to destroy target corrupted unit."
+  action "Sacrifice to destroy a corrupted unit" 0 \u -> do
+    destroyUnit u.self.key
+    withTarget u.user (unitWhere (.corrupted)) destroyUnit

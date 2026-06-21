@@ -985,3 +985,56 @@ bigBoss = unitCard "the-eclipse-of-hope-084" "Big Boss" do
         m = minimum (maxBound : map costOf g.units)
         cands = [u.key | u <- g.units, costOf u == m]
     forcePickUnit self.controller cands "Big Boss: sacrifice the lowest-cost unit." destroyUnit
+
+-- The Enemy cycle -------------------------------------------------------
+
+madShaman :: CardDef Unit
+madShaman = unitCard "bleeding-sun-110" "Mad Shaman" do
+  race Orc
+  cost 4
+  loyalty 2
+  power 1
+  hitPoints 3
+  trait Shaman
+  body
+    "This unit gains {power} for each resource token on it. If this unit has \
+    \more resource tokens on it than hit points, sacrifice it. Forced: At the \
+    \beginning of your turn, put a resource token on this unit."
+  selfPower \_g self -> self.tokens
+  onMyTurnBegin \_owner self -> do
+    push (AdjustUnitTokens self.key 1)
+    when (self.tokens + 1 > self.effectiveMaxHP) $ destroyUnit self.key
+
+giantSpider :: CardDef Unit
+giantSpider = unitCard "bleeding-sun-111" "Giant Spider" do
+  race Orc
+  cost 3
+  loyalty 2
+  power 2
+  hitPoints 4
+  trait Creature
+  battlefieldOnly
+  body "Battlefield only. This unit cannot attack unless the defending zone has at least one unit."
+  canAttack \g pk zone _u ->
+    any (\v -> v.controller /= pk && v.zone == zone) g.units
+
+followersOfSkarsnik :: CardDef Unit
+followersOfSkarsnik = unitCard "the-fall-of-karak-grimaz-029" "Followers of Skarsnik" do
+  race Orc
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Goblin
+  body "This unit gains {power} and +1 hit points for every other copy of \"Followers of Skarsnik\" you control."
+  selfPower \g self -> otherCopies g self
+  selfHP \g self -> otherCopies g self
+  where
+    otherCopies g self =
+      length
+        [ u
+        | u <- g.units
+        , u.controller == self.controller
+        , u.key /= self.key
+        , u.cardDef.code == self.cardDef.code
+        ]

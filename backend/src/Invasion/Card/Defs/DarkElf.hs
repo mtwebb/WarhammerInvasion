@@ -791,3 +791,63 @@ anointedCauldron = supportCard "the-twin-tailed-comet-057" "Anointed Cauldron" d
       chooseFromCards atk 1 1 h "Anointed Cauldron: discard a card." \case
         [c] -> push (DiscardCardsFromHand atk [c.key])
         _ -> pure ()
+
+-- The Enemy cycle -------------------------------------------------------
+
+druchiiNoble :: CardDef Unit
+druchiiNoble = unitCard "the-burning-of-derricksburg-016" "Druchii Noble" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  traits [Elite, Noble]
+  body "Action: When this unit attacks, it gains {power} and target unit loses {power} until the end of the turn."
+  onMyAttackDeclared \_owner self _zone _attackers -> do
+    until EndOfTurn $ buffPower self.key 1
+    withTarget self.controller enemyUnit \k -> until EndOfTurn $ buffPower k (-1)
+
+bloodburnPoison :: CardDef Tactic
+bloodburnPoison = tacticCard "the-fourth-waystone-093" "Bloodburn Poison" do
+  race DarkElf
+  cost 1
+  loyalty 2
+  body "Action: Deal 1 damage to target unit. That unit loses {power} until the end of the turn."
+  playableWhen \g pk -> hasTarget AnyUnit g pk
+  whenResolved \self ->
+    withTarget self.controller AnyUnit \k -> do
+      dealDamage k 1
+      until EndOfTurn $ buffPower k (-1)
+
+whipTheSlaves :: CardDef Tactic
+whipTheSlaves = tacticCard "the-burning-of-derricksburg-017" "Whip the Slaves" do
+  race DarkElf
+  cost 0
+  loyalty 2
+  body "Action: Sacrifice a unit to draw 2 cards."
+  playableWhen \g pk -> any (\u -> u.controller == pk) g.units
+  whenResolved \self ->
+    sacrificeOwnUnit self.controller "Sacrifice a unit." \_ ->
+      drawCards self.controller 2
+
+vanguardOfWoe :: CardDef Unit
+vanguardOfWoe = unitCard "the-fall-of-karak-grimaz-036" "Vanguard of Woe" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Warrior
+  body "Action: When this unit leaves play, target opponent discards a card from his hand."
+  onSelfLeavesPlay \_owner self -> discardRandom self.controller.next
+
+dwarfSlaves :: CardDef Unit
+dwarfSlaves = unitCard "the-silent-forge-054" "Dwarf Slaves" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Slave
+  body "Action: When this unit enters play, put the top card of your deck into this zone as a development."
+  onEnterPlay \_owner self -> addDevelopment self.controller self.zone

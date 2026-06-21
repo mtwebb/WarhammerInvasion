@@ -1049,3 +1049,53 @@ theSealedVaults = tacticCard "portent-of-doom-088" "The Sealed Vaults" do
           quests = length [c | c <- top3, isJust (asQuest c.def)]
       push (DiscardCardsFromDeck pk (map (.key) top3))
       when (quests > 0) $ gainResources pk quests
+
+-- The Enemy cycle -------------------------------------------------------
+
+brightWizardAcolyte :: CardDef Unit
+brightWizardAcolyte = unitCard "the-fourth-waystone-083" "Bright Wizard Acolyte" do
+  race Empire
+  cost 2
+  loyalty 1
+  power 2
+  hitPoints 2
+  trait Mage
+  body "Forced: When your turn ends, this unit takes 1 uncancellable damage."
+  onMyTurnEnd \_owner self -> dealUncancellableDamage self.key 1
+
+calledBack :: CardDef Tactic
+calledBack = tacticCard "the-fall-of-karak-grimaz-026" "Called Back" do
+  race Empire
+  cost 2
+  loyalty 2
+  body "Action: Return target unit to its owner's hand."
+  playableWhen \g pk -> hasTarget AnyUnit g pk
+  whenResolved \self ->
+    withTarget self.controller AnyUnit returnUnitToHand
+
+blessingOfMyrmidia :: CardDef Tactic
+blessingOfMyrmidia = tacticCard "bleeding-sun-107" "Blessing of Myrmidia" do
+  race Empire
+  cost 1
+  loyalty 2
+  body "Action: Each of your attacking or defending Knight units gains {power} until the end of the turn."
+  whenResolved \self ->
+    buffEachUntilEoT self.controller
+      (UnitMatching \pk g u ->
+        u.controller == pk
+          && Knight `elem` u.cardDef.traits
+          && (unitIsAttacking g u || unitIsDefending g u))
+      1
+
+derricksburgForge :: CardDef Support
+derricksburgForge = supportCard "the-burning-of-derricksburg-005" "Derricksburg Forge" do
+  race Empire
+  cost 2
+  loyalty 1
+  power 1
+  trait Building
+  body
+    "Kingdom. Action: When this card enters play, gain 1 resource. Quest. \
+    \Action: When this card enters play, draw a card."
+  kingdom $ onEnterPlay \_owner self -> gainResources self.controller 1
+  quest $ onEnterPlay \_owner self -> drawCard self.controller

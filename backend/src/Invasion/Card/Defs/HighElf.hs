@@ -664,3 +664,54 @@ redirectFirstDamageEachTurn n g self inbound =
                 \k -> dealDamage k (min n inbound)
           }
         else Nothing
+
+-- The Enemy cycle -------------------------------------------------------
+
+spearhostOfAsuryan :: CardDef Unit
+spearhostOfAsuryan = unitCard "the-fourth-waystone-086" "Spearhost of Asuryan" do
+  race HighElf
+  cost 4
+  loyalty 1
+  power 2
+  hitPoints 3
+  traits [Warrior, Elite]
+  body "Action: When this unit attacks, deal 2 indirect damage to target opponent."
+  onMyAttackDeclared \_owner self _zone _attackers ->
+    indirectDamage self.controller.next 2
+
+descendantOfIndraugnir :: CardDef Unit
+descendantOfIndraugnir = unitCard "the-silent-forge-046" "Descendant of Indraugnir" do
+  race HighElf
+  cost 6
+  loyalty 3
+  power 4
+  hitPoints 4
+  trait Dragon
+  body "Action: When this unit attacks, deal 4 indirect damage to each opponent."
+  onMyAttackDeclared \_owner self _zone _attackers ->
+    indirectDamage self.controller.next 4
+
+dreamerOfDragons :: CardDef Unit
+dreamerOfDragons = unitCard "redemption-of-a-mage-068" "Dreamer of Dragons" do
+  race HighElf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  traits [Mage, Elite]
+  body "Action: This unit takes 1 uncancellable damage. If it does, it gains {power} until the end of the turn."
+  action "Wound for power" 0 \u -> do
+    dealUncancellableDamage u.self.key 1
+    until EndOfTurn $ buffPower u.self.key 1
+
+courageOfAenarion :: CardDef Tactic
+courageOfAenarion = tacticCard "redemption-of-a-mage-069" "Courage of Aenarion" do
+  race HighElf
+  cost 1
+  loyalty 2
+  body "Action: Restore all corrupt units that you control."
+  playableWhen \g pk -> any (\u -> u.controller == pk && u.corrupted) g.units
+  whenResolved \self -> do
+    g <- getGame
+    let n = length [u | u <- g.units, u.controller == self.controller, u.corrupted]
+    replicateM_ n $ push (RestoreOneCorruptCard self.controller)

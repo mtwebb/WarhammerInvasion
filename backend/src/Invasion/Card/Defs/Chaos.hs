@@ -1306,3 +1306,102 @@ sorcererOfTzeentch = unitCard "the-twin-tailed-comet-053" "Sorcerer of Tzeentch"
     push (AdjustUnitTokens self.key 1)
     let n = self.tokens + 1
     withTarget self.controller AnyUnit \k -> dealDamage k n
+
+-- The Enemy cycle -------------------------------------------------------
+
+wingedFury :: CardDef Unit
+wingedFury = unitCard "the-burning-of-derricksburg-013" "Winged Fury" do
+  race Chaos
+  cost 5
+  loyalty 2
+  power 2
+  hitPoints 4
+  trait Daemon
+  body "This unit gains {power} for each corrupted unit controlled by an opponent."
+  selfPower \g self ->
+    length [u | u <- g.units, u.controller /= self.controller, u.corrupted]
+
+heraldOfChange :: CardDef Unit
+heraldOfChange = unitCard "redemption-of-a-mage-072" "Herald of Change" do
+  race Chaos
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Cultist
+  body "This unit gains +2 hit points while defending."
+  selfHP \_g self -> if self.defending then 2 else 0
+
+disgracedChampion :: CardDef Unit
+disgracedChampion = unitCard "redemption-of-a-mage-073" "Disgraced Champion" do
+  race Chaos
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 1
+  trait Warrior
+  body "Action: When this unit is destroyed, deal 2 damage to target unit."
+  onSelfDestroyed \_owner self ->
+    withTarget self.controller AnyUnit \k -> dealDamage k 2
+
+schemingCultist :: CardDef Unit
+schemingCultist = unitCard "the-burning-of-derricksburg-011" "Scheming Cultist" do
+  race Chaos
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Cultist
+  body "Action: Spend 1 resource to deal 1 damage to target corrupted unit."
+  action "Deal 1 to a corrupted unit" 1 \u ->
+    withTarget u.user (unitWhere (.corrupted)) \k -> dealDamage k 1
+
+beastOfRot :: CardDef Unit
+beastOfRot = unitCard "bleeding-sun-114" "Beast of Rot" do
+  race Chaos
+  cost 5
+  loyalty 2
+  power 2
+  hitPoints 4
+  trait Creature
+  body "Lower the cost to play this unit by 1 for each Disease card in play. This unit gains {power} for each Disease card in play."
+  selfCostAdjust \g _pk -> negate (diseaseInPlay g)
+  selfPower \g _self -> diseaseInPlay g
+  where
+    diseaseInPlay g =
+      length [s | s <- allInPlaySupports g, Disease `elem` s.cardDef.traits]
+
+necroticSpasms :: CardDef Support
+necroticSpasms = supportCard "bleeding-sun-115" "Necrotic Spasms" do
+  race Chaos
+  cost 1
+  loyalty 2
+  traits [Attachment, Disease]
+  body "Attach to a target unit. Action: At the beginning of its controller's turn, attached unit takes 1 uncancellable damage."
+  onAttachedHostTurnBegin \_owner _self host ->
+    dealUncancellableDamage host.key 1
+
+taintedWell :: CardDef Support
+taintedWell = supportCard "the-fourth-waystone-092" "Tainted Well" do
+  race Chaos
+  cost 4
+  loyalty 2
+  power 2
+  trait Building
+  body "Action: When a unit is corrupted, deal 1 damage to that unit."
+  onUnitCorrupted \_owner _self uk -> dealDamage uk 1
+
+eslian :: CardDef Unit
+eslian = unitCard "the-silent-forge-052" "Esli'an" do
+  hero
+  race Chaos
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  trait Cultist
+  body "Limit one Hero per zone. Action: When this unit attacks, corrupt target unit in the defending zone."
+  onMyAttackDeclared \_owner self zone _attackers ->
+    withTarget self.controller
+      (UnitMatching \pk _g u -> u.controller /= pk && u.zone == zone)
+      corrupt

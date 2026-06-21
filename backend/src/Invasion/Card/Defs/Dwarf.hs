@@ -927,3 +927,136 @@ theSlayerOath = tacticCard "the-twin-tailed-comet-043" "The Slayer Oath" do
     let pk = self.controller
     n <- (\g -> length [c | c <- (playerOf pk g).discard, isJust (asUnit c.def)]) <$> getGame
     withTarget pk ownUnit \k -> until EndOfTurn $ buffPower k n
+
+-- The Enemy cycle -------------------------------------------------------
+
+-- | "While attacking or defending, gains [Power] if there are more
+-- opposing units in combat." Shared by Stonebearer and Son of Grungi.
+-- Modeled as a combat-damage bonus that fires while the unit is in the
+-- combat and the opposing side outnumbers its own.
+moreOpposingInCombat :: Game -> UnitDetails -> Bool
+moreOpposingInCombat g u = case g.combat of
+  Just cs
+    | u.key `elem` cs.attackers -> length cs.defenders > length cs.attackers
+    | u.key `elem` cs.defenders -> length cs.attackers > length cs.defenders
+  _ -> False
+
+stonebearer :: CardDef Unit
+stonebearer = unitCard "bleeding-sun-104" "Stonebearer" do
+  race Dwarf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Warrior
+  body "This unit gains {power} while attacking or defending if there are more opposing units in combat."
+  combatPower \g self -> if moreOpposingInCombat g self then 1 else 0
+
+sonOfGrungi :: CardDef Unit
+sonOfGrungi = unitCard "the-silent-forge-041" "Son of Grungi" do
+  race Dwarf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  trait Warrior
+  toughness 1
+  body
+    "Toughness 1. This unit gains {power}{power} while attacking or defending \
+    \if there are more opposing units in combat."
+  combatPower \g self -> if moreOpposingInCombat g self then 2 else 0
+
+bodyguardOfBelegar :: CardDef Unit
+bodyguardOfBelegar = unitCard "the-burning-of-derricksburg-001" "Bodyguard of Belegar" do
+  race Dwarf
+  cost 3
+  loyalty 1
+  power 2
+  hitPoints 1
+  trait Warrior
+  toughnessX
+  body "Toughness X. X is the number of other [Dwarf] units in this zone."
+  selfToughness \g self ->
+    length
+      [ u
+      | u <- g.units
+      , u.controller == self.controller
+      , u.zone == self.zone
+      , u.key /= self.key
+      , Dwarf `elem` u.cardDef.races
+      ]
+
+grudgebearer :: CardDef Unit
+grudgebearer = unitCard "the-fall-of-karak-grimaz-024" "Grudgebearer" do
+  race Dwarf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Warrior
+  body
+    "This unit gains {power} for each resource token on it. Forced: When one of \
+    \your other [Dwarf] units leaves play, put a resource token on this card."
+  selfPower \_g self -> self.tokens
+  forced \self -> onUnitOfLeavesPlay self.controller \du ->
+    when (du.key /= self.key && Dwarf `elem` du.cardDef.races) $
+      push (AdjustUnitTokens self.key 1)
+
+stuntySmasha :: CardDef Unit
+stuntySmasha = unitCard "the-fall-of-karak-grimaz-030" "Stunty Smasha" do
+  race Dwarf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 1
+  trait Warrior
+  body "Action: Sacrifice this unit to destroy target development."
+  action "Sacrifice to destroy a development" 0 \u -> do
+    destroyUnit u.self.key
+    withTarget u.user AnyDevelopmentZone \(owner, z) -> destroyDevelopment owner z
+
+ancestralTomb :: CardDef Support
+ancestralTomb = supportCard "the-fall-of-karak-grimaz-023" "Ancestral Tomb" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  power 1
+  trait Building
+  body "Action: When this card enters play, put the top two cards of your deck into this zone as developments."
+  onEnterPlay \_owner self -> do
+    addDevelopment self.controller self.zone
+    addDevelopment self.controller self.zone
+
+grombrindalsElite :: CardDef Unit
+grombrindalsElite = unitCard "redemption-of-a-mage-061" "Grombrindal's Elite" do
+  race Dwarf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  traits [Warrior, Elite]
+  body "Lower the cost to play this unit by 3 if a zone is burning. This unit gains {power} if a zone is burning."
+  selfCostAdjust \g _pk -> if burningZoneCount g > 0 then -3 else 0
+  selfPower \g _self -> if burningZoneCount g > 0 then 1 else 0
+
+honorInDeath :: CardDef Tactic
+honorInDeath = tacticCard "bleeding-sun-102" "Honor in Death" do
+  race Dwarf
+  cost 1
+  loyalty 2
+  body "Action: Sacrifice a unit to destroy target attacking unit."
+  playableWhen \g pk -> hasTarget attackingUnit g pk && any (\u -> u.controller == pk) g.units
+  whenResolved \self ->
+    sacrificeOwnUnit self.controller "Sacrifice a unit." \_ ->
+      withTarget self.controller attackingUnit destroyUnit
+
+masterRuneOfSpite :: CardDef Tactic
+masterRuneOfSpite = tacticCard "the-fall-of-karak-grimaz-021" "Master Rune of Spite" do
+  race Dwarf
+  cost 3
+  loyalty 3
+  trait Rune
+  body "Action: Each unit deals damage to itself equal to its power."
+  whenResolved \_self -> do
+    g <- getGame
+    for_ g.units \u -> when (u.effectivePower > 0) $ dealDamage u.key u.effectivePower

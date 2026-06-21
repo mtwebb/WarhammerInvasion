@@ -470,5 +470,49 @@ allCards =
       ("faith-and-steel-103", SupportCardDef theEmperorsStatue),
       ("faith-and-steel-106", UnitCardDef doomSeeker),
       ("faith-and-steel-107", TacticCardDef fearlessInBattle),
-      ("faith-and-steel-111", UnitCardDef gobboBigBoss)
+      ("faith-and-steel-111", UnitCardDef gobboBigBoss),
+      -- The Enemy cycle — Bleeding Sun (101-120)
+      ("bleeding-sun-102", TacticCardDef honorInDeath),
+      ("bleeding-sun-104", UnitCardDef stonebearer),
+      ("bleeding-sun-107", TacticCardDef blessingOfMyrmidia),
+      ("bleeding-sun-110", UnitCardDef madShaman),
+      ("bleeding-sun-111", UnitCardDef giantSpider),
+      ("bleeding-sun-114", UnitCardDef beastOfRot),
+      ("bleeding-sun-115", SupportCardDef necroticSpasms),
+      ("bleeding-sun-118", UnitCardDef grailKnight),
+      -- The Enemy cycle — Redemption of a Mage (061-080)
+      ("redemption-of-a-mage-061", UnitCardDef grombrindalsElite),
+      ("redemption-of-a-mage-068", UnitCardDef dreamerOfDragons),
+      ("redemption-of-a-mage-069", TacticCardDef courageOfAenarion),
+      ("redemption-of-a-mage-072", UnitCardDef heraldOfChange),
+      ("redemption-of-a-mage-073", UnitCardDef disgracedChampion),
+      -- The Enemy cycle — The Burning of Derricksburg (001-020)
+      ("the-burning-of-derricksburg-001", UnitCardDef bodyguardOfBelegar),
+      ("the-burning-of-derricksburg-005", SupportCardDef derricksburgForge),
+      ("the-burning-of-derricksburg-011", UnitCardDef schemingCultist),
+      ("the-burning-of-derricksburg-013", UnitCardDef wingedFury),
+      ("the-burning-of-derricksburg-016", UnitCardDef druchiiNoble),
+      ("the-burning-of-derricksburg-017", TacticCardDef whipTheSlaves),
+      ("the-burning-of-derricksburg-019", TacticCardDef entropy),
+      -- The Enemy cycle — The Fall of Karak Grimaz (021-040)
+      ("the-fall-of-karak-grimaz-021", TacticCardDef masterRuneOfSpite),
+      ("the-fall-of-karak-grimaz-023", SupportCardDef ancestralTomb),
+      ("the-fall-of-karak-grimaz-024", UnitCardDef grudgebearer),
+      ("the-fall-of-karak-grimaz-026", TacticCardDef calledBack),
+      ("the-fall-of-karak-grimaz-029", UnitCardDef followersOfSkarsnik),
+      ("the-fall-of-karak-grimaz-030", UnitCardDef stuntySmasha),
+      ("the-fall-of-karak-grimaz-036", UnitCardDef vanguardOfWoe),
+      -- The Enemy cycle — The Fourth Waystone (081-100)
+      ("the-fourth-waystone-083", UnitCardDef brightWizardAcolyte),
+      ("the-fourth-waystone-086", UnitCardDef spearhostOfAsuryan),
+      ("the-fourth-waystone-092", SupportCardDef taintedWell),
+      ("the-fourth-waystone-093", TacticCardDef bloodburnPoison),
+      ("the-fourth-waystone-100", UnitCardDef mountainBrigands),
+      -- The Enemy cycle — The Silent Forge (041-060)
+      ("the-silent-forge-041", UnitCardDef sonOfGrungi),
+      ("the-silent-forge-046", UnitCardDef descendantOfIndraugnir),
+      ("the-silent-forge-052", UnitCardDef eslian),
+      ("the-silent-forge-054", UnitCardDef dwarfSlaves),
+      ("the-silent-forge-058", UnitCardDef battlePilgrims),
+      ("the-silent-forge-060", TacticCardDef muck)
     ]

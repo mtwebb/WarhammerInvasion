@@ -125,6 +125,14 @@ data Trait
     -- ^ Witch Elf trait (Frenzied Witch Elf).
   | Disease
     -- ^ Disease trait on disease spells (Plague Bomb).
+  | Cultist
+    -- ^ Cultist trait (Scheming Cultist, Herald of Change, Esli'an).
+  | Bretonnian
+    -- ^ Bretonnian trait (Grail Knight, Battle Pilgrims).
+  | Thief
+    -- ^ Thief trait (Mountain Brigands, Treasure Thieves).
+  | Slave
+    -- ^ Slave trait (Dwarf Slaves).
   deriving stock (Show, Eq)
 
 mconcat
