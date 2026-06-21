@@ -141,6 +141,14 @@ data Trait
     -- ^ Martyr trait (Walking Sacrifice).
   | Initiate
     -- ^ Initiate trait (Initiate of Saphery).
+  | Lizardmen
+    -- ^ Lizardmen trait (Skinks of Sotek, Saurus Warriors, the March
+    -- of the Damned Order minor-faction cards).
+  | Undead
+    -- ^ Undead trait (Crypt Ghouls, Skeletal Horde, the March of the
+    -- Damned Destruction minor-faction cards).
+  | Ship
+    -- ^ Ship trait (Elven Warship, Corsair Raider).
   deriving stock (Show, Eq)
 
 mconcat

@@ -1164,3 +1164,70 @@ footOfGork = tacticCard "assault-on-ulthuan-051" "Foot of Gork" do
     g.currentPlayer == pk && hasTarget (unitWhere (costAtMost 2 . (.cardDef))) g pk
   whenResolved \self ->
     withTarget self.controller (unitWhere (costAtMost 2 . (.cardDef))) destroyUnit
+
+-- March of the Damned --------------------------------------------------
+
+savageBoyz :: CardDef Unit
+savageBoyz = unitCard "march-of-the-damned-016" "Savage Boyz" do
+  race Orc
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  trait Warrior
+  body "Action: Spend 1 resource to deal 1 damage to target unit you control."
+  actionFriendlyUnit "Whip into a frenzy" 1 \_usage k -> dealDamage k 1
+
+forestGoblins :: CardDef Unit
+forestGoblins = unitCard "march-of-the-damned-017" "Forest Goblins" do
+  race Orc
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Goblin
+  body "Action: When this unit enters play, target unit gains {power} until the end of the turn."
+  onEnterPlay \_owner self ->
+    withTarget self.controller AnyUnit \k -> until EndOfTurn $ buffPower k 1
+
+trollDen :: CardDef Support
+trollDen = supportCard "march-of-the-damned-018" "Troll Den" do
+  race Orc
+  cost 4
+  loyalty 2
+  power 3
+  trait Building
+  body
+    "Forced: At the beginning of your turn, deal 2 damage to target unit you control in this \
+    \zone or sacrifice this card."
+  forced \self -> onTurnBegin self.controller do
+    g <- getGame
+    let candidates =
+          [ u.key
+          | u <- g.units
+          , u.controller == self.controller
+          , u.zone == self.zone
+          ]
+    if null candidates
+      then destroySupport self.key
+      else do
+        feed <- askYesNo self.controller
+          "Deal 2 damage to one of your units in Troll Den's zone? (Decline to sacrifice Troll Den.)"
+        if feed
+          then forcePickUnit self.controller candidates
+            "Choose a unit to take 2 damage." \k -> dealDamage k 2
+          else destroySupport self.key
+
+spidaHuntin :: CardDef Tactic
+spidaHuntin = tacticCard "march-of-the-damned-019" "Spida Huntin'" do
+  race Orc
+  cost 1
+  loyalty 2
+  body
+    "Action: Deal 2 damage to target unit you control. That unit gains {power}{power} until \
+    \the end of the turn."
+  playableWhen $ hasTarget ownUnit
+  whenResolved \self ->
+    withTarget self.controller ownUnit \k -> do
+      dealDamage k 2
+      until EndOfTurn $ buffPower k 2

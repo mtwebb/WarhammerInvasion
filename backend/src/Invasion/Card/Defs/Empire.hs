@@ -1184,3 +1184,70 @@ surrender = tacticCard "assault-on-ulthuan-048" "Surrender!" do
   playableWhen $ hasTarget defendingUnit
   whenResolved \self ->
     withTarget self.controller defendingUnit returnUnitToHand
+
+-- March of the Damned --------------------------------------------------
+
+warMachineEmplacement :: CardDef Support
+warMachineEmplacement = supportCard "march-of-the-damned-008" "War Machine Emplacement" do
+  race Empire
+  cost 1
+  loyalty 2
+  power 0
+  traits [Siege, WarMachine]
+  body
+    "Battlefield. Action: Spend 2 resources to deal 2 damage to target attacking unit \
+    \(limit once per turn)."
+  battlefield $ actionWith "Bombard" 2 [] \usage -> do
+    g <- getGame
+    let used =
+          any (\m -> m.details == ActionUsedThisTurn)
+            (Map.findWithDefault [] (UnitRef usage.self.key) g.modifiers)
+    unless used do
+      until EndOfTurn (PendingBuff usage.self.key ActionUsedThisTurn)
+      withTarget usage.user attackingUnit \k -> dealDamage k 2
+
+gardenOfMorr :: CardDef Support
+gardenOfMorr = supportCard "march-of-the-damned-009" "Garden of Morr" do
+  race Empire
+  cost 3
+  loyalty 2
+  power 1
+  trait Building
+  body
+    "This card gains {power} for each resource token on it. Action: When one or more units \
+    \are destroyed, put a resource token on this card."
+  zonePowerAura \_g s zone -> if s.zone == zone then s.tokens else 0
+  -- Approximation: banks one token per 'DestroyUnit' message. The
+  -- printed text grants a single token per destruction *event*, so a
+  -- simultaneous multi-unit wipe over-counts slightly; the common
+  -- one-at-a-time case is exact.
+  onReceive $ Receive \msg _owner self -> case msg of
+    DestroyUnit _ -> adjustSupportTokens self.key 1
+    _ -> pure ()
+
+manaanTakeYou :: CardDef Tactic
+manaanTakeYou = tacticCard "march-of-the-damned-010" "Manaan Take You!" do
+  race Empire
+  cost 3
+  loyalty 2
+  trait Spell
+  body "Action: Destroy target unit or support card in a zone with no developments."
+  playableWhen $ hasTarget (Or unitInEmptyZone supportInEmptyZone)
+  whenResolved \self ->
+    withTarget self.controller (Or unitInEmptyZone supportInEmptyZone) \case
+      TargetUnitOption k -> destroyUnit k
+      TargetSupportOption k -> destroySupport k
+      _ -> pure ()
+  where
+    unitInEmptyZone = UnitMatching \_pk g u -> devsInZone g u == 0
+    supportInEmptyZone = SupportMatching \_pk g s -> zoneDevsFor g s.controller s.zone == 0
+
+-- | Facedown developments in a named zone of a player's capital.
+zoneDevsFor :: Game -> PlayerKey -> ZoneKind -> Int
+zoneDevsFor g pk z =
+  let p = playerOf pk g
+      Developments d = case z of
+        KingdomZone -> p.capital.kingdom.developments
+        QuestZone -> p.capital.quest.developments
+        BattlefieldZone -> p.capital.battlefield.developments
+   in d

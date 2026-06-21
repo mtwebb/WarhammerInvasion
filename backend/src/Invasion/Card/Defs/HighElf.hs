@@ -870,3 +870,58 @@ giftOfLife = tacticCard "assault-on-ulthuan-020" "Gift of Life" do
   where
     highElfUnitsIn cards =
       [c | c <- cards, Just cd <- [asUnit c.def], HighElf `elem` cd.races]
+
+-- March of the Damned --------------------------------------------------
+
+seaGuardCaptain :: CardDef Unit
+seaGuardCaptain = unitCard "march-of-the-damned-011" "Sea Guard Captain" do
+  race HighElf
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Warrior
+  body
+    "Action: When this unit attacks, deal 1 indirect damage to target opponent (players \
+    \allocate their own indirect damage)."
+  onMyAttackDeclared \_owner self _zone _attackers ->
+    indirectDamage self.controller.next 1
+
+keeperOfTheFlame :: CardDef Unit
+keeperOfTheFlame = unitCard "march-of-the-damned-012" "Keeper of the Flame" do
+  race HighElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Warrior
+  body
+    "Action: This unit takes 1 uncancellable damage. If it does, destroy target Attachment \
+    \support card."
+  action "Quench" 0 \usage -> do
+    dealUncancellableDamage usage.self.key 1
+    withTarget usage.user (SupportMatching \_pk _g s -> Attachment `elem` s.cardDef.traits)
+      destroySupport
+
+elvenWarship :: CardDef Support
+elvenWarship = supportCard "march-of-the-damned-014" "Elven Warship" do
+  race HighElf
+  cost 3
+  loyalty 1
+  power 1
+  trait Ship
+  body
+    "Action: At the beginning of your turn, deal 2 indirect damage to target opponent \
+    \(players allocate their own indirect damage)."
+  onMyTurnBegin \_owner self ->
+    indirectDamage self.controller.next 2
+
+fromBeneathTheWaves :: CardDef Tactic
+fromBeneathTheWaves = tacticCard "march-of-the-damned-015" "From Beneath the Waves" do
+  race HighElf
+  cost 2
+  loyalty 2
+  body
+    "Action: Deal 3 indirect damage to target opponent (players allocate their own indirect \
+    \damage)."
+  whenResolved \self -> indirectDamage self.controller.next 3

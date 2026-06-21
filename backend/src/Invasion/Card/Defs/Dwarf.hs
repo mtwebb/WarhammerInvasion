@@ -1109,3 +1109,83 @@ mountainBarracks = supportCard "assault-on-ulthuan-044" "Mountain Barracks" do
     if u.controller == s.controller && u.zone == s.zone && Dwarf `elem` u.cardDef.races
       then 1
       else 0
+
+-- March of the Damned --------------------------------------------------
+
+serpentSlayer :: CardDef Unit
+serpentSlayer = unitCard "march-of-the-damned-001" "Serpent Slayer" do
+  race Dwarf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  trait Slayer
+  body
+    "While you have at least three developments in this zone, this unit deals +X \
+    \damage in combat. X is the number of developments in this zone."
+  combatPower \g u ->
+    let d = devsInZone g u in if d >= 3 then d else 0
+
+longDrongsPirates :: CardDef Unit
+longDrongsPirates = unitCard "march-of-the-damned-002" "Long Drong's Pirates" do
+  race Dwarf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Slayer
+  body "If there are at least two other Slayer units in this zone, this unit gains {power}{power}."
+  selfPower \g u ->
+    let otherSlayers =
+          length
+            [ v
+            | v <- g.units
+            , v.key /= u.key
+            , v.zone == u.zone
+            , v.controller == u.controller
+            , Slayer `elem` v.cardDef.traits
+            ]
+     in if otherSlayers >= 2 then 2 else 0
+
+oathstone :: CardDef Support
+oathstone = supportCard "march-of-the-damned-003" "Oathstone" do
+  race Dwarf
+  cost 1
+  loyalty 2
+  power 0
+  traits [Attachment, Rune]
+  body "Attach to a target unit you control. If attached unit is destroyed, draw four cards."
+  onReceive $ Receive \msg _owner self -> case msg of
+    DestroyUnit uk
+      | self.attachedTo == Just uk -> drawCards self.controller 4
+    _ -> pure ()
+
+toughAsNails :: CardDef Tactic
+toughAsNails = tacticCard "march-of-the-damned-004" "Tough as Nails" do
+  race Dwarf
+  cost 1
+  loyalty 2
+  body
+    "Action: Target Slayer unit gains Toughness X until the end of the turn. X is the \
+    \damage on the unit."
+  playableWhen $ hasTarget slayerUnit
+  whenResolved \self ->
+    withTarget self.controller slayerUnit \k ->
+      withUnit k \u ->
+        let Damage d = u.damage
+         in when (d > 0) $ until EndOfTurn $ buffToughness k d
+  where
+    slayerUnit = UnitMatching \_pk _g u -> Slayer `elem` u.cardDef.traits
+
+mercilessAssault :: CardDef Tactic
+mercilessAssault = tacticCard "march-of-the-damned-005" "Merciless Assault" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  body "Action: Target attacking unit you control gains {power}{power}{power} until the end of the turn."
+  playableWhen $ hasTarget ownAttacker
+  whenResolved \self ->
+    withTarget self.controller ownAttacker \k ->
+      until EndOfTurn $ buffPower k 3
+  where
+    ownAttacker = UnitMatching \me g u -> u.controller == me && unitIsAttacking g u

@@ -1080,3 +1080,69 @@ sackTorAendris = questCard "assault-on-ulthuan-032" "Sack Tor Aendris" do
                 h.combats
             )
             (addQuestToken self.key 1)
+
+-- March of the Damned --------------------------------------------------
+
+seasonedCorsair :: CardDef Unit
+seasonedCorsair = unitCard "march-of-the-damned-026" "Seasoned Corsair" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  trait Warrior
+  body "Action: When this unit enters play, target unit gets -2 hit points until the end of the turn."
+  onEnterPlay \_owner self ->
+    withTarget self.controller AnyUnit \k -> until EndOfTurn $ debuffHP k 2
+
+blackDragonRider :: CardDef Unit
+blackDragonRider = unitCard "march-of-the-damned-027" "Black Dragon Rider" do
+  race DarkElf
+  cost 5
+  loyalty 3
+  power 3
+  hitPoints 4
+  traits [Warrior, Elite]
+  body
+    "Forced: When this unit is opposed in combat, all attacking and defending units get -1 \
+    \hit points until the end of the turn."
+  onReceive $ Receive \msg _owner self -> case msg of
+    DeclareDefenders ks -> do
+      g <- getGame
+      case g.combat of
+        Just cs
+          | (self.key `elem` cs.attackers && not (null ks)) || self.key `elem` ks ->
+              for_ (cs.attackers <> ks) \k -> until EndOfTurn $ debuffHP k 1
+        _ -> pure ()
+    _ -> pure ()
+
+corsairRaider :: CardDef Support
+corsairRaider = supportCard "march-of-the-damned-028" "Corsair Raider" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  power 1
+  trait Ship
+  body "Action: At the beginning of your turn, target unit loses {power} until the end of the turn."
+  onMyTurnBegin \_owner self ->
+    withTarget self.controller AnyUnit \k -> until EndOfTurn $ buffPower k (-1)
+
+slavePen :: CardDef Support
+slavePen = supportCard "march-of-the-damned-029" "Slave Pen" do
+  race DarkElf
+  cost 2
+  loyalty 2
+  power 1
+  trait Building
+  body
+    "This card gains {power} for each resource token on it. Action: Sacrifice a unit to put a \
+    \resource token on this card (limit once per turn)."
+  zonePowerAura \_g s zone -> if s.zone == zone then s.tokens else 0
+  actionWith "Enslave" 0 [SacrificeUnit] \usage -> do
+    g <- getGame
+    let used =
+          any (\m -> m.details == ActionUsedThisTurn)
+            (Map.findWithDefault [] (UnitRef usage.self.key) g.modifiers)
+    unless used do
+      until EndOfTurn (PendingBuff usage.self.key ActionUsedThisTurn)
+      adjustSupportTokens usage.self.key 1

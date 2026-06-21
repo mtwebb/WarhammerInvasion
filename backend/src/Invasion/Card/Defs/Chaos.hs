@@ -1503,3 +1503,33 @@ tzeentchsFirestorm = tacticCard "assault-on-ulthuan-054" "Tzeentch's Firestorm" 
     withTarget pk AnyUnit \k1 -> do
       dealDamage k1 2
       withTarget pk (unitWhere (\u -> u.key /= k1)) \k2 -> dealDamage k2 2
+
+-- March of the Damned --------------------------------------------------
+
+bloodboilFever :: CardDef Support
+bloodboilFever = supportCard "march-of-the-damned-023" "Bloodboil Fever" do
+  race Chaos
+  cost 1
+  loyalty 2
+  power 0
+  traits [Attachment, Disease]
+  body
+    "Attach to a target unit. Action: At the beginning of its controller's turn, put a \
+    \resource token on this card. Then, deal X damage to the attached unit. X is the number \
+    \of resource tokens on this card."
+  onAttachedHostTurnBegin \_owner self host -> do
+    adjustSupportTokens self.key 1
+    dealDamage host.key (self.tokens + 1)
+
+cloyingQuagmire :: CardDef Tactic
+cloyingQuagmire = tacticCard "march-of-the-damned-024" "Cloying Quagmire" do
+  race Chaos
+  cost 2
+  loyalty 2
+  trait Spell
+  body "Action: Choose a target unit. Corrupt that unit and deal 2 damage to it."
+  playableWhen $ hasTarget AnyUnit
+  whenResolved \self ->
+    withTarget self.controller AnyUnit \k -> do
+      corrupt k
+      dealDamage k 2

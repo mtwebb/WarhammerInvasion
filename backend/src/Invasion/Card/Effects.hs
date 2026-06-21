@@ -904,6 +904,16 @@ unitIsAttacking g u = maybe False (elem u.key . (.attackers)) g.combat
 unitIsDefending :: Game -> UnitDetails -> Bool
 unitIsDefending g u = maybe False (elem u.key . (.defenders)) g.combat
 
+-- | True iff the unit is opposed in the current combat: an attacker
+-- with at least one defender, or a defender with at least one attacker
+-- (Saurus Warriors, Black Dragon Rider).
+isOpposed :: Game -> UnitDetails -> Bool
+isOpposed g u = case g.combat of
+  Just cs
+    | u.key `elem` cs.attackers -> not (null cs.defenders)
+    | u.key `elem` cs.defenders -> not (null cs.attackers)
+  _ -> False
+
 -- | Every in-play support, whether free-standing in 'Game.supports' or
 -- attached to a unit. Used when an effect needs to consult every
 -- support regardless of attachment status.

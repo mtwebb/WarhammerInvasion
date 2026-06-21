@@ -892,3 +892,204 @@ treasureVaults = supportCard "assault-on-ulthuan-055" "Treasure Vaults" do
                   , Building `elem` b.cardDef.traits
                   ]
               else 0
+
+-- March of the Damned --------------------------------------------------
+--
+-- The Lizardmen (Order) and Undead (Destruction) minor factions, plus a
+-- lone Skaven raider. These are Neutral cards gated by the printed
+-- "Order only." / "Destruction only." deck-construction keywords.
+
+skinksOfSotek :: CardDef Unit
+skinksOfSotek = unitCard "march-of-the-damned-031" "Skinks of Sotek" do
+  cost 2
+  power 1
+  hitPoints 1
+  trait Lizardmen
+  orderOnly
+  body "Order only. Action: When this unit enters play, deal 1 uncancellable damage to target unit."
+  onEnterPlay \_owner self ->
+    withTarget self.controller AnyUnit \k -> dealUncancellableDamage k 1
+
+spawnOfItzl :: CardDef Unit
+spawnOfItzl = unitCard "march-of-the-damned-033" "Spawn of Itzl" do
+  cost 3
+  power 1
+  hitPoints 3
+  trait Lizardmen
+  orderOnly
+  body "Order only. Action: When this unit attacks, destroy target damaged unit in the defending zone."
+  onMyAttackDeclared \_owner self zone _attackers ->
+    withTarget self.controller
+      (UnitMatching \me _g u -> u.controller /= me && u.zone == zone && isDamaged u)
+      destroyUnit
+
+saurusWarriors :: CardDef Unit
+saurusWarriors = unitCard "march-of-the-damned-034" "Saurus Warriors" do
+  cost 4
+  power 2
+  hitPoints 3
+  trait Lizardmen
+  orderOnly
+  body "Order only. This unit gains {power} when opposed in combat."
+  combatPower \g u -> if isOpposed g u then 1 else 0
+
+templeGuard :: CardDef Unit
+templeGuard = unitCard "march-of-the-damned-035" "Temple Guard" do
+  cost 3
+  power 1
+  hitPoints 3
+  trait Lizardmen
+  orderOnly
+  body
+    "Order only. Action: Spend 1 resource to redirect the next 2 damage dealt to target unit \
+    \you control to another target unit you control."
+  action "Interpose" 1 \usage ->
+    withTarget usage.user ownUnit \k1 ->
+      withTarget usage.user (UnitMatching \me _g u -> u.controller == me && u.key /= k1) \k2 ->
+        until EndOfTurn $ redirectNextDamage k1 2 k2
+
+loqtza :: CardDef Unit
+loqtza = unitCard "march-of-the-damned-037" "Loqtza" do
+  hero
+  cost 6
+  power 3
+  hitPoints 5
+  traits [Lizardmen, Mage]
+  orderOnly
+  body
+    "Order only. Limit one Hero per zone. Action: Spend 2 resources to deal X damage to target \
+    \unit. X is the number of Lizardmen units in this zone."
+  action "Star-fire" 2 \usage ->
+    withTarget usage.user AnyUnit \k -> do
+      g <- getGame
+      let x =
+            length
+              [ u
+              | u <- g.units
+              , u.controller == usage.self.controller
+              , u.zone == usage.self.zone
+              , Lizardmen `elem` u.cardDef.traits
+              ]
+      when (x > 0) $ dealDamage k x
+
+bloodShrineOfSotek :: CardDef Support
+bloodShrineOfSotek = supportCard "march-of-the-damned-039" "Blood Shrine of Sotek" do
+  cost 2
+  power 1
+  traits [Lizardmen, Building]
+  orderOnly
+  body "Order only. Your Lizardmen units in this zone gain +1 hit points."
+  supportHPAura \_g s u ->
+    if u.controller == s.controller && u.zone == s.zone && Lizardmen `elem` u.cardDef.traits
+      then 1
+      else 0
+
+bornPredators :: CardDef Tactic
+bornPredators = tacticCard "march-of-the-damned-041" "Born Predators" do
+  cost 2
+  traits [Lizardmen]
+  orderOnly
+  body "Order only. Action: Deal X damage to target unit. X is the number of Lizardmen cards you control."
+  playableWhen $ hasTarget AnyUnit
+  whenResolved \self ->
+    withTarget self.controller AnyUnit \k -> do
+      g <- getGame
+      let x = lizardmenControlled g self.controller
+      when (x > 0) $ dealDamage k x
+  where
+    lizardmenControlled g pk =
+      length [u | u <- g.units, u.controller == pk, Lizardmen `elem` u.cardDef.traits]
+        + length [s | s <- allInPlaySupports g, s.controller == pk, Lizardmen `elem` s.cardDef.traits]
+
+cryptGhouls :: CardDef Unit
+cryptGhouls = unitCard "march-of-the-damned-043" "Crypt Ghouls" do
+  cost 2
+  power 1
+  hitPoints 1
+  traits [Undead, Warrior]
+  destructionOnly
+  body "Destruction only. Action: When this unit leaves play, gain 2 resources."
+  onSelfLeavesPlay \_owner self -> gainResources self.controller 2
+
+enragedVarghulf :: CardDef Unit
+enragedVarghulf = unitCard "march-of-the-damned-047" "Enraged Varghulf" do
+  cost 4
+  power 2
+  hitPoints 3
+  traits [Undead, Creature]
+  destructionOnly
+  body
+    "Destruction only. Action: When this unit attacks, it gains {power} equal to the total \
+    \{power} of target unit in the defending zone."
+  onMyAttackDeclared \_owner self zone _attackers ->
+    withTarget self.controller (UnitMatching \_me _g u -> u.zone == zone) \k ->
+      withUnit k \u -> when (u.effectivePower > 0) $
+        until EndOfTurn $ buffPower self.key u.effectivePower
+
+corpseCart :: CardDef Support
+corpseCart = supportCard "march-of-the-damned-051" "Corpse Cart" do
+  cost 1
+  power 0
+  traits [Undead, WarMachine]
+  destructionOnly
+  body "Destruction only. Battlefield. Action: Spend 1 resource to discard the top 2 cards of your deck."
+  battlefield $ action "Grind the dead" 1 \usage -> millFromDeck usage.user 2
+
+theScreamingBanner :: CardDef Support
+theScreamingBanner = supportCard "march-of-the-damned-052" "The Screaming Banner" do
+  cost 2
+  power 0
+  traits [Attachment, Undead]
+  destructionOnly
+  body
+    "Destruction only. Attach to a target Undead unit you control. Action: When attached unit \
+    \attacks, target unit loses {power}{power} until the end of the turn."
+  onAttachedHostAttack \_owner self _host ->
+    withTarget self.controller AnyUnit \k -> until EndOfTurn $ buffPower k (-2)
+
+raiseDead :: CardDef Tactic
+raiseDead = tacticCard "march-of-the-damned-053" "Raise Dead" do
+  cost 4
+  traits [Undead, Spell]
+  destructionOnly
+  body
+    "Destruction only. Play during your turn. Action: Choose a target unit in your discard pile \
+    \and put it into play (you choose which zone the unit enters)."
+  playableWhen \g pk ->
+    g.currentPlayer == pk && not (null (unitsIn (playerOf pk g).discard))
+  whenResolved \self -> do
+    let pk = self.controller
+    me <- playerOf pk <$> getGame
+    chooseFromCards pk 1 1 (unitsIn me.discard) "Choose a unit to raise into play." \chosen ->
+      for_ chosen \c ->
+        withTarget pk MyAnyZone \zk -> putUnitIntoPlay pk FromDiscard c.key zk
+  where
+    unitsIn cards = [c | c <- cards, isJust (asUnit c.def)]
+
+beguile :: CardDef Tactic
+beguile = tacticCard "march-of-the-damned-054" "Beguile" do
+  cost 2
+  traits [Undead, Spell]
+  destructionOnly
+  body
+    "Destruction only. Action: Target unit deals damage equal to its power to another target \
+    \unit in its zone."
+  playableWhen $ hasTarget AnyUnit
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk AnyUnit \k1 ->
+      withUnit k1 \u1 ->
+        withTarget pk (UnitMatching \_me _g u -> u.zone == u1.zone && u.key /= k1) \k2 ->
+          when (u1.effectivePower > 0) $ dealDamage k2 u1.effectivePower
+
+jezzailTeam :: CardDef Unit
+jezzailTeam = unitCard "march-of-the-damned-055" "Jezzail Team" do
+  cost 3
+  power 1
+  hitPoints 2
+  trait Skaven
+  destructionOnly
+  body "Destruction only. Action: Corrupt this unit to deal 1 damage to target unit in any battlefield."
+  actionWith "Snipe" 0 [CorruptSelf] \usage ->
+    withTarget usage.user (UnitMatching \_me _g u -> u.zone == BattlefieldZone) \k ->
+      dealDamage k 1
