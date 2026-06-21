@@ -788,3 +788,24 @@ battlePilgrims = unitCard "the-silent-forge-058" "Battle Pilgrims" do
   action "Sacrifice to destroy a corrupted unit" 0 \u -> do
     destroyUnit u.self.key
     withTarget u.user (unitWhere (.corrupted)) destroyUnit
+
+bottomlessMine :: CardDef Support
+bottomlessMine = supportCard "the-fall-of-karak-grimaz-038" "Bottomless Mine" do
+  cost 2
+  power 1
+  trait Building
+  limited
+  body "Limited. Kingdom. This card gains {power}{power} if there are at least two units in this zone."
+  zonePowerAura \g s z ->
+    if z == s.zone
+      && length [u | u <- g.units, u.controller == s.controller, u.zone == s.zone] >= 2
+      then 2
+      else 0
+
+darkAbyss :: CardDef Support
+darkAbyss = supportCard "the-fall-of-karak-grimaz-039" "Dark Abyss" do
+  cost 2
+  power 1
+  trait Location
+  body "Action: At the beginning of your turn, discard the top card of target player's deck."
+  onMyTurnBegin \_owner self -> millFromDeck self.controller.next 1

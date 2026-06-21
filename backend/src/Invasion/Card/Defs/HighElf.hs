@@ -715,3 +715,35 @@ courageOfAenarion = tacticCard "redemption-of-a-mage-069" "Courage of Aenarion" 
     g <- getGame
     let n = length [u | u <- g.units, u.controller == self.controller, u.corrupted]
     replicateM_ n $ push (RestoreOneCorruptCard self.controller)
+
+-- The Enemy cycle (batch 2) ---------------------------------------------
+
+moonStaffOfLileath :: CardDef Support
+moonStaffOfLileath = supportCard "bleeding-sun-108" "Moon Staff of Lileath" do
+  race HighElf
+  cost 2
+  loyalty 3
+  traits [Attachment, Weapon]
+  body "Attach to target [High Elf] unit. Action: When attached unit attacks or defends, deal 2 indirect damage to each opponent."
+  onAttachedHostAttackOrDefend \_owner self _host ->
+    indirectDamage self.controller.next 2
+
+dragonArmour :: CardDef Support
+dragonArmour = supportCard "bleeding-sun-109" "Dragon Armour" do
+  race HighElf
+  cost 2
+  loyalty 2
+  trait Attachment
+  body "Attach to a target [High Elf] unit. Action: When attached unit defends, draw a card."
+  onAttachedHostDefend \_owner self _host -> drawCard self.controller
+
+doYouKnowWhoIAm :: CardDef Tactic
+doYouKnowWhoIAm = tacticCard "the-burning-of-derricksburg-008" "'Do You Know Who I Am?'" do
+  race HighElf
+  cost 3
+  loyalty 2
+  body "Action: Each non-[High Elf] unit in play loses {power} until the end of the turn."
+  whenResolved \_self -> do
+    g <- getGame
+    for_ [u | u <- g.units, HighElf `notElem` u.cardDef.races] \u ->
+      until EndOfTurn $ buffPower u.key (-1)

@@ -1038,3 +1038,90 @@ followersOfSkarsnik = unitCard "the-fall-of-karak-grimaz-029" "Followers of Skar
         , u.key /= self.key
         , u.cardDef.code == self.cardDef.code
         ]
+
+-- The Enemy cycle (batch 2) ---------------------------------------------
+
+githitFroatcutta :: CardDef Unit
+githitFroatcutta = unitCard "redemption-of-a-mage-070" "Githit Froatcutta" do
+  hero
+  race Orc
+  cost 5
+  loyalty 2
+  power 2
+  hitPoints 4
+  trait Goblin
+  body "Limit one Hero per zone. This unit gains {power} for each damaged unit you control."
+  selfPower \g self ->
+    length [u | u <- g.units, u.controller == self.controller, isDamaged u]
+
+highMountainTroll :: CardDef Unit
+highMountainTroll = unitCard "the-fourth-waystone-089" "High Mountain Troll" do
+  race Orc
+  cost 6
+  loyalty 3
+  power 4
+  hitPoints 5
+  trait Troll
+  body "Forced: At the beginning of your turn, heal all damage on this unit."
+  onMyTurnBegin \_owner self -> healUnit self.key 99
+
+tooArdToDie :: CardDef Support
+tooArdToDie = supportCard "redemption-of-a-mage-071" "Too 'Ard to Die" do
+  race Orc
+  cost 2
+  loyalty 3
+  trait Attachment
+  body "Attach to target [Orc] unit in your battlefield. Attached unit gains Toughness X, where X is the damage on that unit."
+  supportToughnessAura \_g s u ->
+    if Just u.key == s.attachedTo
+      then let Damage d = u.damage in d
+      else 0
+
+smashEmBashEm :: CardDef Quest
+smashEmBashEm = questCard "the-fall-of-karak-grimaz-033" "Smash 'Em, Bash 'Em" do
+  race Orc
+  cost 0
+  loyalty 2
+  body
+    "Quest. Action: Discard 1 resource token from this card to have target unit \
+    \in the battlefield gain {power} until the end of the turn. Quest. Forced: \
+    \Place 1 resource token on this card at the beginning of your turn if a unit \
+    \is questing here."
+  forced accrueTokenWhileQuesting
+  spendTokens "Buff a battlefield unit" 1 \u ->
+    withTarget u.user (UnitMatching \_pk _g unit -> unit.zone == BattlefieldZone) \k ->
+      until EndOfTurn $ buffPower k 1
+
+smashDerBeards :: CardDef Tactic
+smashDerBeards = tacticCard "bleeding-sun-113" "Smash Der Beards" do
+  race Orc
+  cost 2
+  loyalty 3
+  body "Action: Target attacking unit gains {power} for each development in the defending player's zone."
+  playableWhen \g pk -> hasTarget attackingUnit g pk
+  whenResolved \self -> do
+    g <- getGame
+    let n = case g.combat of
+          Just cs ->
+            let p = playerOf cs.defendingPlayer g
+                Developments d = case cs.targetZone of
+                  KingdomZone -> p.capital.kingdom.developments
+                  QuestZone -> p.capital.quest.developments
+                  BattlefieldZone -> p.capital.battlefield.developments
+             in d
+          Nothing -> 0
+    withTarget self.controller attackingUnit \k -> until EndOfTurn $ buffPower k n
+
+disStuffBurnsGud :: CardDef Tactic
+disStuffBurnsGud = tacticCard "the-fourth-waystone-090" "Dis Stuff Burns Gud" do
+  race Orc
+  cost 3
+  loyalty 2
+  body "Action: Sacrifice a unit to destroy target Building support card. Then, each player takes 3 indirect damage."
+  playableWhen \g pk -> any (\u -> u.controller == pk) g.units
+  whenResolved \self ->
+    sacrificeOwnUnit self.controller "Sacrifice a unit." \_ -> do
+      withTarget self.controller
+        (SupportMatching \_pk _g s -> Building `elem` s.cardDef.traits)
+        destroySupport
+      eachPlayer \pk -> indirectDamage pk 3

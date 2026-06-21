@@ -1405,3 +1405,16 @@ eslian = unitCard "the-silent-forge-052" "Esli'an" do
     withTarget self.controller
       (UnitMatching \pk _g u -> u.controller /= pk && u.zone == zone)
       corrupt
+
+spreadingDarkness :: CardDef Tactic
+spreadingDarkness = tacticCard "the-burning-of-derricksburg-014" "Spreading Darkness" do
+  race Chaos
+  cost 3
+  loyalty 3
+  body "Action: Each attacking unit gains {power} for each corrupted unit in the defending zone."
+  playableWhen \g pk -> inCombat g pk
+  whenResolved \_self -> do
+    g <- getGame
+    for_ g.combat \cs -> do
+      let n = length [u | u <- g.units, u.corrupted, u.zone == cs.targetZone, u.controller == cs.defendingPlayer]
+      for_ cs.attackers \k -> until EndOfTurn $ buffPower k n

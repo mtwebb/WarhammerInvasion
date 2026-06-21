@@ -579,6 +579,60 @@ onAttachedHostTurnBegin handler = onReceive $ Receive \msg owner self -> case ms
           _ -> pure ()
   _ -> pure ()
 
+-- | "When the unit this attachment is on attacks." Fires off
+-- 'BeginCombat' when the host is among the declared attackers, and
+-- hands the body the resolved host record. The on-attack mirror of
+-- 'onAttachedHostTurnBegin'; backs Barbed Whip and Standard of Clar
+-- Karond.
+onAttachedHostAttack
+  :: ( forall m
+      . TriggerM m
+     => Player -> SupportDetails -> UnitDetails -> m ()
+     )
+  -> CardBuilder Support ()
+onAttachedHostAttack handler = onReceive $ Receive \msg owner self -> case msg of
+  BeginCombat _attacker _zone attackers
+    | Just hostKey <- self.attachedTo, hostKey `elem` attackers -> do
+        g <- getGame
+        whenJust (findUnit hostKey g) (handler owner self)
+  _ -> pure ()
+
+-- | "When the unit this attachment is on defends." Fires off
+-- 'DeclareDefenders' when the host is locked in as a defender. Backs
+-- Dragon Armour.
+onAttachedHostDefend
+  :: ( forall m
+      . TriggerM m
+     => Player -> SupportDetails -> UnitDetails -> m ()
+     )
+  -> CardBuilder Support ()
+onAttachedHostDefend handler = onReceive $ Receive \msg owner self -> case msg of
+  DeclareDefenders ks
+    | Just hostKey <- self.attachedTo, hostKey `elem` ks -> do
+        g <- getGame
+        whenJust (findUnit hostKey g) (handler owner self)
+  _ -> pure ()
+
+-- | "When the unit this attachment is on attacks or defends." The union
+-- of 'onAttachedHostAttack' and 'onAttachedHostDefend'; backs Moon Staff
+-- of Lileath.
+onAttachedHostAttackOrDefend
+  :: ( forall m
+      . TriggerM m
+     => Player -> SupportDetails -> UnitDetails -> m ()
+     )
+  -> CardBuilder Support ()
+onAttachedHostAttackOrDefend handler = onReceive $ Receive \msg owner self ->
+  let fire hostKeys = case self.attachedTo of
+        Just hostKey | hostKey `elem` hostKeys -> do
+          g <- getGame
+          whenJust (findUnit hostKey g) (handler owner self)
+        _ -> pure ()
+   in case msg of
+        BeginCombat _attacker _zone attackers -> fire attackers
+        DeclareDefenders ks -> fire ks
+        _ -> pure ()
+
 -- | "Run on every message dispatch this card sees." Used by
 -- Northern Wastes' continuous self-check. Avoid unless you really
 -- need it; it costs one closure call per message.

@@ -851,3 +851,42 @@ dwarfSlaves = unitCard "the-silent-forge-054" "Dwarf Slaves" do
   trait Slave
   body "Action: When this unit enters play, put the top card of your deck into this zone as a development."
   onEnterPlay \_owner self -> addDevelopment self.controller self.zone
+
+blackGuardAspirant :: CardDef Unit
+blackGuardAspirant = unitCard "the-silent-forge-055" "Black Guard Aspirant" do
+  race DarkElf
+  cost 4
+  loyalty 1
+  power 2
+  hitPoints 3
+  traits [Elite, Warrior]
+  body "This unit gains {power} while any unit has one or more cards attached to it."
+  selfPower \g _self -> if any (\u -> not (null u.attachments)) g.units then 1 else 0
+
+barbedWhip :: CardDef Support
+barbedWhip = supportCard "the-fourth-waystone-095" "Barbed Whip" do
+  race DarkElf
+  cost 1
+  loyalty 3
+  traits [Attachment, Weapon]
+  body "Attach to a target [Dark Elf] unit. Action: When attached unit attacks, target unit in the defending zone gets -1 hit points until the end of the turn."
+  onAttachedHostAttack \_owner self _host -> do
+    g <- getGame
+    for_ g.combat \cs ->
+      withTarget self.controller
+        (UnitMatching \_pk _g u -> u.controller == cs.defendingPlayer && u.zone == cs.targetZone)
+        \k -> until EndOfTurn $ debuffHP k 1
+
+standardOfClarKarond :: CardDef Support
+standardOfClarKarond = supportCard "the-silent-forge-056" "Standard of Clar Karond" do
+  race DarkElf
+  cost 1
+  loyalty 3
+  trait Attachment
+  body "Attach to a target [Dark Elf] unit in your battlefield. Action: When attached unit attacks, target unit in the defending zone loses {power} until the end of the turn."
+  onAttachedHostAttack \_owner self _host -> do
+    g <- getGame
+    for_ g.combat \cs ->
+      withTarget self.controller
+        (UnitMatching \_pk _g u -> u.controller == cs.defendingPlayer && u.zone == cs.targetZone)
+        \k -> until EndOfTurn $ buffPower k (-1)

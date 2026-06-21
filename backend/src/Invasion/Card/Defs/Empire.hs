@@ -1099,3 +1099,39 @@ derricksburgForge = supportCard "the-burning-of-derricksburg-005" "Derricksburg 
     \Action: When this card enters play, draw a card."
   kingdom $ onEnterPlay \_owner self -> gainResources self.controller 1
   quest $ onEnterPlay \_owner self -> drawCard self.controller
+
+-- The Enemy cycle (batch 2) ---------------------------------------------
+
+miningTunnels :: CardDef Support
+miningTunnels = supportCard "the-burning-of-derricksburg-002" "Mining Tunnels" do
+  race Empire
+  cost 2
+  loyalty 1
+  power 1
+  trait Building
+  body "Action: When you play a development from your hand, draw a card."
+  onYouPlayDevelopment \_owner self -> drawCard self.controller
+
+griffonStandard :: CardDef Support
+griffonStandard = supportCard "the-burning-of-derricksburg-006" "Griffon Standard" do
+  race Empire
+  cost 2
+  loyalty 3
+  trait Attachment
+  body "Attach to an [Empire] unit in your battlefield. Attached unit gains {power} for each [Empire] unit in this zone."
+  supportAura \g s u ->
+    if Just u.key == s.attachedTo
+      then length [v | v <- g.units, v.controller == u.controller, v.zone == u.zone, Empire `elem` v.cardDef.races]
+      else 0
+
+blackKnightsOfMorr :: CardDef Unit
+blackKnightsOfMorr = unitCard "the-silent-forge-043" "Black Knights of Morr" do
+  race Empire
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 3
+  trait Knight
+  body "Action: When a unit enters this zone, target unit cannot defend until the end of the turn."
+  onUnitEnterMyZone \_owner self _uk ->
+    withTarget self.controller AnyUnit \k -> until EndOfTurn $ disableDefend k
