@@ -639,6 +639,14 @@ bladelord = unitCard "signs-in-the-stars-070" "Bladelord" do
 -- another target unit" hook (White Lion Vanguard, Bladelord). Mirrors
 -- the Warrior Priests pattern: claim up to N of the first hit each turn
 -- provided some other unit exists to receive it.
+--
+-- TODO: approximation for N > 1 (Bladelord) — claims up to N from the
+-- *first* damage event of the turn only. The printed "first 2 damage
+-- dealt each turn" should redirect across multiple smaller hits until N
+-- total has been redirected; model with a per-turn redirected-damage
+-- counter instead of the single RedirectedThisTurn flag. Also redirects
+-- to "another unit" generally rather than restricting to a
+-- corresponding zone.
 redirectFirstDamageEachTurn
   :: Int -> Game -> UnitDetails -> Int -> Maybe PreDamageRedirect
 redirectFirstDamageEachTurn n g self inbound =

@@ -649,6 +649,9 @@ frenziedWitchElf = unitCard "the-chaos-moon-035" "Frenzied Witch Elf" do
   hitPoints 3
   trait WitchElf
   body "Action: When this unit attacks, discard the top 2 cards of target player's deck."
+  -- TODO: approximation — always mills the opponent. The printed card
+  -- lets the controller choose "target player" (including themselves);
+  -- prompt for the player once a target-player picker exists.
   onMyAttackDeclared \_owner self _z _atk ->
     millFromDeck self.controller.next 2
 
@@ -673,6 +676,9 @@ witchHag = unitCard "omens-of-ruin-015" "Witch Hag" do
   hitPoints 2
   trait Sorceror
   body "Action: Corrupt this unit to discard the top card of target player's deck."
+  -- TODO: approximation — always mills the opponent. The printed card
+  -- lets the controller choose "target player"; prompt for the player
+  -- once a target-player picker exists.
   actionWith "Hex" 0 [CorruptSelf] \usage ->
     millFromDeck usage.user.next 1
 
@@ -706,6 +712,10 @@ toxicHydra = unitCard "the-eclipse-of-hope-095" "Toxic Hydra" do
   body
     "Action: When this unit enters play, each unit in any corresponding zone gets \
     \-2 hit points until the end of the turn."
+  -- TODO: interpretation — "each unit in any corresponding zone" is
+  -- treated as the opponent's matching zone only. Confirm whether the
+  -- Hydra's own zone (friendly units) should also be hit, and widen the
+  -- filter if so.
   onEnterPlay \_owner self -> do
     g <- getGame
     let opp = self.controller.next

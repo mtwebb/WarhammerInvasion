@@ -975,6 +975,10 @@ bigBoss = unitCard "the-eclipse-of-hope-084" "Big Boss" do
   body
     "Forced: At the beginning of your turn, the unit with the lowest printed \
     \cost must be sacrificed. You choose in case of a tie."
+  -- TODO: confirm scope — this considers every unit in play (both
+  -- players') for the lowest printed cost, and lets Big Boss's
+  -- controller resolve ties. Verify against the ruling on whose units
+  -- are eligible; narrow to a single player's units if required.
   onMyTurnBegin \_owner self -> do
     g <- getGame
     let costOf u = case u.cardDef.cost of Fixed v -> v; _ -> maxBound

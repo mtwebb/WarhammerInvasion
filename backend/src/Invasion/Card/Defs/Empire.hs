@@ -1037,6 +1037,11 @@ theSealedVaults = tacticCard "portent-of-doom-088" "The Sealed Vaults" do
   cost 0
   loyalty 2
   body "Action: Discard the top 3 cards of your deck. Gain 1 resource for each discarded card with a Quest ability."
+  -- TODO: approximation — counts Quest-*type* cards only. The printed
+  -- card counts any discarded card "with a Quest ability", which also
+  -- covers units/supports carrying a "Quest." ability line (e.g.
+  -- Strollaz's Banner). Widen this predicate beyond 'asQuest' once card
+  -- defs expose whether they have a quest ability.
   whenResolved \self -> do
     let pk = self.controller
     searchTopOfDeck pk 3 \result -> do

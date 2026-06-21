@@ -1268,6 +1268,10 @@ plagueBomb = tacticCard "the-chaos-moon-034" "Plague Bomb" do
   body
     "Action: Deal 1 damage to target unit. Deal 2 damage to another target unit. \
     \Deal 3 damage to a third target unit."
+  -- TODO: approximation — does not enforce that the three targets are
+  -- distinct ("another"/"a third" target unit). The same unit can be
+  -- chosen for more than one prompt until the target picker supports
+  -- excluding already-chosen units.
   whenResolved \self -> do
     let pk = self.controller
     withTarget pk AnyUnit \k -> dealDamage k 1
