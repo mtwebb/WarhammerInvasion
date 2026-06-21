@@ -2079,6 +2079,27 @@ instance Run Game where
             when (dstDmg + srcDmg >= dst.effectiveMaxHP) $
               send $ DestroyUnit toKey
         _ -> pure ()
+    MoveDamage fromKey toKey n -> do
+      g <- get
+      case (findUnit fromKey g, findUnit toKey g) of
+        (Just src, Just dst) -> do
+          let Damage srcDmg = src.damage
+              moved = min n srcDmg
+          when (moved > 0) $ do
+            let src' = (src {damage = Damage (srcDmg - moved)}) :: UnitDetails
+                Damage dstDmg = dst.damage
+                dst' = (dst {damage = Damage (dstDmg + moved)}) :: UnitDetails
+            modify \gx ->
+              gx {units = replaceUnit src' (replaceUnit dst' gx.units)}
+            logIt LogSystem
+              "log.unit.damage_moved"
+              [ ("source", T.pack src.cardDef.title)
+              , ("target", T.pack dst.cardDef.title)
+              , ("amount", tshow moved)
+              ]
+            when (dstDmg + moved >= dst.effectiveMaxHP) $
+              send $ DestroyUnit toKey
+        _ -> pure ()
     MoveUnit ukey newZone -> do
       g <- get
       whenJust (findUnit ukey g) \u ->

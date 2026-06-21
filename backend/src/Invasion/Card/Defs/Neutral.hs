@@ -809,3 +809,29 @@ darkAbyss = supportCard "the-fall-of-karak-grimaz-039" "Dark Abyss" do
   trait Location
   body "Action: At the beginning of your turn, discard the top card of target player's deck."
   onMyTurnBegin \_owner self -> millFromDeck self.controller.next 1
+
+ancientAlliance :: CardDef Support
+ancientAlliance = supportCard "redemption-of-a-mage-078" "Ancient Alliance" do
+  race Dwarf
+  race Empire
+  race HighElf
+  cost 2
+  loyalty 0
+  power 1
+  trait Banner
+  orderOnly
+  limited
+  body "Order only. Limited. (This Alliance provides a Dwarf, an Empire, and a High Elf Loyalty symbol.)"
+
+evilAlliance :: CardDef Support
+evilAlliance = supportCard "redemption-of-a-mage-079" "Evil Alliance" do
+  race Chaos
+  race DarkElf
+  race Orc
+  cost 2
+  loyalty 0
+  power 1
+  trait Banner
+  destructionOnly
+  limited
+  body "Destruction only. Limited. (This Alliance provides a Chaos, a Dark Elf, and an Orc Loyalty symbol.)"

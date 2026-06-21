@@ -133,6 +133,10 @@ gainResources pk n = push (GainResources pk n)
 moveAllDamage :: HasQueue Message m => UnitKey -> UnitKey -> m ()
 moveAllDamage src dst = push (MoveAllDamage src dst)
 
+-- | "Move up to N damage from src to dst." (Douse the Flames.)
+moveDamage :: HasQueue Message m => UnitKey -> UnitKey -> Int -> m ()
+moveDamage src dst n = push (MoveDamage src dst n)
+
 -- | Relocate an in-play unit to another zone controlled by the same
 -- player. No-op if the destination equals its current zone.
 moveUnit :: HasQueue Message m => UnitKey -> ZoneKind -> m ()
@@ -989,6 +993,16 @@ withHistory s k = historyOf s >>= k
 -- burning. The 'Player'-shaped counterpart to 'controllerBurning'.
 capitalBurning :: Player -> Bool
 capitalBurning p = any (.burning) p.capital.zones
+
+-- | Is the named section of the named player's capital currently
+-- burning? Used by burning-zone-targeting effects (Embers to Inferno).
+zoneBurning :: Game -> PlayerKey -> ZoneKind -> Bool
+zoneBurning g pk zk =
+  let p = playerOf pk g
+   in case zk of
+        KingdomZone -> p.capital.kingdom.burning
+        QuestZone -> p.capital.quest.burning
+        BattlefieldZone -> p.capital.battlefield.burning
 
 -- ---------------------------------------------------------------------
 -- Targets

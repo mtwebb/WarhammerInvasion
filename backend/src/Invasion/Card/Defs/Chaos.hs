@@ -1418,3 +1418,39 @@ spreadingDarkness = tacticCard "the-burning-of-derricksburg-014" "Spreading Dark
     for_ g.combat \cs -> do
       let n = length [u | u <- g.units, u.corrupted, u.zone == cs.targetZone, u.controller == cs.defendingPlayer]
       for_ cs.attackers \k -> until EndOfTurn $ buffPower k n
+
+grandfathersCall :: CardDef Tactic
+grandfathersCall = tacticCard "the-fall-of-karak-grimaz-035" "Grandfather's Call" do
+  race Chaos
+  cost 1
+  loyalty 1
+  body
+    "Action: Sacrifice a unit to search the top five cards of your deck for any \
+    \number of Disease cards, reveal them, and add them to your hand. Shuffle \
+    \the remaining cards into your deck."
+  playableWhen \g pk -> any (\u -> u.controller == pk) g.units
+  whenResolved \self ->
+    sacrificeOwnUnit self.controller "Sacrifice a unit." \_ -> do
+      let pk = self.controller
+      searchTopOfDeck pk 5 \result -> do
+        let diseases = [c | c <- result.cards, Disease `elem` someCardTraits c.def]
+        chooseFromCards pk 0 (length diseases) diseases "Choose Disease cards to add to your hand." \chosen ->
+          unless (null chosen) $ push (TakeCardsFromDeckToHand pk (map (.key) chosen))
+        shuffleDeck pk
+
+embersToInferno :: CardDef Tactic
+embersToInferno = tacticCard "the-silent-forge-053" "Embers to Inferno" do
+  race Chaos
+  cost 1
+  loyalty 2
+  trait Spell
+  body "Action: Destroy target unit or support card in any burning zone."
+  playableWhen \g pk -> hasTarget (Or unitInBurning supportInBurning) g pk
+  whenResolved \self ->
+    withTarget self.controller (Or unitInBurning supportInBurning) \case
+      TargetUnitOption k -> destroyUnit k
+      TargetSupportOption k -> destroySupport k
+      _ -> pure ()
+  where
+    unitInBurning = UnitMatching \_pk g u -> zoneBurning g u.controller u.zone
+    supportInBurning = SupportMatching \_pk g s -> zoneBurning g s.controller s.zone

@@ -196,6 +196,9 @@ data Message where
   MoveAllDamage :: UnitKey -> UnitKey -> Message
     -- ^ Move all damage on 'fromKey' to 'toKey'. Source unit ends with
     -- 0 damage; destination accumulates.
+  MoveDamage :: UnitKey -> UnitKey -> Int -> Message
+    -- ^ Move up to N damage from 'fromKey' to 'toKey'. Source heals the
+    -- moved amount; destination accumulates. Used by Douse the Flames.
   -- Unit relocation
   MoveUnit :: UnitKey -> ZoneKind -> Message
     -- ^ Relocate an in-play unit to a different zone controlled by

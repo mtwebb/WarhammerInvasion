@@ -1060,3 +1060,23 @@ masterRuneOfSpite = tacticCard "the-fall-of-karak-grimaz-021" "Master Rune of Sp
   whenResolved \_self -> do
     g <- getGame
     for_ g.units \u -> when (u.effectivePower > 0) $ dealDamage u.key u.effectivePower
+
+runesmithApprentice :: CardDef Unit
+runesmithApprentice = unitCard "the-fall-of-karak-grimaz-022" "Runesmith Apprentice" do
+  race Dwarf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Warrior
+  body
+    "Action: When this unit enters play, search the top five cards of your deck \
+    \for any number of Rune cards, reveal them, and put them into your hand. \
+    \Then, shuffle the remaining cards into your deck."
+  onEnterPlay \_owner self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 5 \result -> do
+      let runes = [c | c <- result.cards, Rune `elem` someCardTraits c.def]
+      chooseFromCards pk 0 (length runes) runes "Choose Rune cards to add to your hand." \chosen ->
+        unless (null chosen) $ push (TakeCardsFromDeckToHand pk (map (.key) chosen))
+      shuffleDeck pk

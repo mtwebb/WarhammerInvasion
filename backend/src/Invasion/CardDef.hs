@@ -133,6 +133,8 @@ data Trait
     -- ^ Thief trait (Mountain Brigands, Treasure Thieves).
   | Slave
     -- ^ Slave trait (Dwarf Slaves).
+  | Environment
+    -- ^ Environment support trait (Higher Ground).
   deriving stock (Show, Eq)
 
 mconcat

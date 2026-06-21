@@ -1135,3 +1135,28 @@ blackKnightsOfMorr = unitCard "the-silent-forge-043" "Black Knights of Morr" do
   body "Action: When a unit enters this zone, target unit cannot defend until the end of the turn."
   onUnitEnterMyZone \_owner self _uk ->
     withTarget self.controller AnyUnit \k -> until EndOfTurn $ disableDefend k
+
+higherGround :: CardDef Support
+higherGround = supportCard "redemption-of-a-mage-065" "Higher Ground" do
+  race Empire
+  cost 1
+  loyalty 2
+  trait Environment
+  body "Battlefield. Action: When a Knight unit enters this zone, that unit gains {power} until the end of the turn."
+  onUnitEnterMyZone \_owner _self uk -> do
+    g <- getGame
+    whenJust (findUnit uk g) \u ->
+      when (Knight `elem` u.cardDef.traits) $ until EndOfTurn $ buffPower uk 1
+
+douseTheFlames :: CardDef Tactic
+douseTheFlames = tacticCard "the-fourth-waystone-084" "Douse the Flames" do
+  race Empire
+  cost 0
+  loyalty 2
+  body "Action: Move 1 damage from one target unit to another target unit."
+  playableWhen \g pk -> hasTarget (unitWhere isDamaged) g pk
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk (unitWhere isDamaged) \src ->
+      withTarget pk (unitWhere (\u -> u.key /= src)) \dst ->
+        moveDamage src dst 1
