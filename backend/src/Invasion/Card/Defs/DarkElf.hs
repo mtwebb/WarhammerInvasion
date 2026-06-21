@@ -1041,3 +1041,42 @@ mindKiller = supportCard "assault-on-ulthuan-033" "Mind Killer" do
   traits [Attachment, Hex]
   body "Attach to a target unit. Attached unit loses {power}."
   attachmentPower (-1)
+
+nightRaids :: CardDef Quest
+nightRaids = questCard "assault-on-ulthuan-031" "Night Raids" do
+  race DarkElf
+  cost 2
+  loyalty 2
+  body
+    "Quest. While this quest has 3 or more resource tokens on it, each of your units gain {power}. \
+    \Quest. Forced: Place 1 resource token on this card at the beginning of your turn if there is a \
+    \unit questing here."
+  forced accrueTokenWhileQuesting
+  questUnitAura \_g self u ->
+    if self.tokens >= 3 && u.controller == self.controller then 1 else 0
+
+sackTorAendris :: CardDef Quest
+sackTorAendris = questCard "assault-on-ulthuan-032" "Sack Tor Aendris" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  body
+    "Quest. Any unit questing here may attack as though it were in your battlefield. \
+    \Quest. You may spend resources on this quest to pay for cards and effects. \
+    \Quest. Forced: At the end of any turn in which the questing unit participated in an attack, \
+    \place a resource token on this card."
+  -- Partial: the "spend resources on this quest to pay for cards and
+  -- effects" clause is not modelled (the engine only supports a quest
+  -- paying for Attachments, via 'paysAttachmentCosts'); tokens accrue
+  -- but cannot yet be spent as generic resources.
+  questerAttacksAnywhere
+  onMyTurnEnd \_owner self ->
+    withQuest self.key \q ->
+      whenJust q.questingUnit \uk ->
+        withHistory ThisTurn \h ->
+          when
+            ( any
+                (\rec -> rec.attacker == self.controller && uk `elem` rec.attackerKeys)
+                h.combats
+            )
+            (addQuestToken self.key 1)

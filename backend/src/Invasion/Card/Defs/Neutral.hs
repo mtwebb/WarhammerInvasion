@@ -861,3 +861,34 @@ innovation = tacticCard "assault-on-ulthuan-057" "Innovation" do
     me <- playerOf self.controller <$> getGame
     let Developments d = me.capital.kingdom.developments
     when (d > 0) $ gainResources self.controller d
+
+treasureVaults :: CardDef Support
+treasureVaults = supportCard "assault-on-ulthuan-055" "Treasure Vaults" do
+  cost 3
+  loyalty 0
+  power 1
+  trait Building
+  kingdomOnly
+  body "Kingdom. While you have 3 or more developments in this zone, each Building support card in this zone gains {power}."
+  -- Each Building support in the zone gains +1; expressed as a single
+  -- zone-power contribution equal to the count of such supports while
+  -- the 3-development threshold holds.
+  zonePowerAura \g s zone ->
+    if s.zone /= zone
+      then 0
+      else
+        let me = playerOf s.controller g
+            Developments d = case zone of
+              KingdomZone -> me.capital.kingdom.developments
+              QuestZone -> me.capital.quest.developments
+              BattlefieldZone -> me.capital.battlefield.developments
+         in if d >= 3
+              then
+                length
+                  [ b
+                  | b <- g.supports
+                  , b.controller == s.controller
+                  , b.zone == zone
+                  , Building `elem` b.cardDef.traits
+                  ]
+              else 0

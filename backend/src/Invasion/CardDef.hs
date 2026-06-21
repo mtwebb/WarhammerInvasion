@@ -516,6 +516,14 @@ data QuestExtras = QuestExtras
     -- cards that are played from your hand." (Dat's Mine!.) The
     -- attachment-play payment path drains this quest's tokens before
     -- the resource pool.
+  , questerAttacksAnyZone :: Bool
+    -- ^ "Any unit questing on this card may attack as though it were in
+    -- your battlefield." (Sack Tor Aendris.) Lets the questing unit be
+    -- declared as an attacker despite sitting in the quest zone.
+  , questUnitAuraPower :: Game -> InPlay Quest -> InPlay Unit -> Int
+    -- ^ Continuous power this quest grants the controller's units
+    -- (Night Raids while it holds 3+ resource tokens). Folded into each
+    -- unit's effective power, like the unit/support auras.
   }
 
 -- | Tactic-specific tunables. Empty for now.
@@ -582,6 +590,8 @@ instance HasDefaultExtras Quest where
     { capitalRedirectFirstDamage = \_ _ -> False
     , questerDefendsAnyZone = False
     , paysForAttachments = False
+    , questerAttacksAnyZone = False
+    , questUnitAuraPower = \_ _ _ -> 0
     }
 
 instance HasDefaultExtras Tactic where

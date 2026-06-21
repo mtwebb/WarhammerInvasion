@@ -2589,6 +2589,16 @@ instance Run Game where
           [("player", playerParam pk), ("count", tshow (length taken))]
         when (null rest) $
           send $ Eliminate pk DeckedOut
+    ReturnCardsFromDiscardToHand pk keys -> do
+      g <- get
+      let player = lookupPlayer pk g
+          (taken, rest) = partition (\c -> c.key `elem` keys) player.discard
+      unless (null taken) do
+        let player' = player {discard = rest, hand = player.hand <> taken}
+        modify (setPlayer pk player')
+        logIt LogSystem
+          "log.discard.returned_to_hand"
+          [("player", playerParam pk), ("count", tshow (length taken))]
     DiscardCardsFromHand pk keys -> do
       g <- get
       let player = lookupPlayer pk g
@@ -3235,10 +3245,21 @@ eligibleAttacker :: Game -> PlayerKey -> ZoneKind -> UnitKey -> Bool
 eligibleAttacker g defender zone ukey = case findUnit ukey g of
   Nothing -> False
   Just u ->
-    u.zone `elem` (unitExtrasOf u).attackEligibleZones
+    (u.zone `elem` (unitExtrasOf u).attackEligibleZones || rovingAttacker u ukey)
       && not u.corrupted
       && not (hasModifier g.modifiers ukey CannotAttack)
       && (unitExtrasOf u).canAttackZone g defender zone u
+  where
+    -- A unit questing on a Sack Tor Aendris-style quest may attack as
+    -- though it were in its controller's battlefield.
+    rovingAttacker u k =
+      any
+        ( \q ->
+            q.controller == u.controller
+              && q.cardDef.extras.questerAttacksAnyZone
+              && q.questingUnit == Just k
+        )
+        g.quests
 
 -- | Prompt the named player to place 'remaining' indirect-damage
 -- points one at a time, respecting the slack-vs-HP cap and skipping
@@ -4552,6 +4573,7 @@ recomputeUnitStats g = g {units = map update g.units}
         + modifierPowerBonus u
         + sum [(extrasOf v).unitAuraPower g v u | v <- g.units]
         + sum [s.cardDef.extras.supportAuraPower g s u | s <- inPlaySupports]
+        + sum [q.cardDef.extras.questUnitAuraPower g q u | q <- g.quests]
         + (extrasOf u).selfPowerBonus g u
         + activeBonusPower ((extrasOf u).runtimeEffects g u)
     computeMaxHP u =
@@ -4606,6 +4628,7 @@ auraPowerBonus :: Game -> UnitDetails -> Int
 auraPowerBonus g u =
   sum [v.cardDef.extras.unitAuraPower g v u | v <- g.units]
     + sum [s.cardDef.extras.supportAuraPower g s u | s <- allInPlaySupports g]
+    + sum [q.cardDef.extras.questUnitAuraPower g q u | q <- g.quests]
 
 -- | Self-scaling power based on game state. Reads the per-card
 -- 'selfPowerBonus' slice on 'UnitExtras' (which subsumes the old

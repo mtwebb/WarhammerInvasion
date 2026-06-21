@@ -852,3 +852,21 @@ templeOfVaul = supportCard "assault-on-ulthuan-015" "Temple of Vaul" do
   onMyTurnBegin \_owner self ->
     withTarget self.controller (CapitalMatching \pk (owner, _) -> owner == pk) \(owner, zk) ->
       dealZoneDamage owner zk 2
+
+giftOfLife :: CardDef Tactic
+giftOfLife = tacticCard "assault-on-ulthuan-020" "Gift of Life" do
+  race HighElf
+  cost 1
+  loyalty 2
+  trait Spell
+  body "Action: Return target [High Elf] unit from your discard pile to your hand."
+  playableWhen \g pk -> not (null (highElfUnitsIn (playerOf pk g).discard))
+  whenResolved \self -> do
+    let pk = self.controller
+    me <- playerOf pk <$> getGame
+    chooseFromCards pk 0 1 (highElfUnitsIn me.discard)
+      "Choose a High Elf unit to return to your hand." \chosen ->
+        for_ chosen \c -> returnFromDiscardToHand pk [c.key]
+  where
+    highElfUnitsIn cards =
+      [c | c <- cards, Just cd <- [asUnit c.def], HighElf `elem` cd.races]

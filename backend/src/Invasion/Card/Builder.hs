@@ -519,6 +519,19 @@ questerDefendsAnywhere =
 paysAttachmentCosts :: CardBuilder Quest ()
 paysAttachmentCosts = modifyQuestExtras \e -> e {paysForAttachments = True}
 
+-- | "Any unit questing on this card may attack as though it were in
+-- your battlefield." (Sack Tor Aendris.)
+questerAttacksAnywhere :: CardBuilder Quest ()
+questerAttacksAnywhere =
+  modifyQuestExtras \e -> e {questerAttacksAnyZone = True}
+
+-- | Continuous power this quest grants the controller's units (Night
+-- Raids while it holds 3+ resource tokens). Args: game, this quest,
+-- target unit. The quest-side mirror of 'unitAura' / 'supportAura'.
+questUnitAura
+  :: (Game -> InPlay Quest -> InPlay Unit -> Int) -> CardBuilder Quest ()
+questUnitAura f = modifyQuestExtras \e -> e {questUnitAuraPower = f}
+
 -- | Non-gated constant block. The body fires every engine tick
 -- regardless of which zone this unit is in. Use for "this unit gains
 -- X while CONDITION" effects whose condition isn't zone-specific

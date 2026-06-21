@@ -162,6 +162,11 @@ discardHand pk = push (DiscardHand pk)
 recycleDiscard :: HasQueue Message m => PlayerKey -> Int -> m ()
 recycleDiscard pk n = push (RecycleDiscard pk n)
 
+-- | "Return the named cards from your discard pile to your hand."
+-- (Gift of Life.)
+returnFromDiscardToHand :: HasQueue Message m => PlayerKey -> [UnitKey] -> m ()
+returnFromDiscardToHand pk keys = push (ReturnCardsFromDiscardToHand pk keys)
+
 -- | Move one development from @from@ to @to@ in this player's capital.
 moveDevelopment :: HasQueue Message m => PlayerKey -> ZoneKind -> ZoneKind -> m ()
 moveDevelopment pk fromZ toZ = push (MoveDevelopment pk fromZ toZ)
