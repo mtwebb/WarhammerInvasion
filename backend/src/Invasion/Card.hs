@@ -661,6 +661,7 @@ allCards =
       ("the-ruinous-hordes-091", UnitCardDef avelornSojourner),
       ("the-ruinous-hordes-094", UnitCardDef wolfGobbos),
       ("the-ruinous-hordes-096", UnitCardDef coldOneChampion),
+      ("the-ruinous-hordes-097", TacticCardDef testOfWill),
       -- Faith and Steel (Eternal War cycle, pack 6)
       ("faith-and-steel-113", UnitCardDef skulltaker),
       ("faith-and-steel-103", SupportCardDef theEmperorsStatue),

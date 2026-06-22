@@ -1265,3 +1265,26 @@ outlawSorcerer = unitCard "glory-of-days-past-076" "Outlaw Sorcerer" do
     \card at random from attacking opponent's hand."
   ambush 1
   onAmbush \_owner self -> discardRandom self.controller.next
+
+testOfWill :: CardDef Tactic
+testOfWill = tacticCard "the-ruinous-hordes-097" "Test of Will" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  trait Spell
+  body
+    "Dark Elf only. Ambush 0. Play only during the Ambush step. Action: \
+    \Attacking opponent must sacrifice an attacking unit or cancel the attack."
+  ambush 0
+  whenResolved \_self -> withCombat \cs -> do
+    let attacker = cs.attackingPlayer
+    if null cs.attackers
+      then cancelAttack
+      else do
+        keep <- askYesNo attacker
+          "Test of Will: sacrifice an attacking unit to continue the attack? \
+          \(Declining cancels the attack.)"
+        if keep
+          then forcePickUnit attacker cs.attackers
+            "Choose an attacking unit to sacrifice." destroyUnit
+          else cancelAttack

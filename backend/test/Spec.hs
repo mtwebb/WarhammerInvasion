@@ -683,6 +683,57 @@ main = do
             )
         _ -> putStrLn "  skip tactic-ambush smoke (deck dealt no usable hand)"
 
+  -- Cancel attack (Test of Will, Ambush 0): flipped during the Ambush
+  -- step, it asks the attacker to sacrifice an attacker or cancel. When
+  -- the attacker declines, the attack is cancelled — combat ends with no
+  -- damage and the attacker survives untouched.
+  let towDeck = Deck {cards = replicate 40 "the-ruinous-hordes-097", race = Dwarf}
+      unitDeck' = Deck {cards = replicate 40 "core-001", race = Dwarf}
+      mkAsym' d1 d2 = case newGame d1 d2 defaultGameOptions of
+        Left err -> putStrLn ("FAIL asym newGame: " <> err) >> exitFailure
+        Right g -> applyMessage g Setup
+      findP1First' :: Int -> IO (Maybe Game)
+      findP1First' 0 = pure Nothing
+      findP1First' n = do
+        g <- mkAsym' towDeck unitDeck'
+        if g.currentPlayer == Player1 then pure (Just g) else findP1First' (n - 1)
+  mD0 <- findP1First' 50
+  case mD0 of
+    Nothing -> putStrLn "  skip cancel-attack smoke (no Player1-first setup)"
+    Just gD0 -> do
+      gD1 <- applyMessage gD0 BeginGame
+      let fpD = gD1.currentPlayer
+          atkD = fpD.next
+      case (take 1 (map (.key) (activePlayer gD1).hand), unitInHand (pRec atkD gD1)) of
+        ([tk], Just (ak, _, _)) -> do
+          gD2 <- applyMessages gD1
+            [ PassPriority fpD, PassPriority atkD
+            , PassPriority fpD, PassPriority atkD
+            , PlayDevelopment fpD tk BattlefieldZone
+            , PassPriority fpD, PassPriority atkD
+            , PassPriority fpD, PassPriority atkD
+            , PassPriority atkD, PassPriority fpD
+            ]
+          gD3 <- applyMessages gD2 [PutUnitIntoPlay atkD ak BattlefieldZone]
+          gD4 <- applyMessagesWithAnswers gD3
+            [ PickUnits [tk]    -- Ambush step: flip Test of Will
+            , PickBool False    -- attacker declines → cancel the attack
+            ]
+            [BeginCombat atkD BattlefieldZone [ak]
+            , PassPriority atkD, PassPriority fpD
+            , PassPriority atkD, PassPriority fpD
+            ]
+          check "cancel attack: combat ended"
+            (isNothing gD4.combat)
+          check "cancel attack: attacking unit survived undamaged"
+            (any (\u -> u.key == ak && u.damage == Damage 0) gD4.units)
+          check "cancel attack: defending zone took no damage"
+            ( let Player {capital = Capital {battlefield = Zone {damage = Damage zd}}} =
+                    pRec fpD gD4
+               in zd == 0
+            )
+        _ -> putStrLn "  skip cancel-attack smoke (deck dealt no usable hand)"
+
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only
   -- key-stubs of Player2's hand; deck contents are hidden from

@@ -453,6 +453,13 @@ data Message where
     -- ^ Internal: fired by CloseActionWindow after the
     -- AfterDeclareCombatTarget window closes. Opens the
     -- AfterDeclareAttackers window.
+  CancelAttack :: Message
+    -- ^ Cancel the current attack: end the combat immediately without
+    -- assigning damage and without firing any post-combat ("after
+    -- combat damage", Scout, Raider) effects. The action-window stack
+    -- has already unwound to the battlefield window, so the engine
+    -- simply returns priority there. Used by Test of Will and the
+    -- "cancel the attack" half of Fulminating Cage.
   ResolveAmbushStep :: Message
     -- ^ Step 2.5 (Ambush): after Declare Attackers, before Declare
     -- Defenders, offer the defender each affordable facedown

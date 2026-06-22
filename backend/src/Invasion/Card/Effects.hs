@@ -204,6 +204,12 @@ triggerOffPhaseAttack pk zone attackers =
 redirectAttackZone :: HasQueue Message m => ZoneKind -> m ()
 redirectAttackZone zk = push (RedirectAttackZone zk)
 
+-- | "Cancel the current attack." Ends the combat immediately with no
+-- damage and no post-combat effects (Test of Will, Fulminating Cage).
+-- Safe to call when no combat is in progress (no-op).
+cancelAttack :: HasQueue Message m => m ()
+cancelAttack = push CancelAttack
+
 -- | Pop one development from the named player's zone. Discards the
 -- facedown card to that player's pile.
 destroyDevelopment :: HasQueue Message m => PlayerKey -> ZoneKind -> m ()

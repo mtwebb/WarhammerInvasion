@@ -2097,6 +2097,17 @@ instance Run Game where
         Nothing -> pure ()
       modify \gx -> gx {combat = Nothing}
       logIt LogSystem "log.combat.ends" []
+    CancelAttack -> do
+      -- End the combat with no damage and no post-combat effects. The
+      -- downstream AdvanceCombatTo*/ResolveAmbushStep handlers all guard
+      -- on 'g.combat == Nothing', so they no-op once this clears it and
+      -- priority returns to the battlefield action window.
+      g <- get
+      case g.combat of
+        Nothing -> pure ()
+        Just _ -> do
+          modify \gx -> gx {combat = Nothing}
+          logIt LogSystem "log.combat.cancelled" []
     FireScoutDiscards attacker defender attackerKeys defenderKeys -> do
       -- Post-damage: count surviving Scouts on each side and queue a
       -- single 'DiscardRandomFromHand' against the opposing player
