@@ -999,3 +999,35 @@ masterOfTheEarth = tacticCard "legends-028" "Master of the Earth" do
     let me = playerOf self.controller g
         devCount = sum [d | z <- me.capital.zones, let Developments d = z.developments]
     indirectDamage self.controller.next devCount
+
+-- Ambush riders (Eternal War cycle) ------------------------------------
+
+nagarytheArcher :: CardDef Unit
+nagarytheArcher = unitCard "oaths-of-vengeance-024" "Nagarythe Archer" do
+  race HighElf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Ranger
+  body
+    "High Elf only. Ambush 2. Action: When this unit ambushes, deal 3 \
+    \indirect damage to target opponent."
+  ambush 2
+  onAmbush \_owner self -> indirectDamage self.controller.next 3
+
+nagarytheWarrior :: CardDef Unit
+nagarytheWarrior = unitCard "battle-for-the-old-world-051" "Nagarythe Warrior" do
+  race HighElf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 3
+  traits [Elite, Ranger]
+  body
+    "High Elf only. Ambush 2. Action: When this unit ambushes, deal 1 \
+    \damage to each damaged unit."
+  ambush 2
+  onAmbush \_owner _self -> do
+    g <- getGame
+    for_ [u.key | u <- g.units, isDamaged u] \k -> dealDamage k 1

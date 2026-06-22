@@ -1302,3 +1302,40 @@ giantRats = unitCard "hidden-kingdoms-024" "Giant Rats" do
       , u.key /= self.key
       , u.cardDef.code == self.cardDef.code
       ]
+
+-- Ambush riders (Eternal War cycle) ------------------------------------
+
+stealthySkink :: CardDef Unit
+stealthySkink = unitCard "oaths-of-vengeance-038" "Stealthy Skink" do
+  cost 2
+  power 1
+  hitPoints 2
+  trait Lizardmen
+  orderOnly
+  body
+    "Order only. Ambush 1. Action: When this unit ambushes, Lizardmen units \
+    \you control get +2 hit points until the end of the phase."
+  ambush 1
+  onAmbush \_owner self -> do
+    g <- getGame
+    for_ [u.key | u <- g.units, u.controller == self.controller, hasTrait Lizardmen u]
+      \k -> until EndOfTurn $ buffHP k 2
+
+skavenPackmaster :: CardDef Unit
+skavenPackmaster = unitCard "oaths-of-vengeance-039" "Skaven Packmaster" do
+  cost 2
+  power 1
+  hitPoints 2
+  trait Skaven
+  destructionOnly
+  body
+    "Destruction only. Ambush 1. Action: When this unit ambushes, restore \
+    \up to 2 units you control."
+  ambush 1
+  onAmbush \_owner self -> do
+    let pk = self.controller
+    withTarget pk (UnitMatching \me _g u -> u.controller == me && isDamaged u) \k1 -> do
+      healUnit k1 999
+      withTarget pk
+        (UnitMatching \me _g u -> u.controller == me && isDamaged u && u.key /= k1)
+        \k2 -> healUnit k2 999

@@ -803,6 +803,10 @@ instance Run Game where
       -- The card's own 'receive' fires via 'dispatchToInPlayUnits'.
       -- Game just narrates.
       logIt LogSystem "log.unit.entered_play" [("player", playerParam pk)]
+    UnitAmbushed pk _key ->
+      -- "When this unit ambushes" abilities fire via the card's own
+      -- 'receive' ('onAmbush'); Game just narrates.
+      logIt LogSystem "log.unit.ambushed" [("player", playerParam pk)]
     AssignUnitToQuest pk uKey qKey -> do
       g <- get
       case (findUnit uKey g, findQuest qKey g) of
@@ -1903,6 +1907,7 @@ instance Run Game where
                 , ("card", T.pack cardDef.title)
                 ]
               send (UnitEnteredPlay pk cardKey)
+              send (UnitAmbushed pk cardKey)
               send ResolveAmbushStep
         _ -> send AdvanceCombatToDefenders
     AdvanceCombatToDefenders -> do

@@ -1234,3 +1234,34 @@ bladewind = tacticCard "legends-042" "Bladewind" do
   whenResolved \self -> do
     discardRandom self.controller.next
     drawCard self.controller
+
+-- Ambush riders (Eternal War cycle) ------------------------------------
+
+brideOfKhaine :: CardDef Unit
+brideOfKhaine = unitCard "days-of-blood-003" "Bride of Khaine" do
+  race DarkElf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait WitchElf
+  body
+    "Dark Elf only. Ambush 2. Action: When this unit ambushes, target \
+    \attacking unit gets -2 hit points until the end of the turn."
+  ambush 2
+  onAmbush \_owner self ->
+    withTarget self.controller attackingUnit \k -> until EndOfTurn $ debuffHP k 2
+
+outlawSorcerer :: CardDef Unit
+outlawSorcerer = unitCard "glory-of-days-past-076" "Outlaw Sorcerer" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Sorceror
+  body
+    "Dark Elf only. Ambush 1. Action: When this unit ambushes, discard a \
+    \card at random from attacking opponent's hand."
+  ambush 1
+  onAmbush \_owner self -> discardRandom self.controller.next

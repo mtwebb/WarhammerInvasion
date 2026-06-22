@@ -61,6 +61,11 @@ data Message where
     -- Quest's key. Pays cost, places the unit in 'QuestZone', and
     -- sets 'QuestDetails.questingUnit'.
   UnitEnteredPlay :: PlayerKey -> UnitKey -> Message
+  UnitAmbushed :: PlayerKey -> UnitKey -> Message
+    -- ^ Narration + trigger event: the named unit just entered play via
+    -- the combat Ambush step (sent right after its 'UnitEnteredPlay').
+    -- Cards' "Action: When this unit ambushes, …" abilities react to
+    -- this via the 'onAmbush' trigger.
   AssignUnitToQuest :: PlayerKey -> UnitKey -> UnitKey -> Message
     -- ^ Attach an already-in-play unit (first UnitKey, must be in the
     -- quest zone of pk) to a quest (second UnitKey). Refused if the

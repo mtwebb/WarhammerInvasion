@@ -593,6 +593,42 @@ main = do
         (not (any (\u -> u.key == ak) gA4.units))
     _ -> putStrLn "  skip ambush smoke (deck dealt no usable hand)"
 
+  -- Ambush rider trigger ('Idden Boy, "when this unit ambushes, it gains
+  -- +2 Power"): drive combat only as far as the Ambush step and confirm
+  -- the rider fired by reading the flipped unit's power before damage.
+  gB1 <- (`applyMessage` BeginGame) =<< mkMonoGame "days-of-blood-013" Orc
+  let fpB = gB1.currentPlayer
+      atkB = fpB.next
+      pRec side g = case side of Player1 -> g.player1; Player2 -> g.player2
+      devKeys side g = map (.key) (concat (Map.elems (pRec side g).developmentCards))
+  case (firstHandKeys 1 gB1, unitInHand (pRec atkB gB1)) of
+    ([dk], Just (ak, _, _)) -> do
+      gB2 <- applyMessages gB1
+        [ PassPriority fpB, PassPriority atkB
+        , PassPriority fpB, PassPriority atkB
+        , GainResources fpB 5
+        , PlayDevelopment fpB dk BattlefieldZone
+        , PassPriority fpB, PassPriority atkB
+        , PassPriority fpB, PassPriority atkB
+        , PassPriority atkB, PassPriority fpB
+        ]
+      gB3 <- applyMessages gB2 [PutUnitIntoPlay atkB ak BattlefieldZone]
+      -- Two pass-pairs close the combat-target and declare-attackers
+      -- windows, firing the Ambush step; we stop there (no damage yet).
+      gB4 <- applyMessagesWithAnswers gB3
+        [ PickUnits [dk]    -- Ambush step: flip 'Idden Boy
+        , PickNone          -- Declare Defenders (MustDefend forces it)
+        ]
+        [ BeginCombat atkB BattlefieldZone [ak]
+        , PassPriority atkB, PassPriority fpB
+        , PassPriority atkB, PassPriority fpB
+        ]
+      check "ambush rider: 'Idden Boy left the development zone"
+        (dk `notElem` devKeys fpB gB4)
+      check "ambush rider: 'Idden Boy gained +2 Power from its ambush trigger"
+        (any (\u -> u.key == dk && u.effectivePower == 3) gB4.units)
+    _ -> putStrLn "  skip ambush-rider smoke (deck dealt no usable hand)"
+
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only
   -- key-stubs of Player2's hand; deck contents are hidden from

@@ -1292,3 +1292,33 @@ defendYourHonor = tacticCard "hidden-kingdoms-039" "Defend Your Honor!" do
         x = length defenders
     for_ defenders \u ->
       when (u `isRace` Dwarf) $ until EndOfTurn $ buffToughness u.key x
+
+-- Ambush riders (Eternal War cycle) ------------------------------------
+
+ironDefenders :: CardDef Unit
+ironDefenders = unitCard "battle-for-the-old-world-045" "Iron Defenders" do
+  race Dwarf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Warrior
+  body
+    "Dwarf only. Ambush 1. Action: When this unit ambushes, it gains \
+    \Toughness 2 until the end of the phase."
+  ambush 1
+  onAmbush \_owner self -> until EndOfTurn $ buffToughness self.key 2
+
+mineEngineers :: CardDef Unit
+mineEngineers = unitCard "glory-of-days-past-063" "Mine Engineers" do
+  race Dwarf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Engineer
+  body
+    "Dwarf only. Ambush 2. Action: When this unit ambushes, heal up to 3 \
+    \damage from your capital."
+  ambush 2
+  onAmbush \_owner self -> healCapital self.controller 3

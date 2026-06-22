@@ -102,6 +102,19 @@ onEnterPlay handler = onReceive $ Receive \msg owner self ->
           handler owner self
     _ -> pure ()
 
+-- | "Action: When this unit ambushes, …" Fires when this specific unit
+-- enters play via the combat Ambush step ('UnitAmbushed'), distinct from
+-- 'onEnterPlay' which fires for every entry. Used by the Ambush rider
+-- units (Ded Scary Boy, Iron Defenders, the Days-of-Blood ambushers, …).
+onAmbush
+  :: HasField "key" UnitDetails UnitKey
+  => (forall m. TriggerM m => Player -> UnitDetails -> m ())
+  -> CardBuilder Unit ()
+onAmbush handler = onReceive $ Receive \msg owner self -> case msg of
+  UnitAmbushed pk uk
+    | pk == self.controller && uk == self.key -> handler owner self
+  _ -> pure ()
+
 -- | "When this in-play unit takes one or more damage." Fires off the
 -- 'DealDamageToUnit' message before Toughness is applied; if you
 -- need post-cancellation semantics, gate on the new damage amount in

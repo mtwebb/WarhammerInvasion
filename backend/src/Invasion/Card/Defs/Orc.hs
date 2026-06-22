@@ -1347,3 +1347,19 @@ orcishArtillery = tacticCard "hidden-kingdoms-054" "Orcish Artillery" do
     for_
       [u.key | u <- g.units, u.controller == cs.defendingPlayer, u.zone == cs.targetZone]
       \k -> dealDamage k 1
+
+-- Ambush riders (Eternal War cycle) ------------------------------------
+
+iddenBoy :: CardDef Unit
+iddenBoy = unitCard "days-of-blood-013" "'Idden Boy" do
+  race Orc
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Warrior
+  body
+    "Orc only. Ambush 1. Action: When this unit ambushes, it gains \
+    \{power}{power} until the end of the phase."
+  ambush 1
+  onAmbush \_owner self -> until EndOfTurn $ buffPower self.key 2
