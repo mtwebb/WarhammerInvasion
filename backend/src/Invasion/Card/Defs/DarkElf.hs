@@ -638,6 +638,23 @@ sacrificialPyre = supportCard "the-imperial-throne-115" "Sacrificial Pyre" do
   onFriendlyUnitLeavePlay \_owner self _uk _zone _code ->
     withTarget self.controller AnyUnit (push . CorruptUnit)
 
+-- Cataclysm cycle ------------------------------------------------------
+
+crimsonBrides :: CardDef Unit
+crimsonBrides = unitCard "cataclysm-042" "Crimson Brides" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait WitchElf
+  body
+    "Action: Sacrifice this unit to discard 1 card at random from each \
+    \opponent's hand."
+  actionWith "Sacrifice" 0 [SacrificeSelf] \usage ->
+    eachPlayer \pk ->
+      when (pk /= usage.self.controller) $ discardRandom pk
+
 -- The Morrslieb cycle ---------------------------------------------------
 
 frenziedWitchElf :: CardDef Unit

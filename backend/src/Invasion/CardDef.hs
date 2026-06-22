@@ -153,6 +153,10 @@ data Trait
     -- ^ Vampire trait (Blood Dragon Knight, the Legends Undead cards).
   | WoodElf
     -- ^ Wood Elf trait (Wild Rider, Shadow Sentinel, Protective Spites).
+  | Condition
+    -- ^ Condition support trait (Big Guns, Garrisoned).
+  | Item
+    -- ^ Item support trait (Arcane Orrery).
   deriving stock (Show, Eq)
 
 mconcat

@@ -453,10 +453,20 @@ allCards =
       ("march-of-the-damned-053", TacticCardDef raiseDead),
       ("march-of-the-damned-054", TacticCardDef beguile),
       ("march-of-the-damned-055", UnitCardDef jezzailTeam),
-      -- Chaos — Cataclysm cycle
+      -- Cataclysm (deluxe expansion)
+      ("cataclysm-002", UnitCardDef hammersmith),
+      ("cataclysm-006", SupportCardDef hallOfHeroes),
+      ("cataclysm-009", UnitCardDef makkaGreenfist),
+      ("cataclysm-013", SupportCardDef bigGuns),
+      ("cataclysm-020", UnitCardDef ferventDisciple),
+      ("cataclysm-021", SupportCardDef luminarkOfHysh),
+      ("cataclysm-022", SupportCardDef garrisoned),
+      ("cataclysm-025", UnitCardDef lirdir),
+      ("cataclysm-028", UnitCardDef arcanePurifier),
       ("cataclysm-033", UnitCardDef lordOfKhorne),
       ("cataclysm-034", UnitCardDef bloodcrusher),
       ("cataclysm-037", SupportCardDef riftOfChaos),
+      ("cataclysm-042", UnitCardDef crimsonBrides),
       -- The Morrslieb cycle — The Chaos Moon (021-040)
       ("the-chaos-moon-022", UnitCardDef bugmansRangers),
       ("the-chaos-moon-023", SupportCardDef bugmansTankard),

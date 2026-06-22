@@ -953,6 +953,46 @@ doublingOfTheGuard = tacticCard "the-imperial-throne-112" "Doubling of the Guard
   whenResolved \self ->
     discardForLoyalty self.controller \x -> when (x > 0) $ drawCards self.controller x
 
+-- Cataclysm cycle ------------------------------------------------------
+
+ferventDisciple :: CardDef Unit
+ferventDisciple = unitCard "cataclysm-020" "Fervent Disciple" do
+  race Empire
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Priest
+  body "If this zone is not burning, this unit deals +2 damage in combat."
+  combatPower \g self ->
+    if zoneBurning g self.controller self.zone then 0 else 2
+
+luminarkOfHysh :: CardDef Support
+luminarkOfHysh = supportCard "cataclysm-021" "Luminark of Hysh" do
+  race Empire
+  cost 3
+  loyalty 1
+  power 2
+  trait WarMachine
+  body "If this zone is burning, this card loses {power}{power}."
+  zonePowerAura \g s zone ->
+    if zone == s.zone && zoneBurning g s.controller s.zone then -2 else 0
+
+garrisoned :: CardDef Support
+garrisoned = supportCard "cataclysm-022" "Garrisoned" do
+  race Empire
+  cost 1
+  loyalty 1
+  power 0
+  traits [Attachment, Condition]
+  body
+    "Attach to a target unit. If this zone is not burning, attached unit \
+    \deals +2 damage in combat."
+  supportCombat \g s u ->
+    if s.attachedTo == Just u.key && not (zoneBurning g u.controller u.zone)
+      then 2
+      else 0
+
 -- The Morrslieb cycle ---------------------------------------------------
 
 chainLightning :: CardDef Tactic

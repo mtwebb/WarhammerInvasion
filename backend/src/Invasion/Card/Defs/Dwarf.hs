@@ -853,6 +853,35 @@ leaveNoTrace = tacticCard "karaz-a-karak-070" "Leave No Trace" do
     withTarget self.controller defendingUnit \k ->
       discardForLoyalty self.controller \x -> when (x > 0) $ dealDamage k x
 
+-- Cataclysm cycle ------------------------------------------------------
+
+hammersmith :: CardDef Unit
+hammersmith = unitCard "cataclysm-002" "Hammersmith" do
+  race Dwarf
+  cost 1
+  loyalty 1
+  power 1
+  hitPoints 1
+  trait Engineer
+  kingdomOnly
+  body "Kingdom only."
+
+hallOfHeroes :: CardDef Support
+hallOfHeroes = supportCard "cataclysm-006" "Hall of Heroes" do
+  race Dwarf
+  cost 2
+  loyalty 1
+  power 1
+  trait Building
+  body
+    "Action: When one of your {dwarf} units leaves play, target unit gains \
+    \{power} until the end of the turn."
+  forced \self ->
+    onUnitOfLeavesPlay self.controller \du ->
+      when (Dwarf `elem` du.cardDef.races) $
+        withTarget self.controller AnyUnit \k ->
+          until EndOfTurn $ buffPower k 1
+
 -- The Morrslieb cycle ---------------------------------------------------
 
 bugmansRangers :: CardDef Unit

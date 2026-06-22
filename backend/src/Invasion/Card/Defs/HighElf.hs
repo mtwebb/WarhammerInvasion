@@ -571,6 +571,40 @@ inflame = tacticCard "realm-of-the-phoenix-king-033" "Inflame" do
       discardForLoyalty self.controller \x ->
         when (x > 0) $ until EndOfTurn $ buffPower k x
 
+-- Cataclysm cycle ------------------------------------------------------
+
+lirdir :: CardDef Unit
+lirdir = unitCard "cataclysm-025" "Lirdir" do
+  race HighElf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  traits [Hero, Mage]
+  limitOneHeroPerZone
+  body
+    "Limit 1 Hero per zone. Action: When you heal a unit, that unit gains \
+    \{power} until the end of the turn."
+  onReceive $ Receive \msg _owner _self -> case msg of
+    HealUnit uk n | n > 0 -> until EndOfTurn $ buffPower uk 1
+    _ -> pure ()
+
+arcanePurifier :: CardDef Unit
+arcanePurifier = unitCard "cataclysm-028" "Arcane Purifier" do
+  race HighElf
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Mage
+  body
+    "Action: When this unit enters or leaves play, heal all damage on \
+    \target unit."
+  onEnterPlay \_owner self ->
+    withTarget self.controller AnyUnit \k -> healUnit k 999
+  onSelfLeavesPlay \_owner self ->
+    withTarget self.controller AnyUnit \k -> healUnit k 999
+
 -- The Morrslieb cycle ---------------------------------------------------
 
 valorousMage :: CardDef Unit

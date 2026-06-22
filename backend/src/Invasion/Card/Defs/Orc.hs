@@ -915,6 +915,48 @@ bannaThief = unitCard "the-iron-rock-042" "Banna Thief" do
   onUnitEnterMyZone \_owner self _uk ->
     withTarget self.controller AnyUnit \k -> until EndOfTurn $ buffPower k 1
 
+-- Cataclysm cycle ------------------------------------------------------
+
+makkaGreenfist :: CardDef Unit
+makkaGreenfist = unitCard "cataclysm-009" "Makka Greenfist" do
+  race Orc
+  cost 3
+  loyalty 3
+  power 1
+  hitPoints 3
+  traits [Hero, Shaman]
+  limitOneHeroPerZone
+  body
+    "Limit 1 Hero per zone. This unit gains {power}{power}{power} while \
+    \attacking a damaged zone."
+  combatPower \g self -> case g.combat of
+    Just cs | self.key `elem` cs.attackers && zoneDamaged g cs.defendingPlayer cs.targetZone -> 3
+    _ -> 0
+
+bigGuns :: CardDef Support
+bigGuns = supportCard "cataclysm-013" "Big Guns" do
+  race Orc
+  cost 2
+  loyalty 2
+  power 0
+  trait Condition
+  battlefieldOnly
+  body "Battlefield. Each attacking {orc} unit deals +1 damage in combat."
+  supportCombat \_g _s u ->
+    if u.attacking && Orc `elem` u.cardDef.races then 1 else 0
+
+-- | True iff the named section of the named player's capital currently
+-- has one or more damage tokens (and is not yet burned). Used by Makka
+-- Greenfist's "attacking a damaged zone" bonus.
+zoneDamaged :: Game -> PlayerKey -> ZoneKind -> Bool
+zoneDamaged g pk zk =
+  let p = playerOf pk g
+      z = case zk of
+        KingdomZone -> p.capital.kingdom
+        QuestZone -> p.capital.quest
+        BattlefieldZone -> p.capital.battlefield
+   in case z.damage of Damage d -> d > 0
+
 -- The Morrslieb cycle ---------------------------------------------------
 
 lootedUmieTown :: CardDef Support
