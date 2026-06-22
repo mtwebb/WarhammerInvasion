@@ -528,6 +528,26 @@ main = do
       putStrLn "  FAIL chariot deck dealt no hand"
       exitFailure
 
+  -- Counterstrike X (Wardancer): the derived counterstrike value tracks
+  -- the number of developments in the unit's zone, then collapses when
+  -- the developments are removed.
+  gWD1 <- (`applyMessage` BeginGame) =<< mkMonoGame "the-eclipse-of-hope-098" HighElf
+  let pkWD = gWD1.currentPlayer
+  gWD2 <- applyMessages gWD1
+    [AddDevelopment pkWD KingdomZone, AddDevelopment pkWD KingdomZone]
+  case firstHandKeys 1 gWD2 of
+    [wk] -> do
+      gWD3 <- applyMessage gWD2 (PutUnitIntoPlay pkWD wk KingdomZone)
+      let csOf g = listToMaybe [totalCounterstrike g u | u <- g.units, u.key == wk]
+      check "counterstrike X: equals developments in zone (2)"
+        (csOf gWD3 == Just 2)
+      gWD4 <- applyMessage gWD3 (DestroyDevelopment pkWD KingdomZone)
+      check "counterstrike X: drops as developments leave (1)"
+        (csOf gWD4 == Just 1)
+    _ -> do
+      putStrLn "  FAIL wardancer deck dealt no hand"
+      exitFailure
+
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only
   -- key-stubs of Player2's hand; deck contents are hidden from

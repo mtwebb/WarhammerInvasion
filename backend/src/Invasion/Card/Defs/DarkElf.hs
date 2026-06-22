@@ -623,6 +623,17 @@ bannermanOfTheCrag = unitCard "city-of-winter-087" "Bannerman of the Crag" do
   -- "target player": the opponent, the only meaningful pick.
   onUnitEnterMyZone \_owner self _uk -> millFromDeck self.controller.next 1
 
+anlecLookout :: CardDef Unit
+anlecLookout = unitCard "city-of-winter-090" "Anlec Lookout" do
+  race DarkElf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 1
+  trait Warrior
+  body "Counterstrike X. X is the highest loyalty on a [Dark Elf] card you control."
+  counterstrikeX \g u -> highestLoyaltyControlled DarkElf g u.controller
+
 sacrificialPyre :: CardDef Support
 sacrificialPyre = supportCard "the-imperial-throne-115" "Sacrificial Pyre" do
   race DarkElf

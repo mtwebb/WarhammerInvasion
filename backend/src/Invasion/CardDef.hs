@@ -357,6 +357,12 @@ data UnitExtras = UnitExtras
     -- 'totalToughness' alongside the printed keyword and auras. Distinct
     -- from 'Toughness Variable', which the engine reads as
     -- developments-in-zone.
+  , selfCounterstrikeBonus :: Game -> InPlay Unit -> Int
+    -- ^ Game-state-derived "Counterstrike X" value (Anlec Lookout:
+    -- X = highest loyalty on a Dark Elf card you control; Wardancer:
+    -- X = developments in this zone). Added to the printed
+    -- 'Counterstrike' keyword total when the unit fires Counterstrike
+    -- in combat.
   , selfHPBonus :: Game -> InPlay Unit -> Int
     -- ^ Game-state-derived bonus to the unit's own max HP (Cold One
     -- Chariot: X = developments in this zone). Folded into the cached
@@ -573,6 +579,7 @@ instance HasDefaultExtras Unit where
     , unitAuraHp = \_ _ _ -> 0
     , preDamageRedirect = \_ _ _ -> Nothing
     , selfToughnessBonus = \_ _ -> 0
+    , selfCounterstrikeBonus = \_ _ -> 0
     , selfHPBonus = \_ _ -> 0
     , cancelAllDamageWhen = \_ _ -> False
     , perHitDamageCap = Nothing

@@ -314,6 +314,12 @@ selfHP f = modifyUnitExtras \e -> e {selfHPBonus = f}
 selfToughness :: (Game -> UnitDetails -> Int) -> CardBuilder Unit ()
 selfToughness f = modifyUnitExtras \e -> e {selfToughnessBonus = f}
 
+-- | "Counterstrike X" — a counterstrike value derived from board state
+-- (Anlec Lookout, Herald of Morai-Heg, Wardancer). Added to any printed
+-- 'Counterstrike' keyword when the unit fires Counterstrike in combat.
+counterstrikeX :: (Game -> UnitDetails -> Int) -> CardBuilder Unit ()
+counterstrikeX f = modifyUnitExtras \e -> e {selfCounterstrikeBonus = f}
+
 -- | "Cancel all damage to this unit while CONDITION." (Gustav the
 -- Bear.) Only cancellable damage is affected.
 damageImmuneWhen :: (Game -> UnitDetails -> Bool) -> CardBuilder Unit ()

@@ -1895,8 +1895,7 @@ instance Run Game where
                   g.defenderCounterstrikeBonus
           traverse_
             ( \def -> do
-                let cs_total =
-                      sum [n | Counterstrike n <- unitKeywords def] + csBonus
+                let cs_total = totalCounterstrike g def + csBonus
                 when (cs_total > 0) $ do
                   g' <- get
                   let alive = filter (\k -> isJust (findUnit k g')) cs.attackers
@@ -4422,6 +4421,16 @@ markPlayedLimited cd =
 -- Plus any aura toughness granted by other in-play units (Big 'Uns)
 -- and supports (Gromril Armour). 'LoseAllToughness' (Morathi's
 -- Pegasus) zeroes the lot.
+-- | A unit's effective Counterstrike value: the printed 'Counterstrike'
+-- keyword(s) plus any game-state-derived "Counterstrike X"
+-- ('selfCounterstrikeBonus': Anlec Lookout, Herald of Morai-Heg,
+-- Wardancer). Does not include the turn-scoped Ulric's-Fury bonus,
+-- which the combat code adds per defending player.
+totalCounterstrike :: Game -> UnitDetails -> Int
+totalCounterstrike g u =
+  sum [n | Counterstrike n <- unitKeywords u]
+    + (unitExtrasOf u).selfCounterstrikeBonus g u
+
 totalToughness :: Game -> UnitDetails -> Int
 totalToughness g u
   | hasModifier g.modifiers u.key LoseAllToughness = 0

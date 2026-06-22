@@ -736,6 +736,16 @@ viciousClanrat = unitCard "the-chaos-moon-040" "Vicious Clanrat" do
       then length [u | u <- g.units, u.controller == self.controller, u.corrupted, Skaven `elem` u.cardDef.traits]
       else 0
 
+wardancer :: CardDef Unit
+wardancer = unitCard "the-eclipse-of-hope-098" "Wardancer" do
+  cost 5
+  power 3
+  hitPoints 3
+  trait WoodElf
+  orderOnly
+  body "Order only. Counterstrike X. X is the number of developments in this zone."
+  counterstrikeX \g u -> devsInZone g u
+
 -- The Enemy cycle -------------------------------------------------------
 
 mountainBrigands :: CardDef Unit

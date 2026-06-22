@@ -489,6 +489,7 @@ allCards =
       ("the-eclipse-of-hope-093", SupportCardDef brandedByKhorne),
       ("the-eclipse-of-hope-095", UnitCardDef toxicHydra),
       ("the-eclipse-of-hope-097", QuestCardDef malekithsRage),
+      ("the-eclipse-of-hope-098", UnitCardDef wardancer),
       -- The Morrslieb cycle — Signs in the Stars (061-080)
       ("signs-in-the-stars-062", SupportCardDef karakAzulForge),
       ("signs-in-the-stars-065", UnitCardDef squigHopper),
@@ -527,6 +528,7 @@ allCards =
       ("the-inevitable-city-019", TacticCardDef willpower),
       ("the-inevitable-city-020", QuestCardDef raidingCamps),
       -- The Capital Cycle — Realm of the Phoenix King (021-040)
+      ("realm-of-the-phoenix-king-027", UnitCardDef heraldOfMoraiHeg),
       ("realm-of-the-phoenix-king-030", SupportCardDef straitsOfLothern),
       ("realm-of-the-phoenix-king-033", TacticCardDef inflame),
       -- The Capital Cycle — The Iron Rock (041-060)
@@ -545,6 +547,7 @@ allCards =
       ("karaz-a-karak-080", QuestCardDef buildingForWar),
       -- The Capital Cycle — City of Winter (081-100)
       ("city-of-winter-087", UnitCardDef bannermanOfTheCrag),
+      ("city-of-winter-090", UnitCardDef anlecLookout),
       ("city-of-winter-093", SupportCardDef harpyAerie),
       ("city-of-winter-095", TacticCardDef callOfTheKraken),
       ("city-of-winter-100", QuestCardDef raidingShips),

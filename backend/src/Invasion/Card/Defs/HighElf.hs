@@ -543,6 +543,17 @@ princeOfCaledor = unitCard "the-inevitable-city-004" "Prince of Caledor" do
   selfCostAdjust \g pk ->
     negate (length [u | u <- g.units, u.controller == pk, isDamaged u])
 
+heraldOfMoraiHeg :: CardDef Unit
+heraldOfMoraiHeg = unitCard "realm-of-the-phoenix-king-027" "Herald of Morai-Heg" do
+  race HighElf
+  cost 2
+  loyalty 1
+  power 0
+  hitPoints 3
+  trait Warrior
+  body "Counterstrike X. X is the highest loyalty on a [High Elf] card you control."
+  counterstrikeX \g u -> highestLoyaltyControlled HighElf g u.controller
+
 straitsOfLothern :: CardDef Support
 straitsOfLothern = supportCard "realm-of-the-phoenix-king-030" "Straits of Lothern" do
   race HighElf
