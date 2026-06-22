@@ -1448,6 +1448,9 @@ instance Run Game where
         [ ("amount", tshow n)
         , ("trigger", "EndTurn")
         ]
+    DeferSacrificeUntilEoT ukey -> do
+      modify \g ->
+        g {pendingEndOfTurn = PEDestroyUnit ukey : g.pendingEndOfTurn}
     DealDamageToZone targetPlayer zoneKind raw -> do
       g0 <- get
       let -- Tactic amplification (Hellcannon Reserves), then capital

@@ -383,6 +383,7 @@ allCards =
       ("the-fall-of-karak-grimaz-036", UnitCardDef vanguardOfWoe),
       ("the-fall-of-karak-grimaz-038", SupportCardDef bottomlessMine),
       ("the-fall-of-karak-grimaz-039", SupportCardDef darkAbyss),
+      ("the-fall-of-karak-grimaz-040", TacticCardDef longWinter),
       -- The Enemy cycle — The Silent Forge (041-060)
       ("the-silent-forge-041", UnitCardDef sonOfGrungi),
       ("the-silent-forge-043", UnitCardDef blackKnightsOfMorr),
@@ -433,6 +434,7 @@ allCards =
       ("march-of-the-damned-017", UnitCardDef forestGoblins),
       ("march-of-the-damned-018", SupportCardDef trollDen),
       ("march-of-the-damned-019", TacticCardDef spidaHuntin),
+      ("march-of-the-damned-022", UnitCardDef brayShaman),
       ("march-of-the-damned-023", SupportCardDef bloodboilFever),
       ("march-of-the-damned-024", TacticCardDef cloyingQuagmire),
       ("march-of-the-damned-026", UnitCardDef seasonedCorsair),
@@ -512,6 +514,9 @@ allCards =
       ("omens-of-ruin-016", UnitCardDef darkElfInfiltrator),
       -- The Morrslieb cycle — Portent of Doom (081-100)
       ("portent-of-doom-088", TacticCardDef theSealedVaults),
+      -- The Morrslieb cycle — Fiery Dawn (101-120)
+      ("fiery-dawn-106", TacticCardDef smashEm),
+      ("fiery-dawn-107", UnitCardDef veteranGreatsword),
       -- The Capital Cycle — The Inevitable City (001-020)
       ("the-inevitable-city-004", UnitCardDef princeOfCaledor),
       ("the-inevitable-city-005", UnitCardDef doomBearer),

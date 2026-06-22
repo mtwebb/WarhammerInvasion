@@ -1540,6 +1540,24 @@ tzeentchsFirestorm = tacticCard "assault-on-ulthuan-054" "Tzeentch's Firestorm" 
 
 -- March of the Damned --------------------------------------------------
 
+brayShaman :: CardDef Unit
+brayShaman = unitCard "march-of-the-damned-022" "Bray Shaman" do
+  race Chaos
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 3
+  trait Warrior
+  body
+    "Action: Corrupt this unit to have target attacking unit you control gain \
+    \{power}{power}. Sacrifice that unit at the end of the turn."
+  actionWith "Frenzy" 0 [CorruptSelf] \usage ->
+    withTarget usage.user
+      (UnitMatching \me _g u -> u.controller == me && u.attacking)
+      \k -> do
+        until EndOfTurn $ buffPower k 2
+        queueEoTSacrifice k
+
 bloodboilFever :: CardDef Support
 bloodboilFever = supportCard "march-of-the-damned-023" "Bloodboil Fever" do
   race Chaos

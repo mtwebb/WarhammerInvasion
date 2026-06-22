@@ -1028,6 +1028,16 @@ bigBoss = unitCard "the-eclipse-of-hope-084" "Big Boss" do
         cands = [u.key | u <- g.units, costOf u == m]
     forcePickUnit self.controller cands "Big Boss: sacrifice the lowest-cost unit." destroyUnit
 
+smashEm :: CardDef Tactic
+smashEm = tacticCard "fiery-dawn-106" "Smash 'Em!" do
+  race Orc
+  cost 3
+  loyalty 3
+  body "Action: Destroy all units with a printed cost of 2 or lower."
+  whenResolved \_self -> do
+    g <- getGame
+    for_ [u.key | u <- g.units, costAtMost 2 u.cardDef] destroyUnit
+
 -- The Enemy cycle -------------------------------------------------------
 
 madShaman :: CardDef Unit

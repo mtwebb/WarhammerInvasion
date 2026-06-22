@@ -96,6 +96,12 @@ dealUncancellableDamage k n = push (DealDamageToUnitUncancellable k n)
 queueEoTDamage :: HasQueue Message m => UnitKey -> Int -> m ()
 queueEoTDamage k n = push (DeferDamageToUnitUntilEoT k n)
 
+-- | "Sacrifice this unit at end of turn." Used by effects that put a
+-- unit into play (or buff it) on the condition that it leaves at the
+-- end of the turn (Bray Shaman).
+queueEoTSacrifice :: HasQueue Message m => UnitKey -> m ()
+queueEoTSacrifice k = push (DeferSacrificeUntilEoT k)
+
 -- | "Destroy a quest."
 destroyQuest :: HasQueue Message m => UnitKey -> m ()
 destroyQuest k = push (DestroyQuest k)

@@ -1090,6 +1090,22 @@ theSealedVaults = tacticCard "portent-of-doom-088" "The Sealed Vaults" do
       push (DiscardCardsFromDeck pk (map (.key) top3))
       when (quests > 0) $ gainResources pk quests
 
+veteranGreatsword :: CardDef Unit
+veteranGreatsword = unitCard "fiery-dawn-107" "Veteran Greatsword" do
+  race Empire
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Warrior
+  body
+    "Action: When this unit enters play, it gains {power} for each unit in this \
+    \zone until the end of the turn."
+  onEnterPlay \_owner self -> do
+    g <- getGame
+    let n = length [u | u <- g.units, u.zone == self.zone]
+    until EndOfTurn $ buffPower self.key n
+
 -- The Enemy cycle -------------------------------------------------------
 
 brightWizardAcolyte :: CardDef Unit

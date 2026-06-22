@@ -810,6 +810,18 @@ darkAbyss = supportCard "the-fall-of-karak-grimaz-039" "Dark Abyss" do
   body "Action: At the beginning of your turn, discard the top card of target player's deck."
   onMyTurnBegin \_owner self -> millFromDeck self.controller.next 1
 
+longWinter :: CardDef Tactic
+longWinter = tacticCard "the-fall-of-karak-grimaz-040" "Long Winter" do
+  cost 0
+  loyalty 0
+  body "Action: Return target development to its owner's hand."
+  playableWhen \g _ -> anyDev g.player1 || anyDev g.player2
+  whenResolved \self ->
+    withTarget self.controller AnyDevelopmentZone \(owner, zk) ->
+      push (ReturnDevelopmentToHand owner zk)
+  where
+    anyDev p = any (\z -> case z.developments of Developments n -> n > 0) p.capital.zones
+
 ancientAlliance :: CardDef Support
 ancientAlliance = supportCard "redemption-of-a-mage-078" "Ancient Alliance" do
   race Dwarf

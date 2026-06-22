@@ -169,6 +169,10 @@ data Message where
   -- Deferred effects
   DeferDamageToUnitUntilEoT :: UnitKey -> Int -> Message
     -- ^ Schedule N damage to land on the target at end of turn.
+  DeferSacrificeUntilEoT :: UnitKey -> Message
+    -- ^ Schedule the target unit to be sacrificed (destroyed) at end
+    -- of turn. Mirrors 'DeferDamageToUnitUntilEoT' but enqueues a
+    -- 'PEDestroyUnit' instead.
   -- Zone damage
   DealDamageToZone :: PlayerKey -> ZoneKind -> Int -> Message
     -- ^ Add N damage tokens to a capital zone. May burn the zone (and
