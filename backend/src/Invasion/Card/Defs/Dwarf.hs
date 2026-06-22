@@ -1189,3 +1189,60 @@ mercilessAssault = tacticCard "march-of-the-damned-005" "Merciless Assault" do
       until EndOfTurn $ buffPower k 3
   where
     ownAttacker = UnitMatching \me g u -> u.controller == me && unitIsAttacking g u
+
+-- Legends (deluxe expansion) -------------------------------------------
+
+veteranSlayer :: CardDef Unit
+veteranSlayer = unitCard "legends-003" "Veteran Slayer" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Slayer
+  body
+    "Action: Sacrifice this unit to have your units gain Toughness 2 until \
+    \the end of the turn."
+  actionWith "Last Stand" 0 [SacrificeSelf] \usage -> do
+    mine <- unitsMatching usage.user ownUnit
+    for_ mine \u -> until EndOfTurn $ buffToughness u.key 2
+
+dwarfThunderer :: CardDef Unit
+dwarfThunderer = unitCard "legends-005" "Dwarf Thunderer" do
+  race Dwarf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  traits [Warrior, Elite]
+  body "If you control a legend, this unit gains Toughness 2."
+  selfToughness \g self ->
+    if isJust (legendOf self.controller g) then 2 else 0
+
+runeOfCleaving :: CardDef Support
+runeOfCleaving = supportCard "legends-006" "Rune of Cleaving" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  traits [Attachment, Rune]
+  body
+    "Attach to a target unit you control. Attached unit gains {power}{power}. \
+    \If attached unit leaves play, you may spend 2 resources to return this \
+    \card to its owner's hand."
+  attachmentPower 2
+
+blastingCharge :: CardDef Tactic
+blastingCharge = tacticCard "legends-007" "Blasting Charge" do
+  race Dwarf
+  cost 3
+  loyalty 2
+  body
+    "Action: Choose a zone. Destroy up to 3 developments in that zone. Then, \
+    \each player takes 3 indirect damage (players allocate their own indirect \
+    \damage)."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk AnyDevelopmentZone \(owner, zk) -> do
+      n <- chooseAmount pk 0 3 "Destroy how many developments?"
+      replicateM_ n (destroyDevelopment owner zk)
+    eachPlayer \p -> indirectDamage p 3

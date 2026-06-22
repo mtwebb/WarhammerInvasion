@@ -112,7 +112,7 @@ export type Trait =
   | 'Troll' | 'WitchElf' | 'Disease'
   | 'Cultist' | 'Bretonnian' | 'Thief' | 'Slave' | 'Environment'
   | 'Messenger' | 'Martyr' | 'Initiate'
-  | 'Lizardmen' | 'Undead' | 'Ship'
+  | 'Lizardmen' | 'Undead' | 'Ship' | 'Vampire' | 'WoodElf'
 
 // Card definition as serialized by Invasion.CardDef.ToJSON. The 'receive'
 // function field is dropped on the wire — see CardDef.hs.

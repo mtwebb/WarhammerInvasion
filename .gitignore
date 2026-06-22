@@ -6,3 +6,7 @@ dist/
 *.local
 .env
 db/schema.sql
+ALLCARDS_STRUCTURED_COMPACT.txt
+PROGRESS.md
+smoke-test.py
+CARD_IMPLEMENTATION_PLAN.local.md

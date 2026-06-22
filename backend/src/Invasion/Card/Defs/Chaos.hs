@@ -732,6 +732,40 @@ warhounds = unitCard "legends-032" "Warhounds" do
       LegendCardDef cd -> Chaos `elem` cd.races
       _ -> False
 
+marauderChieftain :: CardDef Unit
+marauderChieftain = unitCard "legends-033" "Marauder Chieftain" do
+  race Chaos
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Warrior
+  body
+    "Action: At the beginning of your turn, deal 1 damage to target capital \
+    \(you choose which zone)."
+  onMyTurnBegin \_owner self ->
+    withTarget self.controller AnyCapital \(owner, zk) ->
+      dealZoneDamage owner zk 1
+
+seductiveDelusion :: CardDef Tactic
+seductiveDelusion = tacticCard "legends-035" "Seductive Delusion" do
+  race Chaos
+  cost 2
+  loyalty 2
+  trait Spell
+  body
+    "Action: Choose a target unit. Corrupt that unit. Then, that unit deals \
+    \damage equal to its power to another target unit."
+  playableWhen $ hasTarget AnyUnit
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk AnyUnit \k1 -> do
+      corrupt k1
+      g <- getGame
+      whenJust (findUnit k1 g) \u1 ->
+        withTarget pk (unitWhere \u -> u.key /= k1) \k2 ->
+          dealDamage k2 u1.effectivePower
+
 -- Path of the Zealot ---------------------------------------------------
 
 bloodsworn :: CardDef Unit

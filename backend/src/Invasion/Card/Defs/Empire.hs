@@ -1251,3 +1251,30 @@ zoneDevsFor g pk z =
         QuestZone -> p.capital.quest.developments
         BattlefieldZone -> p.capital.battlefield.developments
    in d
+
+-- Legends (deluxe expansion) -------------------------------------------
+
+callForReserves :: CardDef Tactic
+callForReserves = tacticCard "legends-021" "Call for Reserves" do
+  race Empire
+  cost 2
+  loyalty 3
+  body
+    "Action: Return target unit you control to its owner's hand. Then, put \
+    \into play from your hand a unit with printed cost 3 or lower."
+  playableWhen $ hasTarget ownUnit
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk ownUnit \k -> do
+      returnUnitToHand k
+      me <- playerOf pk <$> getGame
+      let reserves =
+            [ c
+            | c <- me.hand
+            , Just cd <- [asUnit c.def]
+            , costAtMost 3 cd
+            ]
+      chooseFromCards pk 0 1 reserves
+        "Put a unit with printed cost 3 or lower into play." \chosen ->
+          for_ chosen \c ->
+            withTarget pk MyAnyZone \zk -> putUnitIntoPlay pk FromHand c.key zk

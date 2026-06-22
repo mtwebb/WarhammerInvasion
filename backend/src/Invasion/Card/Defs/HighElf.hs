@@ -925,3 +925,32 @@ fromBeneathTheWaves = tacticCard "march-of-the-damned-015" "From Beneath the Wav
     "Action: Deal 3 indirect damage to target opponent (players allocate their own indirect \
     \damage)."
   whenResolved \self -> indirectDamage self.controller.next 3
+
+-- Legends (deluxe expansion) -------------------------------------------
+
+elvenSteed :: CardDef Support
+elvenSteed = supportCard "legends-027" "Elven Steed" do
+  race HighElf
+  cost 1
+  loyalty 2
+  trait Attachment
+  body
+    "Attach to a target unit you control. Attached unit gains +3 hit points. \
+    \If attached unit leaves play, you may spend 2 resources to return Elven \
+    \Steed to its owner's hand."
+  attachmentHp 3
+
+masterOfTheEarth :: CardDef Tactic
+masterOfTheEarth = tacticCard "legends-028" "Master of the Earth" do
+  race HighElf
+  cost 3
+  loyalty 3
+  trait Spell
+  body
+    "Action: Deal X indirect damage to target player. X is the number of \
+    \developments you control."
+  whenResolved \self -> do
+    g <- getGame
+    let me = playerOf self.controller g
+        devCount = sum [d | z <- me.capital.zones, let Developments d = z.developments]
+    indirectDamage self.controller.next devCount

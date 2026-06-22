@@ -1146,3 +1146,63 @@ slavePen = supportCard "march-of-the-damned-029" "Slave Pen" do
     unless used do
       until EndOfTurn (PendingBuff usage.self.key ActionUsedThisTurn)
       adjustSupportTokens usage.self.key 1
+
+-- Legends (deluxe expansion) -------------------------------------------
+
+thiefOfEssence :: CardDef Unit
+thiefOfEssence = unitCard "legends-038" "Thief of Essence" do
+  race DarkElf
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Thief
+  body "Action: When one or more units leaves play, draw a card."
+  onReceive $ Receive \msg _owner self -> case msg of
+    UnitLeftPlay _ -> drawCard self.controller
+    _ -> pure ()
+
+darkElfAssassin :: CardDef Unit
+darkElfAssassin = unitCard "legends-039" "Dark Elf Assassin" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Warrior
+  body
+    "If you control a legend, this unit gains \"Action: When this unit \
+    \attacks, destroy target damaged unit.\""
+  onMyAttackDeclared \_owner self _zone _attackers -> do
+    g <- getGame
+    when (isJust (legendOf self.controller g)) $
+      withTarget self.controller (unitWhere isDamaged) destroyUnit
+
+monsterOfTheDeep :: CardDef Unit
+monsterOfTheDeep = unitCard "legends-040" "Monster of the Deep" do
+  race DarkElf
+  cost 6
+  loyalty 3
+  power 3
+  hitPoints 4
+  trait Creature
+  body
+    "Action: Corrupt this unit and choose up to two target units. Those units \
+    \cannot attack or defend until the end of the turn."
+  action "Hypnotic Gaze" 0 \usage -> do
+    corrupt usage.self.key
+    withUpTo usage.user 2 (unitWhere (const True)) \chosen ->
+      for_ chosen \k -> do
+        until EndOfTurn $ disableAttack k
+        until EndOfTurn $ disableDefend k
+
+bladewind :: CardDef Tactic
+bladewind = tacticCard "legends-042" "Bladewind" do
+  race DarkElf
+  cost 1
+  loyalty 2
+  trait Spell
+  body "Action: Target opponent discards a card from his hand. Then, draw a card."
+  whenResolved \self -> do
+    discardRandom self.controller.next
+    drawCard self.controller

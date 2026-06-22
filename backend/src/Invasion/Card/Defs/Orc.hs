@@ -1231,3 +1231,49 @@ spidaHuntin = tacticCard "march-of-the-damned-019" "Spida Huntin'" do
     withTarget self.controller ownUnit \k -> do
       dealDamage k 2
       until EndOfTurn $ buffPower k 2
+
+-- Legends (deluxe expansion) -------------------------------------------
+
+blindRiverGoblin :: CardDef Unit
+blindRiverGoblin = unitCard "legends-010" "Blind River Goblin" do
+  race Orc
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Goblin
+  body "If you control a legend, this unit gains {power}."
+  selfPower \g self ->
+    if isJust (legendOf self.controller g) then 1 else 0
+
+redEadBoyz :: CardDef Unit
+redEadBoyz = unitCard "legends-011" "Red 'Ead Boyz" do
+  race Orc
+  cost 5
+  loyalty 2
+  power 2
+  hitPoints 4
+  traits [Warrior, Elite]
+  body
+    "Action: When this unit enters play, deal 1 damage to each unit with \
+    \printed cost 3 or lower."
+  onEnterPlay \_owner _self -> do
+    g <- getGame
+    for_ [u | u <- g.units, costAtMost 3 u.cardDef] \u ->
+      dealDamage u.key 1
+
+frenziedBigUn :: CardDef Unit
+frenziedBigUn = unitCard "legends-012" "Frenzied Big 'Un" do
+  race Orc
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  trait Warrior
+  body "Battlefield. Each damaged unit you control gains {power}."
+  unitAura \_g self target ->
+    if self.zone == BattlefieldZone
+        && target.controller == self.controller
+        && isDamaged target
+      then 1
+      else 0

@@ -1093,3 +1093,114 @@ jezzailTeam = unitCard "march-of-the-damned-055" "Jezzail Team" do
   actionWith "Snipe" 0 [CorruptSelf] \usage ->
     withTarget usage.user (UnitMatching \_me _g u -> u.zone == BattlefieldZone) \k ->
       dealDamage k 1
+
+-- Legends (deluxe expansion) -------------------------------------------
+
+terradonRider :: CardDef Unit
+terradonRider = unitCard "legends-043" "Terradon Rider" do
+  cost 4
+  loyalty 0
+  power 1
+  hitPoints 3
+  trait Lizardmen
+  orderOnly
+  body
+    "Order only. This unit gains {power} equal to the total number of other \
+    \Lizardmen units in this zone."
+  selfPower \g self ->
+    length
+      [ u
+      | u <- g.units
+      , u.key /= self.key
+      , u.zone == self.zone
+      , hasTrait Lizardmen u
+      ]
+
+stormvermin :: CardDef Unit
+stormvermin = unitCard "legends-046" "Stormvermin" do
+  cost 4
+  loyalty 0
+  power 2
+  hitPoints 4
+  traits [Skaven, Warrior]
+  destructionOnly
+  body
+    "Destruction only. Action: Spend 1 resource to redirect the next 2 damage \
+    \dealt to target unit you control to this unit."
+  action "Bodyguard" 1 \usage ->
+    withTarget usage.user ownUnit \k ->
+      until Permanent $ redirectNextDamage k 2 usage.self.key
+
+screamingBell :: CardDef Support
+screamingBell = supportCard "legends-047" "Screaming Bell" do
+  cost 3
+  loyalty 0
+  power 1
+  traits [Skaven, WarMachine]
+  destructionOnly
+  body "Destruction only. Each attacking Skaven unit you control gains {power}."
+  supportAura \g s u ->
+    if u.controller == s.controller && hasTrait Skaven u && unitIsAttacking g u
+      then 1
+      else 0
+
+shadowSentinel :: CardDef Unit
+shadowSentinel = unitCard "legends-049" "Shadow Sentinel" do
+  cost 2
+  loyalty 0
+  power 1
+  hitPoints 2
+  traits [WoodElf, Warrior]
+  orderOnly
+  body
+    "Order only. Action: When one or more units an opponent controls leaves \
+    \play, put the top card of your deck into this zone facedown as a \
+    \development."
+  onOpponentUnitLeavePlay \_owner self _uk _zone _code ->
+    addDevelopment self.controller self.zone
+
+wildRider :: CardDef Unit
+wildRider = unitCard "legends-050" "Wild Rider" do
+  cost 3
+  loyalty 0
+  power 1
+  hitPoints 3
+  traits [WoodElf, Warrior]
+  orderOnly
+  body
+    "Order only. If you have five or more developments in this zone, this unit \
+    \gains {power}{power}{power}{power}."
+  selfPower \g self ->
+    if devsInZone g self >= 5 then 4 else 0
+
+bloodDragonKnight :: CardDef Unit
+bloodDragonKnight = unitCard "legends-053" "Blood Dragon Knight" do
+  cost 4
+  loyalty 0
+  power 2
+  hitPoints 4
+  traits [Undead, Vampire]
+  destructionOnly
+  body
+    "Destruction only. Action: When this unit attacks, deal damage equal to \
+    \its power to target unit in the defending zone."
+  onMyAttackDeclared \_owner self zone _attackers ->
+    withTarget self.controller
+      (unitWhere \u -> u.zone == zone && u.controller == self.controller.next)
+      \k -> dealDamage k self.effectivePower
+
+curseOfYears :: CardDef Support
+curseOfYears = supportCard "legends-054" "Curse of Years" do
+  cost 2
+  loyalty 0
+  traits [Undead, Attachment, Spell]
+  destructionOnly
+  body
+    "Destruction only. Attach to a target unit. Attached unit gets -1 hit \
+    \points for each resource token on this card. Action: At the beginning of \
+    \its controller's turn, put a resource token on this card."
+  supportHPAura \_g self target -> case self.attachedTo of
+    Just hk | hk == target.key -> negate self.tokens
+    _ -> 0
+  onAttachedHostTurnBegin \_owner self _host ->
+    adjustSupportTokens self.key 1

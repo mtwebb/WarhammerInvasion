@@ -149,6 +149,10 @@ data Trait
     -- Damned Destruction minor-faction cards).
   | Ship
     -- ^ Ship trait (Elven Warship, Corsair Raider).
+  | Vampire
+    -- ^ Vampire trait (Blood Dragon Knight, the Legends Undead cards).
+  | WoodElf
+    -- ^ Wood Elf trait (Wild Rider, Shadow Sentinel, Protective Spites).
   deriving stock (Show, Eq)
 
 mconcat
