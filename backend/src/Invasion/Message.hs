@@ -460,6 +460,10 @@ data Message where
     -- has already unwound to the battlefield window, so the engine
     -- simply returns priority there. Used by Test of Will and the
     -- "cancel the attack" half of Fulminating Cage.
+  BlockAttacksThisTurn :: PlayerKey -> Message
+    -- ^ Bar the named player from declaring another attack for the rest
+    -- of this turn (Fulminating Cage). Recorded in
+    -- 'Game.attackBlockedThisTurn' and checked by 'BeginCombat'.
   ResolveAmbushStep :: Message
     -- ^ Step 2.5 (Ambush): after Declare Attackers, before Declare
     -- Defenders, offer the defender each affordable facedown

@@ -210,6 +210,11 @@ redirectAttackZone zk = push (RedirectAttackZone zk)
 cancelAttack :: HasQueue Message m => m ()
 cancelAttack = push CancelAttack
 
+-- | "That player cannot declare another attack this turn." (Fulminating
+-- Cage.) Persists until the player's next 'BeginTurn'.
+blockAttacksThisTurn :: HasQueue Message m => PlayerKey -> m ()
+blockAttacksThisTurn pk = push (BlockAttacksThisTurn pk)
+
 -- | Pop one development from the named player's zone. Discards the
 -- facedown card to that player's pile.
 destroyDevelopment :: HasQueue Message m => PlayerKey -> ZoneKind -> m ()

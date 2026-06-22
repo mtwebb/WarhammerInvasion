@@ -545,6 +545,10 @@ data Game = Game
     -- ^ True after the active player plays a face-down development
     -- this turn. Enforces the once-per-turn development rule. Reset
     -- to False at 'BeginTurn'.
+  , attackBlockedThisTurn :: [PlayerKey]
+    -- ^ Players who may not declare another attack for the rest of
+    -- this turn (Fulminating Cage). Checked in 'BeginCombat'; reset
+    -- at 'BeginTurn'.
   , drawCaps :: Map PlayerKey Int
     -- ^ Per-player limit on standard draws for the rest of the turn
     -- (Infiltrate the tactic: 1). Checked against the ThisTurn

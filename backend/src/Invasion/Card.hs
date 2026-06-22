@@ -647,6 +647,7 @@ allCards =
       ("glory-of-days-past-063", UnitCardDef mineEngineers),
       ("glory-of-days-past-064", SupportCardDef karakHirnMine),
       ("glory-of-days-past-065", UnitCardDef ostlandGreatswords),
+      ("glory-of-days-past-066", TacticCardDef fulminatingCage),
       ("glory-of-days-past-067", UnitCardDef masterOfQhaysh),
       ("glory-of-days-past-073", UnitCardDef chaosDragon),
       ("glory-of-days-past-075", SupportCardDef painfulMutation),

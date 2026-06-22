@@ -1334,3 +1334,19 @@ callForReserves = tacticCard "legends-021" "Call for Reserves" do
         "Put a unit with printed cost 3 or lower into play." \chosen ->
           for_ chosen \c ->
             withTarget pk MyAnyZone \zk -> putUnitIntoPlay pk FromHand c.key zk
+
+-- Ambush tactics (Eternal War cycle) -----------------------------------
+
+fulminatingCage :: CardDef Tactic
+fulminatingCage = tacticCard "glory-of-days-past-066" "Fulminating Cage" do
+  race Empire
+  cost 5
+  loyalty 3
+  traits [Epic, Spell]
+  body
+    "Empire only. Ambush 3. Action: Cancel the current attack. Your opponent \
+    \cannot declare another attack this turn."
+  ambush 3
+  whenResolved \_self -> withCombat \cs -> do
+    cancelAttack
+    blockAttacksThisTurn cs.attackingPlayer

@@ -734,6 +734,50 @@ main = do
             )
         _ -> putStrLn "  skip cancel-attack smoke (deck dealt no usable hand)"
 
+  -- Attack lockout (Fulminating Cage, Ambush 3): cancels the current
+  -- attack AND bars the attacker from declaring another attack this turn.
+  let cageDeck = Deck {cards = replicate 40 "glory-of-days-past-066", race = Empire}
+      unitDeck'' = Deck {cards = replicate 40 "core-001", race = Empire}
+      mkAsym'' d1 d2 = case newGame d1 d2 defaultGameOptions of
+        Left err -> putStrLn ("FAIL asym newGame: " <> err) >> exitFailure
+        Right g -> applyMessage g Setup
+      findP1First'' :: Int -> IO (Maybe Game)
+      findP1First'' 0 = pure Nothing
+      findP1First'' n = do
+        g <- mkAsym'' cageDeck unitDeck''
+        if g.currentPlayer == Player1 then pure (Just g) else findP1First'' (n - 1)
+  mE0 <- findP1First'' 50
+  case mE0 of
+    Nothing -> putStrLn "  skip attack-lockout smoke (no Player1-first setup)"
+    Just gE0 -> do
+      gE1 <- applyMessage gE0 BeginGame
+      let fpE = gE1.currentPlayer
+          atkE = fpE.next
+      case (take 1 (map (.key) (activePlayer gE1).hand), unitInHand (pRec atkE gE1)) of
+        ([tk], Just (ak, _, _)) -> do
+          gE2 <- applyMessages gE1
+            [ PassPriority fpE, PassPriority atkE
+            , PassPriority fpE, PassPriority atkE
+            , GainResources fpE 5
+            , PlayDevelopment fpE tk BattlefieldZone
+            , PassPriority fpE, PassPriority atkE
+            , PassPriority fpE, PassPriority atkE
+            , PassPriority atkE, PassPriority fpE
+            ]
+          gE3 <- applyMessages gE2 [PutUnitIntoPlay atkE ak BattlefieldZone]
+          gE4 <- applyMessagesWithAnswers gE3
+            [PickUnits [tk]]    -- Ambush step: flip Fulminating Cage
+            [ BeginCombat atkE BattlefieldZone [ak]
+            , PassPriority atkE, PassPriority fpE
+            , PassPriority atkE, PassPriority fpE
+            ]
+          check "attack lockout: first attack was cancelled"
+            (isNothing gE4.combat)
+          gE5 <- applyMessage gE4 (BeginCombat atkE BattlefieldZone [ak])
+          check "attack lockout: attacker cannot declare another attack this turn"
+            (isNothing gE5.combat)
+        _ -> putStrLn "  skip attack-lockout smoke (deck dealt no usable hand)"
+
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only
   -- key-stubs of Player2's hand; deck contents are hidden from

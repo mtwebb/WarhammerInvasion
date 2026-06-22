@@ -512,6 +512,7 @@ instance Run Game where
           , lastResolvedTactic = Nothing
           , pendingActionCancel = mempty
           , developmentPlayedThisTurn = False
+          , attackBlockedThisTurn = []
           }
       t <- gets (.turn)
       logIt LogTurn
@@ -1718,7 +1719,8 @@ instance Run Game where
           -- Filter attackers by per-card eligibility (Sworn of Khorne,
           -- corruption gating, etc.) before committing the combat.
           eligible = filter (eligibleAttacker g defender zone) attackerKeys
-      if null eligible
+          attackBlocked = attacker `elem` g.attackBlockedThisTurn
+      if null eligible || attackBlocked
         then do
           logIt LogSystem
             "log.combat.aborted"
@@ -2108,6 +2110,14 @@ instance Run Game where
         Just _ -> do
           modify \gx -> gx {combat = Nothing}
           logIt LogSystem "log.combat.cancelled" []
+    BlockAttacksThisTurn pk ->
+      modify \gx ->
+        gx
+          { attackBlockedThisTurn =
+              if pk `elem` gx.attackBlockedThisTurn
+                then gx.attackBlockedThisTurn
+                else pk : gx.attackBlockedThisTurn
+          }
     FireScoutDiscards attacker defender attackerKeys defenderKeys -> do
       -- Post-damage: count surviving Scouts on each side and queue a
       -- single 'DiscardRandomFromHand' against the opposing player
@@ -2967,6 +2977,7 @@ newGame deck1 deck2 opts = do
       , lastResolvedTactic = Nothing
       , pendingActionCancel = mempty
       , developmentPlayedThisTurn = False
+      , attackBlockedThisTurn = []
       , drawCaps = mempty
       , capitalShields = mempty
       , defenderCounterstrikeBonus = mempty
