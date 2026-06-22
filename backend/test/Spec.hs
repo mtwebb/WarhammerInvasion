@@ -629,6 +629,60 @@ main = do
         (any (\u -> u.key == dk && u.effectivePower == 3) gB4.units)
     _ -> putStrLn "  skip ambush-rider smoke (deck dealt no usable hand)"
 
+  -- Tactic ambush (Fury of the Forest, Ambush 0): a facedown tactic in
+  -- the defending zone is flipped during the Ambush step, resolves its
+  -- effect ("deal 1 damage to each attacking unit"), and is discarded
+  -- rather than entering play. Asymmetric decks: the defender holds the
+  -- tactic, the attacker holds a real unit to attack with.
+  let mkAsym d1 d2 = case newGame d1 d2 defaultGameOptions of
+        Left err -> putStrLn ("FAIL asym newGame: " <> err) >> exitFailure
+        Right g -> applyMessage g Setup
+      furyDeck = Deck {cards = replicate 40 "hidden-kingdoms-018", race = Dwarf}
+      unitDeck = Deck {cards = replicate 40 "core-001", race = Dwarf}
+      -- The first player is sampled randomly; retry until Player1 (the
+      -- Fury deck) leads, so the defender holds the tactic.
+      findP1First :: Int -> IO (Maybe Game)
+      findP1First 0 = pure Nothing
+      findP1First n = do
+        g <- mkAsym furyDeck unitDeck
+        if g.currentPlayer == Player1 then pure (Just g) else findP1First (n - 1)
+  mC0 <- findP1First 50
+  case mC0 of
+    Nothing -> putStrLn "  skip tactic-ambush smoke (no Player1-first setup)"
+    Just gC0 -> do
+      gC1 <- applyMessage gC0 BeginGame
+      let fpC = gC1.currentPlayer        -- Player1 = defender (tactic deck)
+          atkC = fpC.next
+      case (take 1 (map (.key) (activePlayer gC1).hand), unitInHand (pRec atkC gC1)) of
+        ([tk], Just (ak, _, _)) -> do
+          gC2 <- applyMessages gC1
+            [ PassPriority fpC, PassPriority atkC
+            , PassPriority fpC, PassPriority atkC
+            , PlayDevelopment fpC tk BattlefieldZone     -- Ambush 0: no cost
+            , PassPriority fpC, PassPriority atkC
+            , PassPriority fpC, PassPriority atkC
+            , PassPriority atkC, PassPriority fpC
+            ]
+          gC3 <- applyMessages gC2 [PutUnitIntoPlay atkC ak BattlefieldZone]
+          gC4 <- applyMessagesWithAnswers gC3
+            [ PickUnits [tk]    -- Ambush step: flip Fury of the Forest
+            , PickNone
+            , PickNone
+            ]
+            ( BeginCombat atkC BattlefieldZone [ak]
+                : concat
+                    (replicate 6 [PassPriority atkC, PassPriority fpC])
+            )
+          check "tactic ambush: the tactic did not enter play as a unit"
+            (not (any (\u -> u.key == tk) gC4.units))
+          check "tactic ambush: Fury of the Forest damaged the attacking unit"
+            ( any
+                (\u -> u.key == ak && let Damage d = u.damage in d >= 1)
+                gC4.units
+              || not (any (\u -> u.key == ak) gC4.units)
+            )
+        _ -> putStrLn "  skip tactic-ambush smoke (deck dealt no usable hand)"
+
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only
   -- key-stubs of Player2's hand; deck contents are hidden from

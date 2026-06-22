@@ -1322,3 +1322,12 @@ mineEngineers = unitCard "glory-of-days-past-063" "Mine Engineers" do
     \damage from your capital."
   ambush 2
   onAmbush \_owner self -> healCapital self.controller 3
+
+bandTogether :: CardDef Tactic
+bandTogether = tacticCard "oaths-of-vengeance-026" "Band Together" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  body "Dwarf only. Ambush 0. Action: Gain 3 resources."
+  ambush 0
+  whenResolved \self -> gainResources self.controller 3

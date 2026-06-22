@@ -1834,9 +1834,10 @@ instance Run Game where
       -- Step 2.5 (Ambush): offer the defender each affordable facedown
       -- development in the defending zone that carries Ambush X. One
       -- ambush per firing — flipping re-enters this step — so the
-      -- iterative budget check stays consistent. Prototype scope: only
-      -- unit developments ambush (the rules-critical "must defend"
-      -- case); non-unit Ambush cards are left for follow-up.
+      -- iterative budget check stays consistent. Unit and tactic
+      -- developments ambush (a unit becomes a defender; a tactic
+      -- resolves and is discarded); support/quest/legend ambush is left
+      -- for follow-up.
       g <- get
       case g.combat of
         Nothing -> send AdvanceCombatToDefenders
@@ -1845,11 +1846,14 @@ instance Run Game where
               zk = cs.targetZone
               player = lookupPlayer pk g
               Resources budget = player.resources
-              isUnitCard c = case c.def of UnitCardDef _ -> True; _ -> False
+              ambushable c = case c.def of
+                UnitCardDef _ -> True
+                TacticCardDef _ -> True
+                _ -> False
               eligible =
                 [ c
                 | c <- Map.findWithDefault [] zk player.developmentCards
-                , isUnitCard c
+                , ambushable c
                 , Just x <- [someCardAmbushCost c.def]
                 , x <= budget
                 ]
@@ -1863,8 +1867,8 @@ instance Run Game where
                     , minPick = 0
                     , maxPick = 1
                     , description =
-                        "Ambush: flip a development in the defending zone as a "
-                          <> "defender (pay its Ambush cost)?"
+                        "Ambush: flip a development in the defending zone "
+                          <> "(pay its Ambush cost)?"
                     }
                 , callback = CallbackInlinePrompt
                 }
@@ -1908,6 +1912,33 @@ instance Run Game where
                 ]
               send (UnitEnteredPlay pk cardKey)
               send (UnitAmbushed pk cardKey)
+              send ResolveAmbushStep
+          | TacticCardDef cardDef <- c.def -> do
+              -- A tactic ambush: pop the development, pay the cost, put
+              -- the card in discard, and resolve its effect (it doesn't
+              -- enter play). Then re-enter the step.
+              let cost = fromMaybe 0 (someCardAmbushCost c.def)
+                  rest = filter ((/= cardKey) . (.key)) zoneCards
+                  cap = player.capital
+                  cap' = Capital
+                    { kingdom = decrementDev zk cap.kingdom
+                    , quest = decrementDev zk cap.quest
+                    , battlefield = decrementDev zk cap.battlefield
+                    }
+                  player' = player
+                    { developmentCards = Map.insert zk rest player.developmentCards
+                    , capital = cap'
+                    , discard = mkCard cardKey (TacticCardDef cardDef) : player.discard
+                    }
+              modify (setPlayer pk player')
+              send (SpendResources pk cost)
+              logIt LogSystem
+                "log.development.ambushed"
+                [ ("player", playerParam pk)
+                , ("zone", zoneParam zk)
+                , ("card", T.pack cardDef.title)
+                ]
+              send (TacticResolved pk cardDef.code NoTarget 0)
               send ResolveAmbushStep
         _ -> send AdvanceCombatToDefenders
     AdvanceCombatToDefenders -> do

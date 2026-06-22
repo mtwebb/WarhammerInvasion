@@ -1339,3 +1339,12 @@ skavenPackmaster = unitCard "oaths-of-vengeance-039" "Skaven Packmaster" do
       withTarget pk
         (UnitMatching \me _g u -> u.controller == me && isDamaged u && u.key /= k1)
         \k2 -> healUnit k2 999
+
+furyOfTheForest :: CardDef Tactic
+furyOfTheForest = tacticCard "hidden-kingdoms-018" "Fury of the Forest" do
+  cost 3
+  traits [WoodElf, Spell]
+  orderOnly
+  body "Wood Elf only. Ambush 0. Action: Deal 1 damage to each attacking unit."
+  ambush 0
+  whenResolved \_self -> withCombat \cs -> for_ cs.attackers \k -> dealDamage k 1

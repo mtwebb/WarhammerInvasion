@@ -626,6 +626,7 @@ allCards =
       -- Oaths of Vengeance (Eternal War cycle, pack 2)
       ("oaths-of-vengeance-023", SupportCardDef outlyingTower),
       ("oaths-of-vengeance-024", UnitCardDef nagarytheArcher),
+      ("oaths-of-vengeance-026", TacticCardDef bandTogether),
       ("oaths-of-vengeance-027", SupportCardDef wealthOfTheHold),
       ("oaths-of-vengeance-028", UnitCardDef maidOfSigmar),
       ("oaths-of-vengeance-030", UnitCardDef wolfChariot),
@@ -671,6 +672,7 @@ allCards =
       ("hidden-kingdoms-006", SupportCardDef greatTempleOfTlazcotl),
       ("hidden-kingdoms-009", TacticCardDef ruinationOfCities),
       ("hidden-kingdoms-013", UnitCardDef shroudedWaywatcher),
+      ("hidden-kingdoms-018", TacticCardDef furyOfTheForest),
       ("hidden-kingdoms-024", UnitCardDef giantRats),
       ("hidden-kingdoms-039", TacticCardDef defendYourHonor),
       ("hidden-kingdoms-047", UnitCardDef seekerChariot),
