@@ -97,6 +97,25 @@ someCardTraits = \case
   TacticCardDef cd -> cd.traits
   LegendCardDef cd -> cd.traits
 
+-- | The printed keywords of any card definition, regardless of kind.
+-- Used by the combat Ambush step, which reads 'Ambush' off facedown
+-- developments without knowing their card kind.
+someCardKeywords :: SomeCardDef -> [Keyword]
+someCardKeywords = \case
+  UnitCardDef cd -> cd.keywords
+  SupportCardDef cd -> cd.keywords
+  QuestCardDef cd -> cd.keywords
+  TacticCardDef cd -> cd.keywords
+  LegendCardDef cd -> cd.keywords
+
+-- | The 'Ambush' X cost of a card, if it carries the keyword. Returns
+-- the smallest printed value if (improbably) more than one is present.
+someCardAmbushCost :: SomeCardDef -> Maybe Int
+someCardAmbushCost d =
+  case [n | Ambush n <- someCardKeywords d] of
+    [] -> Nothing
+    ns -> Just (minimum ns)
+
 -- | The printed resource cost of any card definition, as an 'Int'.
 -- 'Variable' ("X") costs report 0 — the callers that read this (e.g.
 -- Vaedra Bloodsworn, gaining power equal to a discarded card's cost)

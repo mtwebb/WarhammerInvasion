@@ -1229,6 +1229,16 @@ curseOfYears = supportCard "legends-054" "Curse of Years" do
 
 -- Hidden Kingdoms (deluxe expansion) -----------------------------------
 
+shroudedWaywatcher :: CardDef Unit
+shroudedWaywatcher = unitCard "hidden-kingdoms-013" "Shrouded Waywatcher" do
+  cost 5
+  power 2
+  hitPoints 2
+  trait WoodElf
+  body "Wood Elf only. Ambush 3. Counterstrike 4."
+  ambush 3
+  counterstrike 4
+
 chameleonStalker :: CardDef Unit
 chameleonStalker = unitCard "hidden-kingdoms-003" "Chameleon Stalker" do
   cost 1

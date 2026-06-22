@@ -135,10 +135,11 @@ raider n = keyword (Raider n)
 counterstrike :: Int -> CardBuilder Unit ()
 counterstrike n = keyword (Counterstrike n)
 
--- | Ambush keyword (FAQ 2.2 v2.0): only triggerable while the host
--- development is face-down. Used by Cataclysm-era developments.
-ambush :: CardBuilder k ()
-ambush = keyword Ambush
+-- | Ambush X keyword (Hidden Kingdoms): the card may be played facedown
+-- as a development and flipped faceup for X resources during the combat
+-- Ambush step. @ambush 0@ is a free flip.
+ambush :: Int -> CardBuilder k ()
+ambush n = keyword (Ambush n)
 
 -- | Limited keyword: only one Limited card may be played each turn,
 -- regardless of which Limited card it is. Enforced by the engine in

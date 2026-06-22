@@ -37,10 +37,12 @@ data Keyword
   | PlayInOpponentArea
     -- ^ Quest enters play in the opponent's play area while remaining
     -- under the playing player's control. Used by Dominion of Chaos.
-  | Ambush
-    -- ^ Triggerable only while the host development is facedown
-    -- (FAQ 2.2 v2.0 keyword). If an effect has flipped the development
-    -- face-up, its Ambush ability cannot fire.
+  | Ambush Int
+    -- ^ Ambush X (Hidden Kingdoms): the card may be played facedown as a
+    -- development, then flipped faceup for X resources during the combat
+    -- Ambush step (after Declare Attackers, before Declare Defenders) on
+    -- a development in the defending zone. The card becomes its printed
+    -- type; a flipped unit must be declared as a defender that step.
   | OrderOnly
     -- ^ Neutral-card restriction: cannot be included in a Destruction
     -- (Chaos / Orc / Dark Elf) deck.

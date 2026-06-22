@@ -448,6 +448,19 @@ data Message where
     -- ^ Internal: fired by CloseActionWindow after the
     -- AfterDeclareCombatTarget window closes. Opens the
     -- AfterDeclareAttackers window.
+  ResolveAmbushStep :: Message
+    -- ^ Step 2.5 (Ambush): after Declare Attackers, before Declare
+    -- Defenders, offer the defender each affordable facedown
+    -- development in the defending zone that carries 'Ambush' X. One
+    -- ambush per firing; flipping re-sends this message to offer the
+    -- next, then 'AdvanceCombatToDefenders' once the defender declines
+    -- or nothing is affordable.
+  AmbushDevelopment :: PlayerKey -> ZoneKind -> UnitKey -> Message
+    -- ^ Flip a specific facedown development faceup as an ambush: pay
+    -- its 'Ambush' X, pop it from the zone, put the card into play as
+    -- its printed type (no end-of-turn sacrifice), and — for units —
+    -- mark it 'MustDefend' so the upcoming Declare Defenders step
+    -- force-includes it. Fires 'UnitEnteredPlay' for its text.
   AdvanceCombatToDefenders :: Message
     -- ^ Internal: opens the AfterDeclareAttackers → defenders
     -- transition, auto-picks defenders (until the defender has a

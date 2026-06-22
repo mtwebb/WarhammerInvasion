@@ -628,7 +628,7 @@ instance Run Game where
       -- top-of-stack phase window ends its phase.
       case trigger of
         Just AfterDeclareCombatTarget -> send AdvanceCombatToAttackers
-        Just AfterDeclareAttackers -> send AdvanceCombatToDefenders
+        Just AfterDeclareAttackers -> send ResolveAmbushStep
         Just AfterDeclareDefenders -> send AdvanceCombatToAssign
         Just AfterAssignCombatDamage -> send AdvanceCombatToApply
         Just AfterApplyCombatDamage -> send EndCombat
@@ -1826,6 +1826,85 @@ instance Run Game where
           openAutoCombatWindow AfterDeclareCombatTarget
     AdvanceCombatToAttackers ->
       openAutoCombatWindow AfterDeclareAttackers
+    ResolveAmbushStep -> do
+      -- Step 2.5 (Ambush): offer the defender each affordable facedown
+      -- development in the defending zone that carries Ambush X. One
+      -- ambush per firing — flipping re-enters this step — so the
+      -- iterative budget check stays consistent. Prototype scope: only
+      -- unit developments ambush (the rules-critical "must defend"
+      -- case); non-unit Ambush cards are left for follow-up.
+      g <- get
+      case g.combat of
+        Nothing -> send AdvanceCombatToDefenders
+        Just cs -> do
+          let pk = cs.defendingPlayer
+              zk = cs.targetZone
+              player = lookupPlayer pk g
+              Resources budget = player.resources
+              isUnitCard c = case c.def of UnitCardDef _ -> True; _ -> False
+              eligible =
+                [ c
+                | c <- Map.findWithDefault [] zk player.developmentCards
+                , isUnitCard c
+                , Just x <- [someCardAmbushCost c.def]
+                , x <= budget
+                ]
+          if null eligible
+            then send AdvanceCombatToDefenders
+            else do
+              ans <- askPrompt Prompt
+                { player = pk
+                , kind = ChooseFromCards
+                    { cards = eligible
+                    , minPick = 0
+                    , maxPick = 1
+                    , description =
+                        "Ambush: flip a development in the defending zone as a "
+                          <> "defender (pay its Ambush cost)?"
+                    }
+                , callback = CallbackInlinePrompt
+                }
+              case ans of
+                PickUnits (ck : _)
+                  | any ((== ck) . (.key)) eligible ->
+                      send (AmbushDevelopment pk zk ck)
+                _ -> send AdvanceCombatToDefenders
+    AmbushDevelopment pk zk cardKey -> do
+      -- Flip one specific facedown development faceup as an ambush:
+      -- pay Ambush X, pop it, put the unit into play (no end-of-turn
+      -- sacrifice), force it to defend, fire its enter-play text, then
+      -- re-enter the Ambush step to offer the next one.
+      g <- get
+      let player = lookupPlayer pk g
+          zoneCards = Map.findWithDefault [] zk player.developmentCards
+      case find ((== cardKey) . (.key)) zoneCards of
+        Just c
+          | UnitCardDef cardDef <- c.def -> do
+              let cost = fromMaybe 0 (someCardAmbushCost c.def)
+                  rest = filter ((/= cardKey) . (.key)) zoneCards
+                  cap = player.capital
+                  cap' = Capital
+                    { kingdom = decrementDev zk cap.kingdom
+                    , quest = decrementDev zk cap.quest
+                    , battlefield = decrementDev zk cap.battlefield
+                    }
+                  player' = player
+                    { developmentCards = Map.insert zk rest player.developmentCards
+                    , capital = cap'
+                    }
+                  unit = freshUnit cardKey pk zk cardDef
+              modify \gx -> (setPlayer pk player' gx) {units = unit : gx.units}
+              send (SpendResources pk cost)
+              send (InstallModifier (UnitRef cardKey) (Modifier MustDefend EndOfTurn))
+              logIt LogSystem
+                "log.development.ambushed"
+                [ ("player", playerParam pk)
+                , ("zone", zoneParam zk)
+                , ("card", T.pack cardDef.title)
+                ]
+              send (UnitEnteredPlay pk cardKey)
+              send ResolveAmbushStep
+        _ -> send AdvanceCombatToDefenders
     AdvanceCombatToDefenders -> do
       -- Step 3: defender chooses which of their units defend the
       -- attacked zone. Prompt the defending player to pick a subset of

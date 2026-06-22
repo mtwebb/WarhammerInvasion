@@ -548,6 +548,51 @@ main = do
       putStrLn "  FAIL wardancer deck dealt no hand"
       exitFailure
 
+  -- Ambush combat step (Shrouded Waywatcher, Ambush 3 / Counterstrike 4):
+  -- a facedown Ambush development in the defending zone can be flipped
+  -- during the new Ambush step (after Declare Attackers, before Declare
+  -- Defenders). It enters play, is forced to defend, and fires its
+  -- Counterstrike — which kills the lone attacker before damage assigns.
+  gA1 <- (`applyMessage` BeginGame) =<< mkMonoGame "hidden-kingdoms-013" HighElf
+  let fpA = gA1.currentPlayer            -- first player = the defender
+      attackerSide = fpA.next
+      playerRec side g = case side of Player1 -> g.player1; Player2 -> g.player2
+      devKeysOf side g =
+        map (.key) (concat (Map.elems (playerRec side g).developmentCards))
+  case (firstHandKeys 1 gA1, unitInHand (playerRec attackerSide gA1)) of
+    ([dk], Just (ak, _, _)) -> do
+      -- Defender plays the Waywatcher facedown during their capital phase
+      -- and banks resources to afford the Ambush cost.
+      gA2 <- applyMessages gA1
+        [ PassPriority fpA, PassPriority attackerSide       -- begin-of-turn
+        , PassPriority fpA, PassPriority attackerSide       -- kingdom
+        , GainResources fpA 5
+        , PlayDevelopment fpA dk BattlefieldZone
+        , PassPriority fpA, PassPriority attackerSide       -- capital
+        , PassPriority fpA, PassPriority attackerSide       -- end-of-turn
+        , PassPriority attackerSide, PassPriority fpA        -- attacker's begin
+        ]
+      check "ambush: development is facedown before combat"
+        (dk `elem` devKeysOf fpA gA2)
+      gA3 <- applyMessages gA2 [PutUnitIntoPlay attackerSide ak BattlefieldZone]
+      gA4 <- applyMessagesWithAnswers gA3
+        [ PickUnits [dk]    -- Ambush step: flip the Waywatcher
+        , PickUnits [dk]    -- Declare Defenders (same key; MustDefend anyway)
+        , PickNone          -- attacker damage order (no-op)
+        , PickNone          -- defender damage order (no-op)
+        ]
+        ( BeginCombat attackerSide BattlefieldZone [ak]
+            : concat
+                (replicate 6 [PassPriority attackerSide, PassPriority fpA])
+        )
+      check "ambush: development left the zone (flipped faceup)"
+        (dk `notElem` devKeysOf fpA gA4)
+      check "ambush: combat resolved"
+        (isNothing gA4.combat)
+      check "ambush: flipped defender's Counterstrike killed the attacker"
+        (not (any (\u -> u.key == ak) gA4.units))
+    _ -> putStrLn "  skip ambush smoke (deck dealt no usable hand)"
+
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only
   -- key-stubs of Player2's hand; deck contents are hidden from
