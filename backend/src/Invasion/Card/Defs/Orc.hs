@@ -1319,3 +1319,21 @@ frenziedBigUn = unitCard "legends-012" "Frenzied Big 'Un" do
         && isDamaged target
       then 1
       else 0
+
+-- Hidden Kingdoms (deluxe expansion) -----------------------------------
+
+orcishArtillery :: CardDef Tactic
+orcishArtillery = tacticCard "hidden-kingdoms-054" "Orcish Artillery" do
+  race Orc
+  cost 2
+  loyalty 1
+  body
+    "Play only on your turn. Action: Deal 1 damage to each attacking unit you \
+    \control and deal 1 damage to each unit in the attacked zone."
+  playableWhen \g pk -> g.currentPlayer == pk && inCombat g pk
+  whenResolved \_self -> withCombat \cs -> do
+    for_ cs.attackers \k -> dealDamage k 1
+    g <- getGame
+    for_
+      [u.key | u <- g.units, u.controller == cs.defendingPlayer, u.zone == cs.targetZone]
+      \k -> dealDamage k 1

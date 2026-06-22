@@ -1275,3 +1275,20 @@ blastingCharge = tacticCard "legends-007" "Blasting Charge" do
       n <- chooseAmount pk 0 3 "Destroy how many developments?"
       replicateM_ n (destroyDevelopment owner zk)
     eachPlayer \p -> indirectDamage p 3
+
+-- Hidden Kingdoms (deluxe expansion) -----------------------------------
+
+defendYourHonor :: CardDef Tactic
+defendYourHonor = tacticCard "hidden-kingdoms-039" "Defend Your Honor!" do
+  race Dwarf
+  cost 0
+  loyalty 2
+  body
+    "Action: Defending [Dwarf] units gain Toughness X until the end of the \
+    \turn. X is the number of defending units."
+  whenResolved \_self -> withCombat \cs -> do
+    g <- getGame
+    let defenders = [u | u <- g.units, u.key `elem` cs.defenders]
+        x = length defenders
+    for_ defenders \u ->
+      when (u `isRace` Dwarf) $ until EndOfTurn $ buffToughness u.key x

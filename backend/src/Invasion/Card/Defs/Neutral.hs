@@ -1204,3 +1204,69 @@ curseOfYears = supportCard "legends-054" "Curse of Years" do
     _ -> 0
   onAttachedHostTurnBegin \_owner self _host ->
     adjustSupportTokens self.key 1
+
+-- Hidden Kingdoms (deluxe expansion) -----------------------------------
+
+chameleonStalker :: CardDef Unit
+chameleonStalker = unitCard "hidden-kingdoms-003" "Chameleon Stalker" do
+  cost 1
+  loyalty 0
+  power 1
+  hitPoints 1
+  trait Lizardmen
+  body "Lizardmen only. This unit cannot be assigned damage during your battlefield phase."
+  damageImmuneWhen \g self ->
+    g.phase == Just BattlefieldPhase && g.currentPlayer == self.controller
+
+greatTempleOfTlazcotl :: CardDef Support
+greatTempleOfTlazcotl = supportCard "hidden-kingdoms-006" "Great Temple of Tlazcotl" do
+  cost 3
+  loyalty 0
+  power 2
+  traits [Lizardmen, Pyramid]
+  body
+    "Lizardmen only. Lizardmen units in a zone with at least 1 Pyramid card \
+    \deal +1 damage in combat."
+  supportCombat \g _s u ->
+    if hasTrait Lizardmen u && zoneHasPyramid g u then 1 else 0
+  where
+    zoneHasPyramid g u =
+      any
+        (\s -> hasTrait Pyramid s && s.controller == u.controller && s.zone == u.zone)
+        g.supports
+
+ruinationOfCities :: CardDef Tactic
+ruinationOfCities = tacticCard "hidden-kingdoms-009" "Ruination of Cities" do
+  cost 6
+  loyalty 0
+  traits [Lizardmen, Spell]
+  body "Lizardmen only. Action: Destroy all support cards and developments in target zone."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk AnyCapital \(owner, zk) -> do
+      g <- getGame
+      for_ [s.key | s <- g.supports, s.controller == owner, s.zone == zk, s.attachedTo == Nothing]
+        destroySupport
+      let me = playerOf owner g
+          n = length (Map.findWithDefault [] zk me.developmentCards)
+      replicateM_ n (destroyDevelopment owner zk)
+
+giantRats :: CardDef Unit
+giantRats = unitCard "hidden-kingdoms-024" "Giant Rats" do
+  cost 2
+  loyalty 0
+  power 1
+  hitPoints 1
+  traits [Skaven, Creature]
+  destructionOnly
+  body
+    "Destruction only. This unit gains {power} for each other copy of this \
+    \unit you control."
+  selfPower \g self ->
+    length
+      [ u
+      | u <- g.units
+      , u.controller == self.controller
+      , u.key /= self.key
+      , u.cardDef.code == self.cardDef.code
+      ]

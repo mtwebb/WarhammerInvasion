@@ -648,5 +648,13 @@ allCards =
       ("faith-and-steel-103", SupportCardDef theEmperorsStatue),
       ("faith-and-steel-106", UnitCardDef doomSeeker),
       ("faith-and-steel-107", TacticCardDef fearlessInBattle),
-      ("faith-and-steel-111", UnitCardDef gobboBigBoss)
+      ("faith-and-steel-111", UnitCardDef gobboBigBoss),
+      -- Hidden Kingdoms (deluxe expansion)
+      ("hidden-kingdoms-003", UnitCardDef chameleonStalker),
+      ("hidden-kingdoms-006", SupportCardDef greatTempleOfTlazcotl),
+      ("hidden-kingdoms-009", TacticCardDef ruinationOfCities),
+      ("hidden-kingdoms-024", UnitCardDef giantRats),
+      ("hidden-kingdoms-039", TacticCardDef defendYourHonor),
+      ("hidden-kingdoms-047", UnitCardDef seekerChariot),
+      ("hidden-kingdoms-054", TacticCardDef orcishArtillery)
     ]

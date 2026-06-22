@@ -157,6 +157,9 @@ data Trait
     -- ^ Condition support trait (Big Guns, Garrisoned).
   | Item
     -- ^ Item support trait (Arcane Orrery).
+  | Pyramid
+    -- ^ Pyramid support trait (Lizardmen temples in Hidden Kingdoms:
+    -- Great Temple of Tlazcotl, Sun Temple of Chotec, Ziggurat of Quetli).
   deriving stock (Show, Eq)
 
 mconcat

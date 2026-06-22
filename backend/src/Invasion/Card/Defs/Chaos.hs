@@ -1567,3 +1567,19 @@ cloyingQuagmire = tacticCard "march-of-the-damned-024" "Cloying Quagmire" do
     withTarget self.controller AnyUnit \k -> do
       corrupt k
       dealDamage k 2
+
+-- Hidden Kingdoms (deluxe expansion) -----------------------------------
+
+seekerChariot :: CardDef Unit
+seekerChariot = unitCard "hidden-kingdoms-047" "Seeker Chariot" do
+  race Chaos
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  traits [Cavalry, Daemon]
+  battlefieldOnly
+  body
+    "Battlefield only. While this unit is not opposed in combat, it deals +2 \
+    \damage in combat."
+  combatPower \g u -> if isOpposed g u then 0 else 2
