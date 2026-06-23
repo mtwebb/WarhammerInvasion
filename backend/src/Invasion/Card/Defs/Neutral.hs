@@ -1375,3 +1375,16 @@ spellweaver = unitCard "the-ruinous-hordes-098" "Spellweaver" do
     \cards of your deck facedown in this zone as developments."
   ambush 1
   onAmbush \_owner self -> placeTopAsDevelopments self.controller self.zone 2
+
+slumberingTitan :: CardDef Unit
+slumberingTitan = unitCard "hidden-kingdoms-014" "Slumbering Titan" do
+  cost 3
+  power 3
+  hitPoints 5
+  trait WoodElf
+  orderOnly
+  body
+    "Wood Elf only. Ambush 2. Forced: At the end of your turn, turn this card \
+    \into a facedown development. It no longer counts as a unit."
+  ambush 2
+  onMyTurnEnd \_owner self -> turnUnitIntoDevelopment self.key

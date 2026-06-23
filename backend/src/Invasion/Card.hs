@@ -681,6 +681,7 @@ allCards =
       ("hidden-kingdoms-006", SupportCardDef greatTempleOfTlazcotl),
       ("hidden-kingdoms-009", TacticCardDef ruinationOfCities),
       ("hidden-kingdoms-013", UnitCardDef shroudedWaywatcher),
+      ("hidden-kingdoms-014", UnitCardDef slumberingTitan),
       ("hidden-kingdoms-018", TacticCardDef furyOfTheForest),
       ("hidden-kingdoms-024", UnitCardDef giantRats),
       ("hidden-kingdoms-039", TacticCardDef defendYourHonor),

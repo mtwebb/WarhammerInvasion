@@ -11,7 +11,7 @@ module Main (main) where
 import Data.Aeson (Value (..), toJSON)
 import Data.Aeson.KeyMap qualified as KM
 import Data.Map.Strict qualified as Map
-import Invasion.Capital (Capital (..), Damage (..), Zone (..))
+import Invasion.Capital (Capital (..), Damage (..), Developments (..), Zone (..))
 import Invasion.Card (Card (..), SomeCardDef (..), allCards)
 import Invasion.CardDef (CardDef (..), Keyword (..))
 import Invasion.Modifier
@@ -826,6 +826,23 @@ main = do
   gG4 <- applyMessage gG3 (DealDamageToZone foeG KingdomZone 2)
   check "get em ladz: damage to an unwatched zone draws nothing"
     (handOf pkG gG4 == beforeG + 3)
+
+  -- Slumbering Titan: a unit can transform into a facedown development in
+  -- its zone (it stops being a unit; the zone's development count rises).
+  gT1 <- (`applyMessage` BeginGame) =<< mkMonoGame "hidden-kingdoms-014" HighElf
+  let pkT = gT1.currentPlayer
+  case firstHandKeys 1 gT1 of
+    [tk] -> do
+      gT2 <- applyMessage gT1 (PutUnitIntoPlay pkT tk KingdomZone)
+      let Developments d0 = (pRec pkT gT2).capital.kingdom.developments
+      check "titan: enters play as a unit"
+        (any (\u -> u.key == tk) gT2.units)
+      gT3 <- applyMessage gT2 (TurnUnitIntoDevelopment tk)
+      check "titan: no longer counts as a unit"
+        (not (any (\u -> u.key == tk) gT3.units))
+      check "titan: became a development in its zone"
+        (let Developments d = (pRec pkT gT3).capital.kingdom.developments in d == d0 + 1)
+    _ -> putStrLn "  FAIL titan deck dealt no hand" >> exitFailure
 
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only

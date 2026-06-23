@@ -1654,6 +1654,28 @@ instance Run Game where
           { zoneDamageDrawWatchers =
               (watcher, owner, zone) : gx.zoneDamageDrawWatchers
           }
+    TurnUnitIntoDevelopment ukey -> do
+      g <- get
+      whenJust (findUnit ukey g) \u -> do
+        let pk = u.controller
+            zone = u.zone
+            player = lookupPlayer pk g
+            zoneL = getZone zone player
+            Developments d = zoneL.developments
+            zoneL' = (zoneL {developments = Developments (d + 1)}) :: Zone
+            existing = Map.findWithDefault [] zone player.developmentCards
+            player' =
+              (setZone zone zoneL' player)
+                { developmentCards =
+                    Map.insert
+                      zone
+                      (mkCard ukey (UnitCardDef u.cardDef) : existing)
+                      player.developmentCards
+                }
+        modify \gx -> (setPlayer pk player' gx) {units = removeById ukey gx.units}
+        logIt LogSystem
+          "log.unit.became_development"
+          [("player", playerParam pk), ("zone", zoneParam zone)]
     PlaceTopAsDevelopments pk zone n -> do
       g <- get
       let player = lookupPlayer pk g

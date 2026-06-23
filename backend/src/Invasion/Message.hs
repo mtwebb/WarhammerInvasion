@@ -41,6 +41,11 @@ data Message where
   -- Phase steps
   ReturnResources :: PlayerKey -> Message
   CollectResources :: PlayerKey -> Message
+  TurnUnitIntoDevelopment :: UnitKey -> Message
+    -- ^ Transform an in-play unit into a facedown development in its
+    -- current zone (Slumbering Titan). The card stays in play but stops
+    -- being a unit; this is a transformation, not a leave-play, so no
+    -- leave-play hooks fire.
   WatchZoneForDamageDraw :: PlayerKey -> PlayerKey -> ZoneKind -> Message
     -- ^ "Until the end of the phase, draw a card for each damage dealt
     -- to that zone." (Get 'Em Ladz!) Args: watching player, zone owner,
