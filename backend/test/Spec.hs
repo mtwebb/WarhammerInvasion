@@ -16,7 +16,7 @@ import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUn
 import Invasion.CardDef (ActionTarget (..), CardDef (..), Keyword (..))
 import Invasion.Modifier
 import Invasion.Engine
-import Invasion.Entity (UnitDetails (..))
+import Invasion.Entity (SupportDetails (..), UnitDetails (..))
 import Invasion.Game
 import Invasion.Player
 import Invasion.Prelude
@@ -991,6 +991,41 @@ main = do
                 gShG.units
             )
     _ -> putStrLn "  skip shield-of-aeons (no suitable attacker/defender/shield)"
+
+  -- Star Crown Fragments: its action sacrifices the artefact to return
+  -- the top non-Artefact cards from the discard pile to hand. Seed the
+  -- discard with two units, fire the action, and confirm both come back
+  -- while the artefact leaves play.
+  gSC1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkSC = gSC1.currentPlayer
+      getPl pk g = case pk of Player1 -> g.player1; Player2 -> g.player2
+      setPl pk p g = case pk of Player1 -> g {player1 = p}; Player2 -> g {player2 = p}
+  case (firstHandKeys 4 gSC1, Map.lookup "fragments-of-power-021" allCards) of
+    ([hk, sk, d1, d2], Just (SupportCardDef scDef)) -> do
+      gSC2 <- applyMessage gSC1 (PutUnitIntoPlay pkSC hk BattlefieldZone)
+      let withAtt u
+            | u.key == hk =
+                u {attachments = freshSupport sk pkSC u.zone (Just hk) scDef : u.attachments}
+            | otherwise = u
+          p0 = getPl pkSC gSC2
+          seeded = [c | c <- p0.hand, c.key `elem` [d1, d2]]
+          p1 =
+            p0
+              { hand = [c | c <- p0.hand, c.key `notElem` [d1, d2]]
+              , discard = seeded <> p0.discard
+              }
+          gSC3 = setPl pkSC p1 (gSC2 {units = map withAtt gSC2.units})
+      gSC4 <- applyMessage gSC3 (TriggerCardAction pkSC sk 0 NoTarget)
+      let handKeys = map (.key) (getPl pkSC gSC4).hand
+          discKeys = map (.key) (getPl pkSC gSC4).discard
+          stillInPlay = any (\u -> any (\a -> a.key == sk) u.attachments) gSC4.units
+      check "star crown: both seeded cards returned to hand"
+        (d1 `elem` handKeys && d2 `elem` handKeys)
+      check "star crown: returned cards left the discard pile"
+        (d1 `notElem` discKeys && d2 `notElem` discKeys)
+      check "star crown: the artefact sacrificed itself"
+        (not stillInPlay)
+    _ -> putStrLn "  FAIL star-crown setup (hand too small or def missing)" >> exitFailure
 
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only

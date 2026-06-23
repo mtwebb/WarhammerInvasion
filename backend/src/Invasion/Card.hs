@@ -540,6 +540,7 @@ allCards =
       ("realm-of-the-phoenix-king-027", UnitCardDef heraldOfMoraiHeg),
       ("realm-of-the-phoenix-king-030", SupportCardDef straitsOfLothern),
       ("realm-of-the-phoenix-king-033", TacticCardDef inflame),
+      ("realm-of-the-phoenix-king-034", SupportCardDef horrificFavour),
       -- The Capital Cycle — The Iron Rock (041-060)
       ("the-iron-rock-041", UnitCardDef guildOfEngineers),
       ("the-iron-rock-042", UnitCardDef bannaThief),
@@ -576,11 +577,13 @@ allCards =
       ("rising-dawn-013", TacticCardDef boonOfTzeentch),
       ("rising-dawn-015", SupportCardDef towerOfOblivion),
       -- Bloodquest cycle — Fragments of Power (pack 2)
+      ("fragments-of-power-021", SupportCardDef starCrownFragments),
       ("fragments-of-power-027", UnitCardDef averheimSoldiers),
       ("fragments-of-power-031", UnitCardDef swornOfKhorne),
       ("fragments-of-power-032", SupportCardDef stolenSkin),
       -- Bloodquest cycle — The Accursed Dead (pack 3)
       ("the-accursed-dead-043", UnitCardDef recklessEngineer),
+      ("the-accursed-dead-057", TacticCardDef arcanePower),
       ("the-accursed-dead-045", UnitCardDef lionStandard),
       ("the-accursed-dead-051", UnitCardDef strickenWarrior),
       ("the-accursed-dead-052", SupportCardDef riftOfBattle),

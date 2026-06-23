@@ -3949,7 +3949,10 @@ data ActionSource
 findActionSource :: UnitKey -> Game -> Maybe ActionSource
 findActionSource k g =
       (UnitSource <$> findUnit k g)
-  <|> (SupportSource <$> findSupport k g)
+  -- Includes attached supports — an Attachment artefact (Windcatcher
+  -- Prism, Star Crown Fragments, Eye of Sheerian) carries an Action
+  -- ability that fires while it's attached to its host.
+  <|> (SupportSource <$> find ((== k) . (.key)) (allInPlaySupports g))
   <|> (QuestSource <$> findQuest k g)
   <|> (LegendSource <$> findLegend k g)
 

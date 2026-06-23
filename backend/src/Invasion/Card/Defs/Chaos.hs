@@ -1453,6 +1453,27 @@ spreadingDarkness = tacticCard "the-burning-of-derricksburg-014" "Spreading Dark
       let n = length [u | u <- g.units, u.corrupted, u.zone == cs.targetZone, u.controller == cs.defendingPlayer]
       for_ cs.attackers \k -> until EndOfTurn $ buffPower k n
 
+horrificFavour :: CardDef Support
+horrificFavour = supportCard "realm-of-the-phoenix-king-034" "Horrific Favour" do
+  race Chaos
+  cost 1
+  loyalty 2
+  trait Condition
+  body
+    "Action: When a Daemon unit enters play under your control, return a \
+    \Disease card from your discard pile to your hand."
+  onFriendlyUnitEnterPlay \_owner self enteredKey -> do
+    let pk = self.controller
+    g <- getGame
+    case findUnit enteredKey g of
+      Just u | hasTrait Daemon u -> do
+        me <- playerOf pk <$> getGame
+        let diseases = [c | c <- me.discard, Disease `elem` someCardTraits c.def]
+        chooseFromCards pk 0 1 diseases
+          "Choose a Disease card to return to your hand." \chosen ->
+            for_ chosen \c -> returnFromDiscardToHand pk [c.key]
+      _ -> pure ()
+
 grandfathersCall :: CardDef Tactic
 grandfathersCall = tacticCard "the-fall-of-karak-grimaz-035" "Grandfather's Call" do
   race Chaos

@@ -1415,6 +1415,47 @@ dawnstarSword = supportCard "rising-dawn-001" "Dawnstar Sword" do
           _ -> pure ()
     _ -> pure ()
 
+starCrownFragments :: CardDef Support
+starCrownFragments = supportCard "fragments-of-power-021" "Star Crown Fragments" do
+  cost 4
+  loyalty 0
+  traits [Artefact, Arcane, Attachment]
+  orderOnly
+  body
+    "Order only. Attach to a target Hero or legend you control. This card \
+    \cannot be targeted by card effects. Action: Sacrifice this card to \
+    \return the top 5 non-Artefact cards from your discard pile to your hand."
+  cannotBeTargetedSelf
+  actionWith "Reclaim the fragments" 0 [SacrificeSelf] \usage -> do
+    let pk = usage.user
+    me <- playerOf pk <$> getGame
+    let top5 =
+          take 5 [c | c <- me.discard, Artefact `notElem` someCardTraits c.def]
+    returnFromDiscardToHand pk (map (.key) top5)
+
+arcanePower :: CardDef Tactic
+arcanePower = tacticCard "the-accursed-dead-057" "Arcane Power" do
+  cost 1
+  loyalty 0
+  trait Spell
+  body
+    "Action: Draw a card. Then, if you control a legend or Artefact support \
+    \card, return target card from your discard pile to your hand."
+  whenResolved \self -> do
+    let pk = self.controller
+    drawCard pk
+    g <- getGame
+    let controlsLegendOrArtefact =
+          isJust (legendOf pk g)
+            || any
+              (\s -> s.controller == pk && Artefact `elem` s.cardDef.traits)
+              (allInPlaySupports g)
+    when controlsLegendOrArtefact $ do
+      me <- playerOf pk <$> getGame
+      chooseFromCards pk 0 1 me.discard
+        "Choose a card to return from your discard pile to your hand." \chosen ->
+          for_ chosen \c -> returnFromDiscardToHand pk [c.key]
+
 shieldOfAeons :: CardDef Support
 shieldOfAeons = supportCard "shield-of-the-gods-101" "Shield of Aeons" do
   cost 4
