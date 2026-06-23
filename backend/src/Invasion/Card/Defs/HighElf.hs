@@ -1129,3 +1129,28 @@ tiranocChariot = unitCard "omens-of-ruin-010" "Tiranoc Chariot" do
           , someCardCost c.def <= 2 ->
               putUnitIntoPlay self.controller FromDeck c.key BattlefieldZone
         _ -> pure ()
+
+furyOfAenarion :: CardDef Tactic
+furyOfAenarion = tacticCard "fiery-dawn-112" "Fury of Aenarion" do
+  race HighElf
+  cost 2
+  loyalty 3
+  trait Spell
+  body
+    "Action: Reveal a [High Elf] unit from your hand. Target attacking or \
+    \defending unit gains power equal to the printed power of the revealed \
+    \card until the end of the turn."
+  playableWhen \g pk ->
+    any
+      (\c -> maybe False (\cd -> HighElf `elem` cd.races) (asUnit c.def))
+      (playerOf pk g).hand
+  whenResolved \self -> do
+    let pk = self.controller
+    revealFromHand pk
+      (\c -> maybe False (\cd -> HighElf `elem` cd.races) (asUnit c.def))
+      "Reveal a High Elf unit." \revealed -> do
+        push (RevealCards pk [revealed])
+        let pw = maybe 0 (.power) (asUnit revealed.def)
+        withTarget pk (Or attackingUnit defendingUnit) \case
+          TargetUnitOption k -> until EndOfTurn $ buffPower k pw
+          _ -> pure ()

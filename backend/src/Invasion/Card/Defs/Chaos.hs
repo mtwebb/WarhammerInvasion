@@ -1601,3 +1601,24 @@ seekerChariot = unitCard "hidden-kingdoms-047" "Seeker Chariot" do
     "Battlefield only. While this unit is not opposed in combat, it deals +2 \
     \damage in combat."
   combatPower \g u -> if isOpposed g u then 0 else 2
+
+callTheBrayherd :: CardDef Tactic
+callTheBrayherd = tacticCard "fiery-dawn-114" "Call the Brayherd" do
+  race Chaos
+  cost 4
+  loyalty 3
+  trait Spell
+  body
+    "Play during your turn. Action: Reveal the top five cards of your deck. \
+    \Put all revealed units with a printed cost of 3 or lower into your \
+    \battlefield. Then, shuffle your deck."
+  playableWhen \g pk -> g.currentPlayer == pk
+  whenResolved \self -> do
+    let pk = self.controller
+    revealTopOfDeck pk 5 \r -> do
+      for_ r.cards \c ->
+        case asUnit c.def of
+          Just _ | someCardCost c.def <= 3 ->
+            putUnitIntoPlay pk FromDeck c.key BattlefieldZone
+          _ -> pure ()
+      shuffleDeck pk

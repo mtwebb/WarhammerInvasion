@@ -523,6 +523,8 @@ allCards =
       -- The Morrslieb cycle — Fiery Dawn (101-120)
       ("fiery-dawn-106", TacticCardDef smashEm),
       ("fiery-dawn-107", UnitCardDef veteranGreatsword),
+      ("fiery-dawn-112", TacticCardDef furyOfAenarion),
+      ("fiery-dawn-114", TacticCardDef callTheBrayherd),
       -- The Capital Cycle — The Inevitable City (001-020)
       ("the-inevitable-city-004", UnitCardDef princeOfCaledor),
       ("the-inevitable-city-005", UnitCardDef doomBearer),
