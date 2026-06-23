@@ -1031,3 +1031,22 @@ nagarytheWarrior = unitCard "battle-for-the-old-world-051" "Nagarythe Warrior" d
   onAmbush \_owner _self -> do
     g <- getGame
     for_ [u.key | u <- g.units, isDamaged u] \k -> dealDamage k 1
+
+shadowlandsHunter :: CardDef Unit
+shadowlandsHunter = unitCard "days-of-blood-011" "Shadowlands Hunter" do
+  race HighElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Ranger
+  body
+    "High Elf only. Ambush 1. Action: When this unit ambushes, put 1 \
+    \resource token on a [High Elf] card with at least 1 resource token on it."
+  -- Resource tokens accrue on supports; target a High Elf support that
+  -- already carries at least one.
+  ambush 1
+  onAmbush \_owner self ->
+    withTarget self.controller
+      (SupportMatching \_me _g s -> HighElf `elem` s.cardDef.races && s.tokens >= 1)
+      \k -> adjustSupportTokens k 1

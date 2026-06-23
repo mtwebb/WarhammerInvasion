@@ -619,6 +619,7 @@ allCards =
       ("days-of-blood-007", UnitCardDef ludwigSchwarzheim),
       ("days-of-blood-008", UnitCardDef middenheimLookout),
       ("days-of-blood-010", UnitCardDef greatFireDragon),
+      ("days-of-blood-011", UnitCardDef shadowlandsHunter),
       ("days-of-blood-013", UnitCardDef iddenBoy),
       ("days-of-blood-016", UnitCardDef norseMarauders),
       ("days-of-blood-017", UnitCardDef ghorgon),
