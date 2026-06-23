@@ -126,19 +126,22 @@ main = do
   check "after quest (T2): phase = Just CapitalPhase"
     (g4cap.phase == Just CapitalPhase)
 
-  -- PlayUnit: pick any affordable Unit from the active player's hand
-  -- and play it into the kingdom zone. The active player has just been
-  -- granted 3 resources for the new turn (see g3 above), so anything
-  -- costing 3 or less is fair game.
-  let preP = activePlayer g4cap
+  -- PlayUnit: pick a Unit from the active player's hand and play it into
+  -- the kingdom zone. Grant a large pile of resources first so *any*
+  -- unit in hand is affordable — otherwise the probe is flaky on the
+  -- shuffle (a hand of only expensive units fails the affordability
+  -- check). The "resources reduced by cost" assertion still holds since
+  -- it measures the delta from the granted total.
+  g4res <- applyMessage g4cap (GainResources g4cap.currentPlayer 50)
+  let preP = activePlayer g4res
   case findPlayableUnit preP of
     Nothing -> do
-      putStrLn "  FAIL active hand has no affordable Unit; can't exercise PlayUnit"
+      putStrLn "  FAIL active hand has no playable Unit; can't exercise PlayUnit"
       exitFailure
     Just (cardKey, cardCode, cardCost, playZone) -> do
       let handBefore = length preP.hand
           Resources resBefore = preP.resources
-      g5 <- applyMessage g4cap (PlayUnit g4cap.currentPlayer cardKey playZone)
+      g5 <- applyMessage g4res (PlayUnit g4res.currentPlayer cardKey playZone)
       let postP = activePlayer g5
       check "PlayUnit: hand size decreased by 1"
         (length postP.hand == handBefore - 1)
@@ -153,7 +156,7 @@ main = do
               _ -> False
             where _ = err :: String
       check "PlayUnit: unit controller = active player"
-        (unitOk (\c _ _ -> c == g4cap.currentPlayer) "controller")
+        (unitOk (\c _ _ -> c == g4res.currentPlayer) "controller")
       check "PlayUnit: unit zone = chosen zone"
         (unitOk (\_ z _ -> z == playZone) "zone")
       check "PlayUnit: card code carried through"
