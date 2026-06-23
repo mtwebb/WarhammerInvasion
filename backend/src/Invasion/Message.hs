@@ -63,6 +63,13 @@ data Message where
     -- ^ Move the top N cards of the player's deck to the bottom, order
     -- preserved (Comet of Casandora's "put the revealed cards on the
     -- bottom of your deck").
+  ArrangeDeckCards :: PlayerKey -> [UnitKey] -> [UnitKey] -> Message
+    -- ^ Reorder named deck cards after a scry: the keys in the first
+    -- list are pulled to the TOP of the deck in the given order, the
+    -- keys in the second list to the BOTTOM in the given order; every
+    -- other card keeps its relative position in between. Used by the
+    -- "look at the top N … return them in any order" effects (Scroll of
+    -- Asur, Advanced Engineering) once the player has chosen an order.
   DrawFromBottom :: PlayerKey -> Message
     -- ^ Draw the bottom card of the player's deck into hand (Restless
     -- Corpse). Unlike a standard 'Draw', this is not subject to draw

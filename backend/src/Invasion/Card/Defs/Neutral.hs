@@ -1415,6 +1415,26 @@ dawnstarSword = supportCard "rising-dawn-001" "Dawnstar Sword" do
           _ -> pure ()
     _ -> pure ()
 
+advancedEngineering :: CardDef Support
+advancedEngineering = supportCard "bleeding-sun-119" "Advanced Engineering" do
+  cost 2
+  loyalty 0
+  trait Siege
+  body
+    "Action: At the beginning of your turn, look at the top two cards of \
+    \your deck. Place one of those cards on the top of your deck and the \
+    \other card on the bottom of your deck."
+  onMyTurnBegin \_owner self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 2 \result ->
+      case result.cards of
+        [] -> pure ()
+        cs ->
+          chooseFromCards pk 1 1 cs
+            "Place one card on top of your deck; the other goes to the bottom." \chosen ->
+              for_ chosen \keep ->
+                arrangeDeckCards pk [keep.key] [c.key | c <- cs, c.key /= keep.key]
+
 starCrownFragments :: CardDef Support
 starCrownFragments = supportCard "fragments-of-power-021" "Star Crown Fragments" do
   cost 4

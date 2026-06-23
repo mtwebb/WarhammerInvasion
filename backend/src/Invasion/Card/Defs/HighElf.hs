@@ -1171,3 +1171,20 @@ shieldOfSaphery = tacticCard "signs-in-the-stars-071" "Shield of Saphery" do
   where
     ownHighElfUnit =
       UnitMatching \pk _g u -> u.controller == pk && HighElf `elem` u.cardDef.races
+
+scrollOfAsur :: CardDef Tactic
+scrollOfAsur = tacticCard "the-fall-of-karak-grimaz-027" "Scroll of Asur" do
+  race HighElf
+  cost 0
+  loyalty 2
+  trait Spell
+  body
+    "Action: Look at the top five cards of your deck. Then, return them \
+    \to the top of your deck in any order."
+  whenResolved \self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 5 \result ->
+      unless (null result.cards) $
+        chooseOrdering pk result.cards
+          "Order these cards on top of your deck (first pick = top)." \ordered ->
+            arrangeDeckCards pk ordered []

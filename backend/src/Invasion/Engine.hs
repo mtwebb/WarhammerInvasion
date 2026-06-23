@@ -2861,6 +2861,19 @@ instance Run Game where
           [("player", playerParam pk), ("count", tshow (length dropped))]
         when (null rest) $
           send $ Eliminate pk DeckedOut
+    ArrangeDeckCards pk topKeys botKeys -> do
+      g <- get
+      let player = lookupPlayer pk g
+          byKey k = find ((== k) . (.key)) player.deck
+          topCards = mapMaybe byKey topKeys
+          botCards = mapMaybe byKey botKeys
+          moved = topKeys <> botKeys
+          middle = [c | c <- player.deck, c.key `notElem` moved]
+      unless (null topCards && null botCards) do
+        modify (setPlayer pk player {deck = topCards <> middle <> botCards})
+        logIt LogSystem
+          "log.deck.rearranged"
+          [("player", playerParam pk), ("count", tshow (length moved))]
     TransformUnitToAttachment ukey hostKey -> do
       g <- get
       case (findUnit ukey g, findUnit hostKey g) of

@@ -639,6 +639,30 @@ revealTopOfDeck pk n body =
 moveTopToBottomOfDeck :: HasQueue Message m => PlayerKey -> Int -> m ()
 moveTopToBottomOfDeck pk n = push (MoveTopToBottomOfDeck pk n)
 
+-- | "Return these cards to the top (and these to the bottom) of your
+-- deck in this order." Drives the scry "in any order" effects after the
+-- player has chosen an order (Scroll of Asur, Advanced Engineering).
+arrangeDeckCards
+  :: HasQueue Message m => PlayerKey -> [UnitKey] -> [UnitKey] -> m ()
+arrangeDeckCards pk top bot = push (ArrangeDeckCards pk top bot)
+
+-- | "Put these cards back in any order (top first)." Asks the player to
+-- order @cards@ one at a time via repeated single-card picks — the first
+-- pick becomes the new top — then runs @k@ with the chosen ordering of
+-- keys. Reuses 'chooseFromCards' so it needs no dedicated ordering
+-- prompt. A single remaining card is placed without a redundant prompt.
+chooseOrdering
+  :: (HasPromptIO m, HasGame m)
+  => PlayerKey -> [Card] -> Text -> ([UnitKey] -> m ()) -> m ()
+chooseOrdering pk cards desc k = go cards []
+  where
+    go [] acc = k (reverse acc)
+    go [c] acc = k (reverse (c.key : acc))
+    go remaining acc =
+      chooseFromCards pk 1 1 remaining desc \case
+        (c : _) -> go [x | x <- remaining, x.key /= c.key] (c.key : acc)
+        [] -> k (reverse acc <> map (.key) remaining)
+
 -- | "Put that support card into play [in the given zone]." Plays the
 -- named support directly from the player's deck.
 playSupportFromDeck

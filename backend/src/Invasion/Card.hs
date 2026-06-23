@@ -358,6 +358,7 @@ allCards =
       ("bleeding-sun-114", UnitCardDef beastOfRot),
       ("bleeding-sun-115", SupportCardDef necroticSpasms),
       ("bleeding-sun-118", UnitCardDef grailKnight),
+      ("bleeding-sun-119", SupportCardDef advancedEngineering),
       -- The Enemy cycle — The Burning of Derricksburg (001-020)
       ("the-burning-of-derricksburg-001", UnitCardDef bodyguardOfBelegar),
       ("the-burning-of-derricksburg-002", SupportCardDef miningTunnels),
@@ -376,6 +377,7 @@ allCards =
       ("the-fall-of-karak-grimaz-023", SupportCardDef ancestralTomb),
       ("the-fall-of-karak-grimaz-024", UnitCardDef grudgebearer),
       ("the-fall-of-karak-grimaz-026", TacticCardDef calledBack),
+      ("the-fall-of-karak-grimaz-027", TacticCardDef scrollOfAsur),
       ("the-fall-of-karak-grimaz-029", UnitCardDef followersOfSkarsnik),
       ("the-fall-of-karak-grimaz-030", UnitCardDef stuntySmasha),
       ("the-fall-of-karak-grimaz-033", QuestCardDef smashEmBashEm),

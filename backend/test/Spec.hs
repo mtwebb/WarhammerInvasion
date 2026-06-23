@@ -1027,6 +1027,24 @@ main = do
         (not stillInPlay)
     _ -> putStrLn "  FAIL star-crown setup (hand too small or def missing)" >> exitFailure
 
+  -- ArrangeDeckCards (the scry reorder primitive behind Scroll of Asur /
+  -- Advanced Engineering): named cards are pulled to the top in the given
+  -- order, others to the bottom, the rest keep their relative position.
+  gAR1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkAR = gAR1.currentPlayer
+      deck0 = (getPl pkAR gAR1).deck
+  case map (.key) (take 3 deck0) of
+    [k1, k2, k3] -> do
+      gAR2 <- applyMessage gAR1 (ArrangeDeckCards pkAR [k3, k1] [k2])
+      let deck1 = map (.key) (getPl pkAR gAR2).deck
+      check "arrange: chosen cards put on top in the given order"
+        (take 2 deck1 == [k3, k1])
+      check "arrange: the other card was put on the bottom"
+        (not (null deck1) && last deck1 == k2)
+      check "arrange: deck size is unchanged"
+        (length deck1 == length deck0)
+    _ -> putStrLn "  FAIL arrange-deck setup (deck too small)" >> exitFailure
+
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only
   -- key-stubs of Player2's hand; deck contents are hidden from
