@@ -267,7 +267,7 @@ main = do
       ]
   let attackerSide = gE.currentPlayer
       defenderSide = attackerSide.next
-      attackerHand = unitInHand (case attackerSide of
+      attackerHand = attackerInHand (case attackerSide of
                                    Player1 -> gE.player1
                                    Player2 -> gE.player2)
       defenderHand = unitInHand (case defenderSide of
@@ -929,6 +929,23 @@ unitInHand p = go p.hand
     go [] = Nothing
     go (Card {key, def} : rest) = case def of
       UnitCardDef cardDef ->
+        let printed = case cardDef.cost of
+              Fixed n -> n
+              Variable -> 0
+         in Just (key, cardDef.code, printed)
+      _ -> go rest
+
+-- | Like 'unitInHand' but only matches a unit with printed power > 1, so
+-- the chosen attacker deals enough combat damage to mark the defender
+-- even through the highest starter-deck Toughness (Trollslayers'
+-- Toughness 1). Keeps the scripted-combat damage assertion deterministic
+-- regardless of which units the shuffle surfaces.
+attackerInHand :: Player -> Maybe (UnitKey, CardCode, Int)
+attackerInHand p = go p.hand
+  where
+    go [] = Nothing
+    go (Card {key, def} : rest) = case def of
+      UnitCardDef cardDef | cardDef.power > 1 ->
         let printed = case cardDef.cost of
               Fixed n -> n
               Variable -> 0

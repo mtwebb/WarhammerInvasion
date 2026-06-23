@@ -1641,6 +1641,24 @@ instance Run Game where
             logIt LogPlayerAction
               "log.zone.development_played"
               [("player", playerParam pk), ("zone", zoneParam zone)]
+    PlaceTopAsDevelopments pk zone n -> do
+      g <- get
+      let player = lookupPlayer pk g
+          (taken, restDeck) = splitAt n player.deck
+          zoneL = getZone zone player
+          Developments d = zoneL.developments
+          zoneL' = (zoneL {developments = Developments (d + length taken)}) :: Zone
+          existing = Map.findWithDefault [] zone player.developmentCards
+          player' =
+            (setZone zone zoneL' player)
+              { deck = restDeck
+              , developmentCards = Map.insert zone (taken ++ existing) player.developmentCards
+              }
+      unless (null taken) $ do
+        modify (setPlayer pk player')
+        logIt LogSystem
+          "log.zone.development_played"
+          [("player", playerParam pk), ("zone", zoneParam zone)]
     DealDamageToEachEnemyUnitInZone pk zone raw -> do
       let amount = max 0 raw
       when (amount > 0) $ do

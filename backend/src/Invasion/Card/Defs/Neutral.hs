@@ -1361,3 +1361,17 @@ restlessCorpse = unitCard "the-ruinous-hordes-099" "Restless Corpse" do
     \card from the bottom of your deck."
   ambush 1
   onAmbush \_owner self -> drawFromBottom self.controller
+
+spellweaver :: CardDef Unit
+spellweaver = unitCard "the-ruinous-hordes-098" "Spellweaver" do
+  cost 2
+  loyalty 1
+  power 0
+  hitPoints 2
+  trait WoodElf
+  orderOnly
+  body
+    "Order only. Ambush 1. Action: When this unit ambushes, place the top 2 \
+    \cards of your deck facedown in this zone as developments."
+  ambush 1
+  onAmbush \_owner self -> placeTopAsDevelopments self.controller self.zone 2

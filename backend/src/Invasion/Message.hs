@@ -41,6 +41,10 @@ data Message where
   -- Phase steps
   ReturnResources :: PlayerKey -> Message
   CollectResources :: PlayerKey -> Message
+  PlaceTopAsDevelopments :: PlayerKey -> ZoneKind -> Int -> Message
+    -- ^ Move the top N cards of the player's deck, facedown, into the
+    -- named zone as developments (Spellweaver). Bypasses the
+    -- once-per-turn development limit.
   DrawFromBottom :: PlayerKey -> Message
     -- ^ Draw the bottom card of the player's deck into hand (Restless
     -- Corpse). Unlike a standard 'Draw', this is not subject to draw

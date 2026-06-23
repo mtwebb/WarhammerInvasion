@@ -617,6 +617,7 @@ allCards =
       ("days-of-blood-004", SupportCardDef chillSeaWatchtower),
       ("days-of-blood-005", UnitCardDef veteranThunderers),
       ("days-of-blood-007", UnitCardDef ludwigSchwarzheim),
+      ("days-of-blood-008", UnitCardDef middenheimLookout),
       ("days-of-blood-010", UnitCardDef greatFireDragon),
       ("days-of-blood-013", UnitCardDef iddenBoy),
       ("days-of-blood-016", UnitCardDef norseMarauders),
@@ -664,6 +665,7 @@ allCards =
       ("the-ruinous-hordes-094", UnitCardDef wolfGobbos),
       ("the-ruinous-hordes-096", UnitCardDef coldOneChampion),
       ("the-ruinous-hordes-097", TacticCardDef testOfWill),
+      ("the-ruinous-hordes-098", UnitCardDef spellweaver),
       ("the-ruinous-hordes-099", UnitCardDef restlessCorpse),
       -- Faith and Steel (Eternal War cycle, pack 6)
       ("faith-and-steel-113", UnitCardDef skulltaker),

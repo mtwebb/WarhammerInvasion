@@ -63,6 +63,11 @@ drawCard pk = push (Draw (Drawing StandardDraw pk))
 drawFromBottom :: HasQueue Message m => PlayerKey -> m ()
 drawFromBottom pk = push (DrawFromBottom pk)
 
+-- | "Place the top N cards of your deck facedown in this zone as
+-- developments." (Spellweaver.)
+placeTopAsDevelopments :: HasQueue Message m => PlayerKey -> ZoneKind -> Int -> m ()
+placeTopAsDevelopments pk zone n = push (PlaceTopAsDevelopments pk zone n)
+
 -- | "Shuffle your deck." Hides the @push (ShuffleDeck pk)@ ceremony.
 shuffleDeck :: HasQueue Message m => PlayerKey -> m ()
 shuffleDeck pk = push (ShuffleDeck pk)

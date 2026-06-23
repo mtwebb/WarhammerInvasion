@@ -1364,3 +1364,22 @@ celestialWizardAcolyte = unitCard "faith-and-steel-104" "Celestial Wizard Acolyt
     \Counterstrike 3 until the end of the turn."
   ambush 2
   onAmbush \_owner self -> until EndOfTurn $ buffCounterstrike self.key 3
+
+middenheimLookout :: CardDef Unit
+middenheimLookout = unitCard "days-of-blood-008" "Middenheim Lookout" do
+  race Empire
+  cost 1
+  loyalty 1
+  power 0
+  hitPoints 3
+  trait Ranger
+  body
+    "Empire only. Ambush 1. Action: When this unit ambushes, move target unit \
+    \you control into this zone and declare that unit as a defender."
+  ambush 1
+  onAmbush \_owner self ->
+    withTarget self.controller
+      (UnitMatching \me _g u -> u.controller == me && u.key /= self.key)
+      \k -> do
+        moveUnit k self.zone
+        until EndOfTurn $ mustDefend k
