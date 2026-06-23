@@ -1074,6 +1074,11 @@ instance Run Game where
             , u.controller == pk
             , u.corrupted
             ]
+              <> [ s.key
+                 | s <- allInPlaySupports g
+                 , s.controller == pk
+                 , s.corrupted
+                 ]
       case corrupt of
         [] -> pure ()
         candidates -> do
@@ -3195,6 +3200,7 @@ freshSupport key controller zone attachedTo cardDef = SupportDetails
   , cardDef
   , attachedTo
   , tokens = 0
+  , corrupted = False
   }
 
 -- | Push a card onto the named player's discard pile.
@@ -3323,11 +3329,21 @@ bumpDev fromZ toZ z =
 setCorrupted :: Bool -> Text -> UnitKey -> StateT Game GameT ()
 setCorrupted newVal logKey ukey = do
   munit <- gets (findUnit ukey)
-  whenJust munit \u ->
-    when (u.corrupted /= newVal) do
-      let u' = (u {corrupted = newVal}) :: UnitDetails
-      modify \gx -> gx {units = replaceUnit u' gx.units}
-      logIt LogSystem logKey [("card", T.pack u.cardDef.title)]
+  case munit of
+    Just u ->
+      when (u.corrupted /= newVal) do
+        let u' = (u {corrupted = newVal}) :: UnitDetails
+        modify \gx -> gx {units = replaceUnit u' gx.units}
+        logIt LogSystem logKey [("card", T.pack u.cardDef.title)]
+    Nothing -> do
+      -- Supports (free-standing or attached) carry the same flag; the
+      -- artefact "Corrupt this card" cost flips it here.
+      g <- get
+      whenJust (find ((== ukey) . (.key)) (allInPlaySupports g)) \s ->
+        when (s.corrupted /= newVal) do
+          let s' = (s {corrupted = newVal}) :: SupportDetails
+          modify (replaceSupportAnywhere s')
+          logIt LogSystem logKey [("card", T.pack s.cardDef.title)]
 
 -- | The "I can pay for it" preamble shared by the vanilla play handlers
 -- (PlayUnit, PlaySupport, PlayQuest, PlayLegend, and PlayTactic / …
@@ -4033,7 +4049,10 @@ canPayExtra _pk srcKey g SacrificeSelf =
     || isJust (findSupport srcKey g)
     || any (any ((== srcKey) . (.key)) . (.attachments)) g.units
 canPayExtra _pk srcKey g CorruptSelf =
-  maybe False (not . (.corrupted)) (findUnit srcKey g)
+  maybe
+    (maybe False (not . (.corrupted)) (find ((== srcKey) . (.key)) (allInPlaySupports g)))
+    (not . (.corrupted))
+    (findUnit srcKey g)
 canPayExtra pk _srcKey g SacrificeDevelopment =
   any (\z -> case z.developments of Developments n -> n > 0)
     (playerOf pk g).capital.zones
@@ -4992,6 +5011,22 @@ replaceUnit = replaceById
 
 replaceSupport :: SupportDetails -> [SupportDetails] -> [SupportDetails]
 replaceSupport = replaceById
+
+-- | Write back a support whether it's free-standing (in 'g.supports') or
+-- attached (inside some unit's 'attachments'), matched by key.
+replaceSupportAnywhere :: SupportDetails -> Game -> Game
+replaceSupportAnywhere s' g
+  | any ((== s'.key) . (.key)) g.supports =
+      g {supports = replaceSupport s' g.supports}
+  | otherwise =
+      g
+        { units =
+            [ if any ((== s'.key) . (.key)) u.attachments
+                then u {attachments = replaceSupport s' u.attachments}
+                else u
+            | u <- g.units
+            ]
+        }
 
 replaceQuest :: QuestDetails -> [QuestDetails] -> [QuestDetails]
 replaceQuest = replaceById

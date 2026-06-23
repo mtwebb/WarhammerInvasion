@@ -1070,6 +1070,46 @@ main = do
         (maybe False (\k -> not (null deckLM) && last deckLM == k) topKey0)
     _ -> putStrLn "  FAIL learned-mage deck dealt no hand" >> exitFailure
 
+  -- Eye of Sheerian + support corruption: the artefact's action corrupts
+  -- itself as its cost, scries the target deck, and the corruption is
+  -- restorable in the kingdom phase like a unit's.
+  gEC1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkEC = gEC1.currentPlayer
+  case (firstHandKeys 2 gEC1, Map.lookup "portent-of-doom-081" allCards) of
+    ([hkE, skE], Just (SupportCardDef eyeDef)) -> do
+      gEC2 <- applyMessage gEC1 (PutUnitIntoPlay pkEC hkE BattlefieldZone)
+      let withAtt u
+            | u.key == hkE =
+                u {attachments = freshSupport skE pkEC u.zone (Just hkE) eyeDef : u.attachments}
+            | otherwise = u
+          gEC3 = gEC2 {units = map withAtt gEC2.units}
+          isCorrupt g =
+            any (\u -> any (\a -> a.key == skE && a.corrupted) u.attachments) g.units
+          top5 = map (.key) (take 5 (getPl pkEC gEC3).deck)
+          deckLen0 = length (getPl pkEC gEC3).deck
+          answers =
+            PickTargetOption (TargetPlayerOption pkEC)
+              : PickUnits [head top5]
+              : [PickUnits [k] | k <- take 3 (drop 1 top5)]
+      gEY <- applyMessagesWithAnswers gEC3 answers [TriggerCardAction pkEC skE 0 NoTarget]
+      check "eye of sheerian: corrupted itself as the action cost"
+        (isCorrupt gEY)
+      check "eye of sheerian: discarded one card from the target deck"
+        (length (getPl pkEC gEY).deck == deckLen0 - 1)
+      check "eye of sheerian: discarded card went to the discard pile"
+        (head top5 `elem` map (.key) (getPl pkEC gEY).discard)
+      -- A corrupted support can't pay its own Corrupt cost again.
+      gEY2 <- applyMessagesWithAnswers gEY
+        [PickTargetOption (TargetPlayerOption pkEC)]
+        [TriggerCardAction pkEC skE 0 NoTarget]
+      check "eye of sheerian: cannot re-fire while corrupted"
+        (length (getPl pkEC gEY2).deck == length (getPl pkEC gEY).deck)
+      -- The kingdom-phase restore step cleanses the corrupted artefact.
+      gEY3 <- applyMessagesWithAnswers gEY [PickUnits [skE]] [RestoreOneCorruptCard pkEC]
+      check "support corruption: kingdom restore cleansed the artefact"
+        (not (isCorrupt gEY3))
+    _ -> putStrLn "  FAIL eye-of-sheerian setup (hand too small or def missing)" >> exitFailure
+
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only
   -- key-stubs of Player2's hand; deck contents are hidden from

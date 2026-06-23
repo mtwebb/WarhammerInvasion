@@ -113,7 +113,7 @@ export type Trait =
   | 'Cultist' | 'Bretonnian' | 'Thief' | 'Slave' | 'Environment'
   | 'Messenger' | 'Martyr' | 'Initiate'
   | 'Lizardmen' | 'Undead' | 'Ship' | 'Vampire' | 'WoodElf'
-  | 'Condition' | 'Item' | 'Pyramid' | 'Artefact' | 'Shield' | 'Arcane'
+  | 'Condition' | 'Item' | 'Pyramid' | 'Artefact' | 'Shield' | 'Arcane' | 'Portent'
 
 // Card definition as serialized by Invasion.CardDef.ToJSON. The 'receive'
 // function field is dropped on the wire — see CardDef.hs.
@@ -179,6 +179,10 @@ export interface EngineSupport {
   cardDef: EngineCardDef
   attachedTo: number | null
   tokens: number
+  // True while this support is corrupted (turned sideways) — the cost of
+  // "Corrupt this card" artefact actions (Eye of Sheerian). Cleared by
+  // the kingdom-phase restore step.
+  corrupted: boolean
 }
 
 export interface EngineQuest {

@@ -523,6 +523,7 @@ allCards =
       ("omens-of-ruin-015", UnitCardDef witchHag),
       ("omens-of-ruin-016", UnitCardDef darkElfInfiltrator),
       -- The Morrslieb cycle — Portent of Doom (081-100)
+      ("portent-of-doom-081", SupportCardDef eyeOfSheerian),
       ("portent-of-doom-088", TacticCardDef theSealedVaults),
       -- The Morrslieb cycle — Fiery Dawn (101-120)
       ("fiery-dawn-105", TacticCardDef deyzBigga),

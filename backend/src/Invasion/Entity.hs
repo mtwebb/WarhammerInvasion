@@ -116,6 +116,11 @@ data SupportDetails = SupportDetails
     -- ^ Generic counter slot. Iron Throneroom counts down from 4 here;
     -- other tokenised supports (resource-storing siege engines, …)
     -- will reuse it.
+  , corrupted :: Bool
+    -- ^ Whether this support is corrupted (turned sideways). Set as the
+    -- cost of "Corrupt this card" artefact actions (Eye of Sheerian);
+    -- cleared by the kingdom-phase restore step. Mirrors the unit-side
+    -- 'corrupted' flag.
   }
   deriving stock Show
 

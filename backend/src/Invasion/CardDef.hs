@@ -169,6 +169,8 @@ data Trait
     -- ^ Shield item trait (Shield of Aeons).
   | Arcane
     -- ^ Arcane artefact trait (Windcatcher Prism, Star Crown Fragments).
+  | Portent
+    -- ^ Portent artefact trait (Eye of Sheerian).
   deriving stock (Show, Eq)
 
 mconcat

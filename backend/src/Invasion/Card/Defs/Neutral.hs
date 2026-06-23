@@ -1415,6 +1415,33 @@ dawnstarSword = supportCard "rising-dawn-001" "Dawnstar Sword" do
           _ -> pure ()
     _ -> pure ()
 
+eyeOfSheerian :: CardDef Support
+eyeOfSheerian = supportCard "portent-of-doom-081" "Eye of Sheerian" do
+  cost 4
+  loyalty 0
+  traits [Artefact, Portent, Attachment]
+  destructionOnly
+  body
+    "Destruction only. Attach to a target Hero or legend you control. This \
+    \card cannot be targeted by card effects. Action: Corrupt this card to \
+    \look at the top 5 cards of target player's deck. Discard up to 2 of those \
+    \cards and return the rest to the top of the deck in any order."
+  cannotBeTargetedSelf
+  actionWith "Scry the portent" 0 [CorruptSelf] \usage -> do
+    let pk = usage.user
+    withTarget pk TargetPlayer \targetPk ->
+      searchTopOfDeck targetPk 5 \result ->
+        unless (null result.cards) $
+          chooseFromCards pk 0 2 result.cards
+            "Discard up to 2 of these cards." \toDiscard -> do
+              let discardKeys = map (.key) toDiscard
+              unless (null discardKeys) $
+                push (DiscardCardsFromDeck targetPk discardKeys)
+              let remaining = [c | c <- result.cards, c.key `notElem` discardKeys]
+              chooseOrdering pk remaining
+                "Return the rest to the top of the deck (first pick = top)." \ordered ->
+                  arrangeDeckCards targetPk ordered []
+
 advancedEngineering :: CardDef Support
 advancedEngineering = supportCard "bleeding-sun-119" "Advanced Engineering" do
   cost 2
