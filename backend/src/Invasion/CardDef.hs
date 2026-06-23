@@ -162,6 +162,11 @@ data Trait
   | Pyramid
     -- ^ Pyramid support trait (Lizardmen temples in Hidden Kingdoms:
     -- Great Temple of Tlazcotl, Sun Temple of Chotec, Ziggurat of Quetli).
+  | Artefact
+    -- ^ Artefact support trait — the self-protecting attachments
+    -- (Dawnstar Sword, Eye of Sheerian, Windcatcher Prism, …).
+  | Shield
+    -- ^ Shield item trait (Shield of Aeons).
   deriving stock (Show, Eq)
 
 mconcat
@@ -518,6 +523,14 @@ data SupportExtras = SupportExtras
     -- (Vigilant Elector after its quest action). When the attachment
     -- leaves play, the discard pile receives this unit def instead of
     -- the synthetic support def.
+  , selfUntargetable :: Game -> InPlay Support -> Maybe Bool
+    -- ^ "This card cannot be targeted by card effects." Returns
+    -- @Just opponentOnly@ while the immunity is active (@True@ blocks
+    -- only the opponent, @False@ blocks everyone), @Nothing@ when the
+    -- support is freely targetable. The self-protecting artefacts
+    -- (Dawnstar Sword, Eye of Sheerian, …) return a constant
+    -- @Just False@; Helm of Fortune gates it on the host questing.
+    -- Consulted by 'targetableBy' alongside the modifier map.
   }
 
 -- | Static metadata about a card that's currently being played, used
@@ -619,6 +632,7 @@ instance HasDefaultExtras Support where
     , blanksHost = False
     , hostDestroyRansom = Nothing
     , revertToUnit = Nothing
+    , selfUntargetable = \_ _ -> Nothing
     }
 
 instance HasDefaultExtras Quest where

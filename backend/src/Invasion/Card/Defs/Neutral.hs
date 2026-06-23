@@ -1389,6 +1389,32 @@ slumberingTitan = unitCard "hidden-kingdoms-014" "Slumbering Titan" do
   ambush 2
   onMyTurnEnd \_owner self -> turnUnitIntoDevelopment self.key
 
+dawnstarSword :: CardDef Support
+dawnstarSword = supportCard "rising-dawn-001" "Dawnstar Sword" do
+  cost 4
+  loyalty 0
+  traits [Artefact, Weapon, Attachment]
+  body
+    "Attach to a target Hero or legend you control. This card cannot be \
+    \targeted by card effects. Attached Hero or legend gains {power}{power}\
+    \{power}{power}{power} while in combat and takes 2 damage if it survives \
+    \combat."
+  cannotBeTargetedSelf
+  supportAura \g s u ->
+    if s.attachedTo == Just u.key && (unitIsAttacking g u || unitIsDefending g u)
+      then 5
+      else 0
+  onReceive $ Receive \msg _owner self -> case msg of
+    ResolveCombat ->
+      for_ self.attachedTo \hostKey -> do
+        g <- getGame
+        case g.combat of
+          Just cs
+            | hostKey `elem` (cs.attackers <> cs.defenders) ->
+                whenJust (findUnit hostKey g) \_ -> dealDamage hostKey 2
+          _ -> pure ()
+    _ -> pure ()
+
 ghostlyApparition :: CardDef Tactic
 ghostlyApparition = tacticCard "portent-of-doom-097" "Ghostly Apparition" do
   cost 1

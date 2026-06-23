@@ -12,7 +12,7 @@ import Data.Aeson (Value (..), toJSON)
 import Data.Aeson.KeyMap qualified as KM
 import Data.Map.Strict qualified as Map
 import Invasion.Capital (Capital (..), Damage (..), Developments (..), Zone (..))
-import Invasion.Card (Card (..), SomeCardDef (..), Target (AnyUnit), allCards, enumerateOptionsPure)
+import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUnit), allCards, enumerateOptionsPure)
 import Invasion.CardDef (ActionTarget (..), CardDef (..), Keyword (..))
 import Invasion.Modifier
 import Invasion.Engine
@@ -903,6 +903,30 @@ main = do
       check "untargetable: the controller still can (opponent-only)"
         (canTarget pkCT)
     _ -> putStrLn "  FAIL untargetable deck dealt no hand" >> exitFailure
+
+  -- Dawnstar Sword: a self-protecting attachment carries its
+  -- "cannot be targeted by card effects" immunity as a static field, so
+  -- neither player can target the attachment — no modifier needed.
+  gDS1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-004" Dwarf
+  let pkDS = gDS1.currentPlayer
+  case firstHandKeys 2 gDS1 of
+    [hk, ak] -> do
+      gDS2 <- applyMessage gDS1 (PutUnitIntoPlay pkDS hk KingdomZone)
+      case Map.lookup "rising-dawn-001" allCards of
+        Just (SupportCardDef ddef) -> do
+          let withAtt u
+                | u.key == hk =
+                    u {attachments = freshSupport ak pkDS u.zone (Just hk) ddef : u.attachments}
+                | otherwise = u
+              gDS3 = gDS2 {units = map withAtt gDS2.units}
+              canTargetAtt picker =
+                ak `elem` [k | TargetSupportOption k <- enumerateOptionsPure picker gDS3 AnySupportCard]
+          check "dawnstar self-untargetable: opponent cannot target the attachment"
+            (not (canTargetAtt pkDS.next))
+          check "dawnstar self-untargetable: even the controller cannot target it"
+            (not (canTargetAtt pkDS))
+        _ -> putStrLn "  FAIL dawnstar def missing from allCards" >> exitFailure
+    _ -> putStrLn "  FAIL dawnstar deck dealt too few cards" >> exitFailure
 
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only

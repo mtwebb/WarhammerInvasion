@@ -1303,10 +1303,20 @@ enumerateOptions pk t = do
 targetableBy :: Game -> PlayerKey -> UnitKey -> PlayerKey -> Bool
 targetableBy g picker key controller =
   not (any immune (Map.findWithDefault [] (UnitRef key) g.modifiers))
+    && not staticImmune
   where
     immune (Modifier (CannotBeTargeted opponentOnly) _) =
       not opponentOnly || controller /= picker
     immune _ = False
+    -- Self-protecting supports (Dawnstar Sword, Helm of Fortune, …) carry
+    -- their immunity as a static field rather than a modifier, so it never
+    -- needs re-applying and survives across turns.
+    staticImmune =
+      case find (\s -> s.key == key) (allInPlaySupports g) of
+        Just s -> case s.cardDef.extras.selfUntargetable g s of
+          Just opponentOnly -> not opponentOnly || s.controller /= picker
+          Nothing -> False
+        Nothing -> False
 
 enumerateOptionsPure :: PlayerKey -> Game -> Target a -> [TargetOption]
 enumerateOptionsPure pk g = \case

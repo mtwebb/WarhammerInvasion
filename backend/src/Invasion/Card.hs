@@ -569,6 +569,7 @@ allCards =
       ("the-imperial-throne-115", SupportCardDef sacrificialPyre),
       ("the-imperial-throne-120", QuestCardDef recruitingForWar),
       -- Bloodquest cycle — Rising Dawn (pack 1)
+      ("rising-dawn-001", SupportCardDef dawnstarSword),
       ("rising-dawn-005", UnitCardDef orcBully),
       ("rising-dawn-008", TacticCardDef rageOfTheBear),
       ("rising-dawn-009", UnitCardDef lothernSeaMaster),

@@ -503,6 +503,22 @@ doublesCapitalDamage f =
 blanksAttachedUnit :: CardBuilder Support ()
 blanksAttachedUnit = modifySupportExtras \e -> e {blanksHost = True}
 
+-- | "This card cannot be targeted by card effects." Unconditional
+-- self-immunity for the artefact attachments (Dawnstar Sword, Eye of
+-- Sheerian, Windcatcher Prism, …). Blocks every player.
+cannotBeTargetedSelf :: CardBuilder Support ()
+cannotBeTargetedSelf =
+  modifySupportExtras \e -> e {selfUntargetable = \_ _ -> Just False}
+
+-- | Conditional self-immunity. Returns @Just opponentOnly@ while the
+-- predicate holds (Helm of Fortune: blocks opponents while the host is
+-- questing). Args: game, this support.
+cannotBeTargetedSelfWhen
+  :: (Game -> InPlay Support -> Maybe Bool)
+  -> CardBuilder Support ()
+cannotBeTargetedSelfWhen f =
+  modifySupportExtras \e -> e {selfUntargetable = f}
+
 -- | "If attached unit would be destroyed, you may pay N resources to
 -- leave it in play and remove all damage from it." (Hydra Blade.)
 hostDestroyRansomOf :: Int -> CardBuilder Support ()
