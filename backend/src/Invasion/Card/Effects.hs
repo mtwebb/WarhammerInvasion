@@ -139,7 +139,7 @@ cancelDamageOnUnit k n = push (CancelAssignedDamageOnUnit k n)
 
 -- | "Put a unit into play from hand or discard in the named zone.
 -- Origin tells the engine which pile to remove from."
-data PlayUnitOrigin = FromHand | FromDiscard
+data PlayUnitOrigin = FromHand | FromDiscard | FromDeck
 
 putUnitIntoPlay
   :: HasQueue Message m
@@ -147,6 +147,7 @@ putUnitIntoPlay
 putUnitIntoPlay pk origin uk z = push $ case origin of
   FromHand -> PutUnitIntoPlay pk uk z
   FromDiscard -> PutUnitIntoPlayFromDiscard pk uk z
+  FromDeck -> PutUnitIntoPlayFromDeck pk uk z
 
 -- | "Place or remove N resource tokens on this support card."
 adjustSupportTokens :: HasQueue Message m => UnitKey -> Int -> m ()

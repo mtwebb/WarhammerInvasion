@@ -1085,3 +1085,47 @@ cometOfCasandora = tacticCard "signs-in-the-stars-072" "Comet of Casandora" do
       let x = sum [someCardCost c.def | c <- r.cards]
       eachPlayer \p -> indirectDamage p x
       moveTopToBottomOfDeck pk (length r.cards)
+
+korhil :: CardDef Unit
+korhil = unitCard "omens-of-ruin-009" "Korhil" do
+  race HighElf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  hero
+  body
+    "Limit one Hero per zone. Action: When this unit attacks, reveal the top \
+    \card of your deck. If the revealed card is a [High Elf] unit with a \
+    \printed cost 3 or lower, put it into your battlefield, attacking."
+  onMyAttackDeclared \_owner self _zone _attackers ->
+    revealTopOfDeck self.controller 1 \r ->
+      case r.cards of
+        (c : _)
+          | Just cd <- asUnit c.def
+          , HighElf `elem` cd.races
+          , someCardCost c.def <= 3 ->
+              putUnitIntoPlay self.controller FromDeck c.key BattlefieldZone
+        _ -> pure ()
+
+tiranocChariot :: CardDef Unit
+tiranocChariot = unitCard "omens-of-ruin-010" "Tiranoc Chariot" do
+  race HighElf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Warrior
+  body
+    "Action: When this unit attacks, reveal the top card of your deck. If the \
+    \revealed card is a [High Elf] unit with a printed cost 2 or lower, put it \
+    \into your battlefield, attacking."
+  onMyAttackDeclared \_owner self _zone _attackers ->
+    revealTopOfDeck self.controller 1 \r ->
+      case r.cards of
+        (c : _)
+          | Just cd <- asUnit c.def
+          , HighElf `elem` cd.races
+          , someCardCost c.def <= 2 ->
+              putUnitIntoPlay self.controller FromDeck c.key BattlefieldZone
+        _ -> pure ()

@@ -512,6 +512,8 @@ allCards =
       ("omens-of-ruin-003", UnitCardDef poisonousWyvern),
       ("omens-of-ruin-004", UnitCardDef riverTroll),
       ("omens-of-ruin-006", UnitCardDef steamTank),
+      ("omens-of-ruin-009", UnitCardDef korhil),
+      ("omens-of-ruin-010", UnitCardDef tiranocChariot),
       ("omens-of-ruin-012", UnitCardDef ungorRaiders),
       ("omens-of-ruin-013", SupportCardDef markOfChaos),
       ("omens-of-ruin-015", UnitCardDef witchHag),
