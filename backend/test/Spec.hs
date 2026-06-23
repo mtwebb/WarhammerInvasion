@@ -12,7 +12,7 @@ import Data.Aeson (Value (..), toJSON)
 import Data.Aeson.KeyMap qualified as KM
 import Data.Map.Strict qualified as Map
 import Invasion.Capital (Capital (..), Damage (..), Developments (..), Zone (..))
-import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUnit), allCards, enumerateOptionsPure, someCardCost)
+import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUnit, TargetPlayer), allCards, enumerateOptionsPure, someCardCost)
 import Invasion.CardDef (ActionTarget (..), CardDef (..), Keyword (..))
 import Invasion.Modifier
 import Invasion.Engine
@@ -1044,6 +1044,31 @@ main = do
       check "arrange: deck size is unchanged"
         (length deck1 == length deck0)
     _ -> putStrLn "  FAIL arrange-deck setup (deck too small)" >> exitFailure
+
+  -- TargetPlayer schema: both players are offered as targets.
+  gTP1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let tpOpts = enumerateOptionsPure gTP1.currentPlayer gTP1 TargetPlayer
+  check "target-player: both players offered"
+    (tpOpts == [TargetPlayerOption Player1, TargetPlayerOption Player2])
+
+  -- Learned Mage: its action deals itself 1 uncancellable damage, then
+  -- looks at the top card of the chosen player's deck and puts it on top
+  -- or bottom. Drive the player-target prompt + the top/bottom choice.
+  gLM1 <- (`applyMessage` BeginGame) =<< mkMonoGame "vessel-of-the-winds-070" HighElf
+  let pkLM = gLM1.currentPlayer
+  case firstHandKeys 1 gLM1 of
+    [uk] -> do
+      gLM2 <- applyMessage gLM1 (PutUnitIntoPlay pkLM uk BattlefieldZone)
+      let topKey0 = (.key) <$> listToMaybe (getPl pkLM gLM2).deck
+      gLM3 <- applyMessagesWithAnswers gLM2
+        [PickTargetOption (TargetPlayerOption pkLM), PickBool False]
+        [TriggerCardAction pkLM uk 0 NoTarget]
+      let deckLM = map (.key) (getPl pkLM gLM3).deck
+      check "learned mage: took 1 uncancellable damage"
+        (any (\u -> u.key == uk && let Damage d = u.damage in d >= 1) gLM3.units)
+      check "learned mage: chosen-deck top card was put on the bottom"
+        (maybe False (\k -> not (null deckLM) && last deckLM == k) topKey0)
+    _ -> putStrLn "  FAIL learned-mage deck dealt no hand" >> exitFailure
 
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only

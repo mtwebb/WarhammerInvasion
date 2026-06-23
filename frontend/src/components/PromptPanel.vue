@@ -211,6 +211,8 @@ function targetOptionLabel(o: TargetOption): string {
       const [owner, zone] = o.contents
       return `${playerLabel(owner)} ${zoneLabel(zone).toLowerCase()}`
     }
+    case 'TargetPlayerOption':
+      return playerLabel(o.contents)
   }
 }
 
@@ -224,6 +226,8 @@ function targetOptionKey(o: TargetOption): string {
       const [owner, zone] = o.contents
       return `z:${owner}:${zone}`
     }
+    case 'TargetPlayerOption':
+      return `p:${o.contents}`
   }
 }
 

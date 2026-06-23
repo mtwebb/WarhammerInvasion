@@ -188,6 +188,9 @@ data TargetOption
     -- ^ An in-play support card (free-standing or attached),
     -- identified by its support key. Used by "destroy one target
     -- support card or development"-style unified pickers.
+  | TargetPlayerOption PlayerKey
+    -- ^ A player. Used by "target player"/"any player's deck" effects
+    -- (Caradryan, Learned Mage, Eye of Sheerian).
   deriving stock (Show, Eq)
 
 -- | Predicate describing which units a 'ChooseUnits' prompt accepts.

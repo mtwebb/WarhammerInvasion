@@ -312,6 +312,7 @@ allCards =
       ("assault-on-ulthuan-001", UnitCardDef envoyFromAverlorn),
       ("assault-on-ulthuan-003", UnitCardDef swordMastersOfHoeth),
       ("assault-on-ulthuan-004", UnitCardDef highElfSpearmen),
+      ("assault-on-ulthuan-005", UnitCardDef caradryan),
       ("assault-on-ulthuan-006", UnitCardDef initiateOfSaphery),
       ("assault-on-ulthuan-007", UnitCardDef loremasterOfHoeth),
       ("assault-on-ulthuan-012", SupportCardDef dragonMageWakening),
@@ -592,6 +593,7 @@ allCards =
       ("the-accursed-dead-053", UnitCardDef treasureThieves),
       -- Bloodquest cycle — Vessel of the Winds (pack 4)
       ("vessel-of-the-winds-061", SupportCardDef windcatcherPrism),
+      ("vessel-of-the-winds-070", UnitCardDef learnedMage),
       ("vessel-of-the-winds-075", SupportCardDef templeOfSpite),
       ("vessel-of-the-winds-076", UnitCardDef magePriestOfItza),
       -- Bloodquest cycle — Portent of Doom (pack 5)

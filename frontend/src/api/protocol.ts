@@ -451,6 +451,7 @@ export type TargetOption =
   | { tag: 'TargetUnitOption'; contents: number }
   | { tag: 'TargetZoneOption'; contents: [PlayerKey, ZoneKind] }
   | { tag: 'TargetSupportOption'; contents: number }
+  | { tag: 'TargetPlayerOption'; contents: PlayerKey }
 
 export type PromptFilter =
   | { tag: 'AnyOwnUnit' }

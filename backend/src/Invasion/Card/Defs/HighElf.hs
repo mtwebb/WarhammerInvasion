@@ -1188,3 +1188,57 @@ scrollOfAsur = tacticCard "the-fall-of-karak-grimaz-027" "Scroll of Asur" do
         chooseOrdering pk result.cards
           "Order these cards on top of your deck (first pick = top)." \ordered ->
             arrangeDeckCards pk ordered []
+
+-- cards.json records Caradryan's hit points as 0 (a data gap); the
+-- printed card is a 0-power, 4-hit-point Phoenix Guard captain.
+caradryan :: CardDef Unit
+caradryan = unitCard "assault-on-ulthuan-005" "Caradryan" do
+  race HighElf
+  hero
+  cost 4
+  loyalty 2
+  power 0
+  hitPoints 4
+  body
+    "Limit 1 Hero per zone. Quest. Forced: At the beginning of your turn, \
+    \look at the top 3 cards of any player's deck. You may discard up to 1 of \
+    \these cards. Return the rest to the top of the deck in any order."
+  onMyTurnBegin \_owner self -> do
+    let pk = self.controller
+    withTarget pk TargetPlayer \targetPk ->
+      searchTopOfDeck targetPk 3 \result ->
+        unless (null result.cards) $
+          chooseFromCards pk 0 1 result.cards
+            "You may discard up to 1 of these cards." \toDiscard -> do
+              let discardKeys = map (.key) toDiscard
+              unless (null discardKeys) $
+                push (DiscardCardsFromDeck targetPk discardKeys)
+              let remaining = [c | c <- result.cards, c.key `notElem` discardKeys]
+              chooseOrdering pk remaining
+                "Return the rest to the top of the deck (first pick = top)." \ordered ->
+                  arrangeDeckCards targetPk ordered []
+
+learnedMage :: CardDef Unit
+learnedMage = unitCard "vessel-of-the-winds-070" "Learned Mage" do
+  race HighElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Mage
+  body
+    "Quest. Action: This unit takes 1 uncancellable damage. If it does, look \
+    \at the top card of target player's deck. Put that card on the top or \
+    \bottom of that player's deck."
+  action "Scry" 0 \usage -> do
+    let pk = usage.user
+    dealUncancellableDamage usage.self.key 1
+    withTarget pk TargetPlayer \targetPk ->
+      searchTopOfDeck targetPk 1 \result ->
+        case result.cards of
+          [] -> pure ()
+          (c : _) -> do
+            onTop <- askYesNo pk "Put the card on top of the deck? (No = bottom.)"
+            if onTop
+              then arrangeDeckCards targetPk [c.key] []
+              else arrangeDeckCards targetPk [] [c.key]

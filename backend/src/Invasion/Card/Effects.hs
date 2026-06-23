@@ -1163,6 +1163,10 @@ data Target a where
     -- "your" / "an opponent's" via @u.controller@). Use the smart
     -- constructors below (@ownUnit@, @enemyUnit@, @defendingUnit@…)
     -- for common cases.
+  TargetPlayer :: Target PlayerKey
+    -- ^ A player (either side). Used by "target player"/"any player's
+    -- deck" effects (Caradryan, Learned Mage). The picking player is
+    -- offered both players.
   AnySupportCard :: Target UnitKey
     -- ^ Any in-play support card — free-standing or attached, either
     -- controller's. Used by "destroy one target support card"
@@ -1271,6 +1275,11 @@ pickTarget pk = \case
     opts <- enumerateOptions pk (UnitMatching p)
     promptForOption pk opts >>= \case
       Just (TargetUnitOption k) -> pure (Just k)
+      _ -> pure Nothing
+  TargetPlayer -> do
+    opts <- enumerateOptions pk TargetPlayer
+    promptForOption pk opts >>= \case
+      Just (TargetPlayerOption p) -> pure (Just p)
       _ -> pure Nothing
   AnySupportCard -> do
     opts <- enumerateOptions pk AnySupportCard
@@ -1401,6 +1410,8 @@ enumerateOptionsPure pk g = \case
          , a <- u.attachments
          , targetableBy g pk a.key a.controller
          ]
+  TargetPlayer ->
+    [TargetPlayerOption g.player1.key, TargetPlayerOption g.player2.key]
   SupportMatching p ->
     [ TargetSupportOption s.key
     | s <- allInPlaySupports g
