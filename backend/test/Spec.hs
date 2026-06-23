@@ -273,7 +273,7 @@ main = do
       attackerHand = attackerInHand (case attackerSide of
                                    Player1 -> gE.player1
                                    Player2 -> gE.player2)
-      defenderHand = unitInHand (case defenderSide of
+      defenderHand = defenderInHand (case defenderSide of
                                    Player1 -> gE.player1
                                    Player2 -> gE.player2)
   case (attackerHand, defenderHand) of
@@ -1028,6 +1028,27 @@ attackerInHand p = go p.hand
               Variable -> 0
          in Just (key, cardDef.code, printed)
       _ -> go rest
+
+-- | Find the first Unit in a player's hand that does NOT carry Toughness.
+-- Used as the scripted-combat defender so a positive-power attacker
+-- always marks it — a Toughness defender (e.g. Trollslayers, or
+-- Ironbreakers whose Toughness scales with developments) could otherwise
+-- cancel the damage entirely and intermittently fail the smoke.
+defenderInHand :: Player -> Maybe (UnitKey, CardCode, Int)
+defenderInHand p = go p.hand
+  where
+    go [] = Nothing
+    go (Card {key, def} : rest) = case def of
+      UnitCardDef cardDef
+        | not (any isToughness cardDef.keywords) ->
+            let printed = case cardDef.cost of
+                  Fixed n -> n
+                  Variable -> 0
+             in Just (key, cardDef.code, printed)
+      _ -> go rest
+    isToughness = \case
+      Toughness _ -> True
+      _ -> False
 
 check :: String -> Bool -> IO ()
 check label ok =
