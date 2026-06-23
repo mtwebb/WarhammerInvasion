@@ -844,6 +844,26 @@ main = do
         (let Developments d = (pRec pkT gT3).capital.kingdom.developments in d == d0 + 1)
     _ -> putStrLn "  FAIL titan deck dealt no hand" >> exitFailure
 
+  -- Reveal primitives: RevealCards records the revealed cards (public,
+  -- for the UI), and MoveTopToBottomOfDeck rotates the deck.
+  gR1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-004" Dwarf
+  let pkR = gR1.currentPlayer
+      deckR g = (pRec pkR g).deck
+  case (activePlayer gR1).hand of
+    (hc : _) -> do
+      gR2 <- applyMessage gR1 (RevealCards pkR [hc])
+      check "reveal: lastRevealed records the revealed card"
+        (map (.key) gR2.lastRevealed == [hc.key])
+    _ -> putStrLn "  FAIL reveal deck dealt no hand" >> exitFailure
+  case deckR gR1 of
+    (top : _ : _) -> do
+      gR3 <- applyMessage gR1 (MoveTopToBottomOfDeck pkR 1)
+      check "deck rotate: length preserved"
+        (length (deckR gR3) == length (deckR gR1))
+      check "deck rotate: old top card is now on the bottom"
+        (not (null (deckR gR3)) && (last (deckR gR3)).key == top.key)
+    _ -> putStrLn "  skip deck-rotate (deck too small)"
+
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only
   -- key-stubs of Player2's hand; deck contents are hidden from

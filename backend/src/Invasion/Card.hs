@@ -479,6 +479,7 @@ allCards =
       ("the-chaos-moon-034", TacticCardDef plagueBomb),
       ("the-chaos-moon-035", UnitCardDef frenziedWitchElf),
       ("the-chaos-moon-037", TacticCardDef sacrificeToKhaine),
+      ("the-chaos-moon-024", UnitCardDef nightGoblinFanatic),
       ("the-chaos-moon-040", UnitCardDef viciousClanrat),
       -- The Morrslieb cycle — The Eclipse of Hope (081-100)
       ("the-eclipse-of-hope-081", UnitCardDef mountainGuard),
@@ -492,9 +493,11 @@ allCards =
       ("the-eclipse-of-hope-098", UnitCardDef wardancer),
       -- The Morrslieb cycle — Signs in the Stars (061-080)
       ("signs-in-the-stars-062", SupportCardDef karakAzulForge),
+      ("signs-in-the-stars-064", UnitCardDef sneakyGit),
       ("signs-in-the-stars-065", UnitCardDef squigHopper),
       ("signs-in-the-stars-068", UnitCardDef innerCircleKnight),
       ("signs-in-the-stars-070", UnitCardDef bladelord),
+      ("signs-in-the-stars-072", TacticCardDef cometOfCasandora),
       ("signs-in-the-stars-076", UnitCardDef enragedManticore),
       -- The Morrslieb cycle — The Twin-Tailed Comet (041-060)
       ("the-twin-tailed-comet-041", UnitCardDef daemonslayer),
@@ -686,5 +689,6 @@ allCards =
       ("hidden-kingdoms-024", UnitCardDef giantRats),
       ("hidden-kingdoms-039", TacticCardDef defendYourHonor),
       ("hidden-kingdoms-047", UnitCardDef seekerChariot),
+      ("hidden-kingdoms-053", UnitCardDef recklessBoyz),
       ("hidden-kingdoms-054", TacticCardDef orcishArtillery)
     ]

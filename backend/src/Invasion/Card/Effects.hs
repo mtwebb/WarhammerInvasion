@@ -615,6 +615,24 @@ searchTopOfDeck pk n body = do
     player <- getPlayer pk
     body SearchResult {cards = take (n + bonus) player.deck}
 
+-- | "Reveal the top N cards of your deck, then act on them." Surfaces
+-- the cards to both players (records them in 'Game.lastRevealed' for the
+-- UI) and runs @body@ with the same cards. The cards are NOT removed —
+-- the body decides what happens next (shuffle, put into play, leave on
+-- top, move to bottom, …), exactly like 'searchTopOfDeck' but public.
+revealTopOfDeck
+  :: (HasGame m, HasQueue Message m)
+  => PlayerKey -> Int -> (SearchResult -> m ()) -> m ()
+revealTopOfDeck pk n body =
+  searchTopOfDeck pk n \result -> do
+    push (RevealCards pk result.cards)
+    body result
+
+-- | "Put the top N cards of your deck on the bottom." (Comet of
+-- Casandora.)
+moveTopToBottomOfDeck :: HasQueue Message m => PlayerKey -> Int -> m ()
+moveTopToBottomOfDeck pk n = push (MoveTopToBottomOfDeck pk n)
+
 -- | "Put that support card into play [in the given zone]." Plays the
 -- named support directly from the player's deck.
 playSupportFromDeck

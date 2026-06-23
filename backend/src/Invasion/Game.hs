@@ -542,6 +542,10 @@ data Game = Game
     -- ^ The most recently resolved tactic, with the target it
     -- carried and the X paid. Used by Twin-Tailed Comet to copy
     -- the previous tactic. Cleared at end of turn.
+  , lastRevealed :: [Card]
+    -- ^ Cards most recently revealed to BOTH players (reveal-the-top
+    -- effects). Public information — the frontend flashes them.
+    -- Overwritten by each reveal; cleared at 'BeginTurn'.
   , pendingActionCancel :: Map PlayerKey Int
     -- ^ Per-player count of "next card action cancel" tokens.
     -- Decremented and consumed on the next 'TriggerCardAction'

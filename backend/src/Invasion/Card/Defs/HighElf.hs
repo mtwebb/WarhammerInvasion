@@ -1068,3 +1068,20 @@ shadowlandsHunter = unitCard "days-of-blood-011" "Shadowlands Hunter" do
               if c.key `elem` supportKeys
                 then adjustSupportTokens c.key 1
                 else addQuestToken c.key 1
+
+cometOfCasandora :: CardDef Tactic
+cometOfCasandora = tacticCard "signs-in-the-stars-072" "Comet of Casandora" do
+  race HighElf
+  cost 2
+  loyalty 3
+  trait Spell
+  body
+    "Action: Reveal the top 2 cards of your deck. Deal X indirect damage to \
+    \each player. X is the total printed cost of the revealed cards. Then, put \
+    \the revealed cards on the bottom of your deck."
+  whenResolved \self -> do
+    let pk = self.controller
+    revealTopOfDeck pk 2 \r -> do
+      let x = sum [someCardCost c.def | c <- r.cards]
+      eachPlayer \p -> indirectDamage p x
+      moveTopToBottomOfDeck pk (length r.cards)

@@ -2,6 +2,7 @@
 
 module Invasion.Message (module Invasion.Message) where
 
+import Invasion.Card.Types (Card)
 import Invasion.CardDef (ActionTarget, CardDef)
 import Invasion.Game (ActionWindowTrigger, Prompt, PromptResult)
 import Invasion.Modifier (Modifier, ModifierScope)
@@ -54,6 +55,14 @@ data Message where
     -- ^ Move the top N cards of the player's deck, facedown, into the
     -- named zone as developments (Spellweaver). Bypasses the
     -- once-per-turn development limit.
+  RevealCards :: PlayerKey -> [Card] -> Message
+    -- ^ Reveal these cards to both players (reveal-the-top effects).
+    -- Records them in 'Game.lastRevealed' for the UI; does not move
+    -- them. The inspecting effect reads/acts on the same cards.
+  MoveTopToBottomOfDeck :: PlayerKey -> Int -> Message
+    -- ^ Move the top N cards of the player's deck to the bottom, order
+    -- preserved (Comet of Casandora's "put the revealed cards on the
+    -- bottom of your deck").
   DrawFromBottom :: PlayerKey -> Message
     -- ^ Draw the bottom card of the player's deck into hand (Restless
     -- Corpse). Unlike a standard 'Draw', this is not subject to draw

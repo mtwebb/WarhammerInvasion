@@ -366,6 +366,10 @@ export interface EngineGame {
   // attacks). The frontend reads this so the player can see who's
   // attacking what during the prompt-driven combat ladder.
   combat: EngineCombatState | null
+  // Cards most recently revealed to both players (reveal-the-top
+  // effects). Public info the UI can flash; overwritten by each reveal,
+  // cleared at BeginTurn.
+  lastRevealed: EngineCard[]
   // True after the active player has played their once-per-turn
   // development. Resets at BeginTurn. UI uses this to disable the
   // "Play as development" affordance after the player has spent it.

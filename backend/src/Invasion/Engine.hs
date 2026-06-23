@@ -524,6 +524,7 @@ instance Run Game where
           , pendingActionCancel = mempty
           , developmentPlayedThisTurn = False
           , attackBlockedThisTurn = []
+          , lastRevealed = []
           }
       t <- gets (.turn)
       logIt LogTurn
@@ -1654,6 +1655,17 @@ instance Run Game where
           { zoneDamageDrawWatchers =
               (watcher, owner, zone) : gx.zoneDamageDrawWatchers
           }
+    RevealCards pk cards -> do
+      modify \gx -> gx {lastRevealed = cards}
+      logIt LogSystem
+        "log.reveal.cards"
+        [("player", playerParam pk), ("count", tshow (length cards))]
+    MoveTopToBottomOfDeck pk n -> do
+      g <- get
+      let player = lookupPlayer pk g
+          (taken, rest) = splitAt (max 0 n) player.deck
+      unless (null taken) $
+        modify (setPlayer pk player {deck = rest <> taken})
     TurnUnitIntoDevelopment ukey -> do
       g <- get
       whenJust (findUnit ukey g) \u -> do
@@ -3046,6 +3058,7 @@ newGame deck1 deck2 opts = do
       , pendingActionCancel = mempty
       , developmentPlayedThisTurn = False
       , attackBlockedThisTurn = []
+      , lastRevealed = []
       , drawCaps = mempty
       , capitalShields = mempty
       , defenderCounterstrikeBonus = mempty

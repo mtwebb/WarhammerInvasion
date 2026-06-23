@@ -1394,3 +1394,72 @@ getEmLadz = tacticCard "glory-of-days-past-072" "Get 'Em Ladz!" do
   whenResolved \self ->
     withTarget self.controller AnyCapital \(owner, zone) ->
       watchZoneForDamageDraw self.controller owner zone
+
+-- Reveal-the-top units --------------------------------------------------
+
+recklessBoyz :: CardDef Unit
+recklessBoyz = unitCard "hidden-kingdoms-053" "Reckless Boyz" do
+  race Orc
+  cost 3
+  loyalty 1
+  power 3
+  hitPoints 3
+  trait Warrior
+  battlefieldOnly
+  body
+    "Battlefield only. Forced: When this unit attacks, reveal the top card of \
+    \your deck. If the cost of the revealed card is even, deal 2 damage to \
+    \this unit. Then, shuffle your deck."
+  onMyAttackDeclared \_owner self _zone _attackers ->
+    revealTopOfDeck self.controller 1 \r -> do
+      case r.cards of
+        (c : _) | even (someCardCost c.def) -> dealDamage self.key 2
+        _ -> pure ()
+      shuffleDeck self.controller
+
+nightGoblinFanatic :: CardDef Unit
+nightGoblinFanatic = unitCard "the-chaos-moon-024" "Night Goblin Fanatic" do
+  race Orc
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Goblin
+  body
+    "Action: When this unit attacks, reveal the top card of your deck. If the \
+    \printed cost of the revealed card is odd, deal 2 uncancellable damage to \
+    \each unit in the defending zone. Otherwise, sacrifice this unit. Then, \
+    \shuffle your deck."
+  onMyAttackDeclared \_owner self zone _attackers ->
+    revealTopOfDeck self.controller 1 \r -> do
+      case r.cards of
+        (c : _) | odd (someCardCost c.def) -> do
+          g <- getGame
+          for_
+            [u.key | u <- g.units, u.zone == zone, u.controller == self.controller.next]
+            \k -> dealUncancellableDamage k 2
+        _ -> destroyUnit self.key
+      shuffleDeck self.controller
+
+sneakyGit :: CardDef Unit
+sneakyGit = unitCard "signs-in-the-stars-064" "Sneaky Git" do
+  race Orc
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Goblin
+  body
+    "Action: When this unit attacks, reveal the top card of your deck. If the \
+    \printed cost of the revealed card is odd, deal 2 damage to target \
+    \capital. Otherwise, deal 2 damage to your capital. Then, shuffle your deck."
+  onMyAttackDeclared \_owner self _zone _attackers ->
+    revealTopOfDeck self.controller 1 \r -> do
+      case r.cards of
+        (c : _) | odd (someCardCost c.def) ->
+          withTarget self.controller AnyCapital \(owner, zk) -> dealZoneDamage owner zk 2
+        _ ->
+          withTarget self.controller
+            (CapitalMatching \pk (owner, _) -> owner == pk)
+            \(owner, zk) -> dealZoneDamage owner zk 2
+      shuffleDeck self.controller
