@@ -491,6 +491,12 @@ data Game = Game
     -- ^ Effects scheduled to fire on 'EndPhase' for a specific phase.
     -- Entries matching the firing phase are extracted, run, and
     -- discarded.
+  , zoneDamageDrawWatchers :: [(PlayerKey, PlayerKey, ZoneKind)]
+    -- ^ "Until the end of the phase, draw a card for each damage dealt
+    -- to that zone." (Get 'Em Ladz!) Each tuple is
+    -- (watching player, zone owner, zone); when damage lands on the
+    -- watched zone the watcher draws that many cards. Cleared at
+    -- 'EndPhase'.
   , history :: Map Scope History
     -- ^ Per-scope event log (counts of units discarded, attackers
     -- declared, damage taken, etc.). Engine bumps every scope's

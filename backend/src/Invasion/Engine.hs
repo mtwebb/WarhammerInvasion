@@ -581,7 +581,8 @@ instance Run Game where
       (mine, rest) <- gets (partition ((== phase) . fst) . (.pendingEndOfPhase))
       modify \g -> g {pendingEndOfPhase = rest}
       traverse_ (firePendingEffect . snd) mine
-      modify \g -> g {phase = Nothing}
+      -- "Until the end of the phase" zone-damage draw watchers expire.
+      modify \g -> g {phase = Nothing, zoneDamageDrawWatchers = []}
       logIt LogPhase "log.phase.ends" [("phase", phaseParam phase)]
       case nextPhase phase of
         Just np -> send $ BeginPhase np
@@ -1531,6 +1532,12 @@ instance Run Game where
               , ("zone", zoneParam zoneKind)
               , ("amount", tshow amount)
               ]
+            -- Get 'Em Ladz!: each player watching this zone draws a card
+            -- per point of damage that just landed.
+            watchers <- gets (.zoneDamageDrawWatchers)
+            for_ watchers \(watcher, owner, z) ->
+              when (owner == targetPlayer && z == zoneKind) $
+                replicateM_ amount (send (Draw (Drawing StandardDraw watcher)))
             when justBurned $ do
               logIt LogResult
                 "log.zone.burned"
@@ -1641,6 +1648,12 @@ instance Run Game where
             logIt LogPlayerAction
               "log.zone.development_played"
               [("player", playerParam pk), ("zone", zoneParam zone)]
+    WatchZoneForDamageDraw watcher owner zone ->
+      modify \gx ->
+        gx
+          { zoneDamageDrawWatchers =
+              (watcher, owner, zone) : gx.zoneDamageDrawWatchers
+          }
     PlaceTopAsDevelopments pk zone n -> do
       g <- get
       let player = lookupPlayer pk g
@@ -3000,6 +3013,7 @@ newGame deck1 deck2 opts = do
       , pendingEndOfTurn = []
       , combat = Nothing
       , pendingEndOfPhase = []
+      , zoneDamageDrawWatchers = []
       , history = emptyHistory
       , autoSkipActionWindows = opts.autoSkipActionWindows
       , capitalDefenseUsed = mempty

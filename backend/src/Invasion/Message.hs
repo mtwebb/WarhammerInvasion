@@ -41,6 +41,10 @@ data Message where
   -- Phase steps
   ReturnResources :: PlayerKey -> Message
   CollectResources :: PlayerKey -> Message
+  WatchZoneForDamageDraw :: PlayerKey -> PlayerKey -> ZoneKind -> Message
+    -- ^ "Until the end of the phase, draw a card for each damage dealt
+    -- to that zone." (Get 'Em Ladz!) Args: watching player, zone owner,
+    -- zone. Recorded in 'Game.zoneDamageDrawWatchers'.
   PlaceTopAsDevelopments :: PlayerKey -> ZoneKind -> Int -> Message
     -- ^ Move the top N cards of the player's deck, facedown, into the
     -- named zone as developments (Spellweaver). Bypasses the

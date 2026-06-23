@@ -1381,3 +1381,16 @@ dedScaryBoy = unitCard "battle-for-the-old-world-044" "Ded Scary Boy" do
     g <- getGame
     for_ [u.key | u <- g.units, u.key /= self.key, not (isDamaged u)] \k ->
       until EndOfTurn $ buffPower k (-2)
+
+getEmLadz :: CardDef Tactic
+getEmLadz = tacticCard "glory-of-days-past-072" "Get 'Em Ladz!" do
+  race Orc
+  cost 2
+  loyalty 1
+  body
+    "Orc only. Ambush 0. Action: Choose a zone. Until the end of the phase, \
+    \draw a card for each damage dealt to that zone."
+  ambush 0
+  whenResolved \self ->
+    withTarget self.controller AnyCapital \(owner, zone) ->
+      watchZoneForDamageDraw self.controller owner zone

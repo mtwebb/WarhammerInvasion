@@ -68,6 +68,13 @@ drawFromBottom pk = push (DrawFromBottom pk)
 placeTopAsDevelopments :: HasQueue Message m => PlayerKey -> ZoneKind -> Int -> m ()
 placeTopAsDevelopments pk zone n = push (PlaceTopAsDevelopments pk zone n)
 
+-- | "Until the end of the phase, @watcher@ draws a card for each damage
+-- dealt to (@owner@, @zone@)." (Get 'Em Ladz!)
+watchZoneForDamageDraw
+  :: HasQueue Message m => PlayerKey -> PlayerKey -> ZoneKind -> m ()
+watchZoneForDamageDraw watcher owner zone =
+  push (WatchZoneForDamageDraw watcher owner zone)
+
 -- | "Shuffle your deck." Hides the @push (ShuffleDeck pk)@ ceremony.
 shuffleDeck :: HasQueue Message m => PlayerKey -> m ()
 shuffleDeck pk = push (ShuffleDeck pk)

@@ -808,6 +808,22 @@ main = do
             (isNothing gE5.combat)
         _ -> putStrLn "  skip attack-lockout smoke (deck dealt no usable hand)"
 
+  -- Get 'Em Ladz!: a zone-damage watcher draws a card per point of
+  -- damage dealt to the watched zone (until the phase ends), and only
+  -- for the watched zone.
+  gG1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-001" Dwarf
+  let pkG = gG1.currentPlayer
+      foeG = pkG.next
+      handOf side g = length (pRec side g).hand
+  gG2 <- applyMessage gG1 (WatchZoneForDamageDraw pkG foeG BattlefieldZone)
+  let beforeG = handOf pkG gG2
+  gG3 <- applyMessage gG2 (DealDamageToZone foeG BattlefieldZone 3)
+  check "get em ladz: watcher drew a card per damage on the watched zone"
+    (handOf pkG gG3 == beforeG + 3)
+  gG4 <- applyMessage gG3 (DealDamageToZone foeG KingdomZone 2)
+  check "get em ladz: damage to an unwatched zone draws nothing"
+    (handOf pkG gG4 == beforeG + 3)
+
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only
   -- key-stubs of Player2's hand; deck contents are hidden from

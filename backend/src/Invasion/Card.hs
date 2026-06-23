@@ -651,6 +651,7 @@ allCards =
       ("glory-of-days-past-065", UnitCardDef ostlandGreatswords),
       ("glory-of-days-past-066", TacticCardDef fulminatingCage),
       ("glory-of-days-past-067", UnitCardDef masterOfQhaysh),
+      ("glory-of-days-past-072", TacticCardDef getEmLadz),
       ("glory-of-days-past-073", UnitCardDef chaosDragon),
       ("glory-of-days-past-075", SupportCardDef painfulMutation),
       ("glory-of-days-past-076", UnitCardDef outlawSorcerer),
