@@ -1350,3 +1350,17 @@ fulminatingCage = tacticCard "glory-of-days-past-066" "Fulminating Cage" do
   whenResolved \_self -> withCombat \cs -> do
     cancelAttack
     blockAttacksThisTurn cs.attackingPlayer
+
+celestialWizardAcolyte :: CardDef Unit
+celestialWizardAcolyte = unitCard "faith-and-steel-104" "Celestial Wizard Acolyte" do
+  race Empire
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 1
+  trait Mage
+  body
+    "Empire only. Ambush 2. Action: When this unit ambushes, it gains \
+    \Counterstrike 3 until the end of the turn."
+  ambush 2
+  onAmbush \_owner self -> until EndOfTurn $ buffCounterstrike self.key 3

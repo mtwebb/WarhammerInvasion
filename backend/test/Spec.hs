@@ -629,6 +629,36 @@ main = do
         (any (\u -> u.key == dk && u.effectivePower == 3) gB4.units)
     _ -> putStrLn "  skip ambush-rider smoke (deck dealt no usable hand)"
 
+  -- Ambush rider granting a keyword (Celestial Wizard Acolyte gains
+  -- Counterstrike 3 on ambush): drive to the Ambush step and read the
+  -- flipped unit's total Counterstrike via the engine's accessor.
+  gK1 <- (`applyMessage` BeginGame) =<< mkMonoGame "faith-and-steel-104" Empire
+  let fpK = gK1.currentPlayer
+      atkK = fpK.next
+  case (firstHandKeys 1 gK1, unitInHand (pRec atkK gK1)) of
+    ([dk], Just (ak, _, _)) -> do
+      gK2 <- applyMessages gK1
+        [ PassPriority fpK, PassPriority atkK
+        , PassPriority fpK, PassPriority atkK
+        , GainResources fpK 5
+        , PlayDevelopment fpK dk BattlefieldZone
+        , PassPriority fpK, PassPriority atkK
+        , PassPriority fpK, PassPriority atkK
+        , PassPriority atkK, PassPriority fpK
+        ]
+      gK3 <- applyMessages gK2 [PutUnitIntoPlay atkK ak BattlefieldZone]
+      gK4 <- applyMessagesWithAnswers gK3
+        [ PickUnits [dk]    -- Ambush step: flip Celestial Wizard Acolyte
+        , PickNone          -- Declare Defenders
+        ]
+        [ BeginCombat atkK BattlefieldZone [ak]
+        , PassPriority atkK, PassPriority fpK
+        , PassPriority atkK, PassPriority fpK
+        ]
+      check "ambush rider: Celestial Wizard Acolyte gained Counterstrike 3"
+        (any (\u -> u.key == dk && totalCounterstrike gK4 u == 3) gK4.units)
+    _ -> putStrLn "  skip ambush-keyword smoke (deck dealt no usable hand)"
+
   -- Tactic ambush (Fury of the Forest, Ambush 0): a facedown tactic in
   -- the defending zone is flipped during the Ambush step, resolves its
   -- effect ("deal 1 damage to each attacking unit"), and is discarded

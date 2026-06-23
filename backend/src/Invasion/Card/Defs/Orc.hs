@@ -1363,3 +1363,21 @@ iddenBoy = unitCard "days-of-blood-013" "'Idden Boy" do
     \{power}{power} until the end of the phase."
   ambush 1
   onAmbush \_owner self -> until EndOfTurn $ buffPower self.key 2
+
+dedScaryBoy :: CardDef Unit
+dedScaryBoy = unitCard "battle-for-the-old-world-044" "Ded Scary Boy" do
+  race Orc
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Berserker
+  body
+    "Orc only. Ambush 2. Action: When this unit ambushes, it takes 1 damage. \
+    \Then, units with no damage lose {power}{power} until the end of the phase."
+  ambush 2
+  onAmbush \_owner self -> do
+    dealDamage self.key 1
+    g <- getGame
+    for_ [u.key | u <- g.units, u.key /= self.key, not (isDamaged u)] \k ->
+      until EndOfTurn $ buffPower k (-2)

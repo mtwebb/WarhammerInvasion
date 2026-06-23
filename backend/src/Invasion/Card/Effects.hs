@@ -59,6 +59,10 @@ mkCard k d = Card {key = k, def = d}
 drawCard :: HasQueue Message m => PlayerKey -> m ()
 drawCard pk = push (Draw (Drawing StandardDraw pk))
 
+-- | "Draw a card from the bottom of your deck." (Restless Corpse.)
+drawFromBottom :: HasQueue Message m => PlayerKey -> m ()
+drawFromBottom pk = push (DrawFromBottom pk)
+
 -- | "Shuffle your deck." Hides the @push (ShuffleDeck pk)@ ceremony.
 shuffleDeck :: HasQueue Message m => PlayerKey -> m ()
 shuffleDeck pk = push (ShuffleDeck pk)
@@ -685,6 +689,11 @@ buffCombatDamage target n = PendingBuff target (GainCombatDamage n)
 -- into 'totalToughness' for the buff's scope (Fearless in Battle).
 buffToughness :: UnitKey -> Int -> PendingBuff
 buffToughness target n = PendingBuff target (GainToughness n)
+
+-- | "Target unit gains Counterstrike N." Folded into
+-- 'totalCounterstrike' for the buff's scope (Celestial Wizard Acolyte).
+buffCounterstrike :: UnitKey -> Int -> PendingBuff
+buffCounterstrike target n = PendingBuff target (GainCounterstrike n)
 
 -- | "Target unit must defend this turn, if able." Animosity,
 -- Alluring Daemonettes.

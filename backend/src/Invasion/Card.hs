@@ -637,6 +637,7 @@ allCards =
       ("oaths-of-vengeance-039", UnitCardDef skavenPackmaster),
       -- Battle for the Old World (Eternal War cycle, pack 3)
       ("battle-for-the-old-world-043", SupportCardDef mobOHutz),
+      ("battle-for-the-old-world-044", UnitCardDef dedScaryBoy),
       ("battle-for-the-old-world-045", UnitCardDef ironDefenders),
       ("battle-for-the-old-world-047", UnitCardDef reiksguardElite),
       ("battle-for-the-old-world-049", SupportCardDef chapterhouseStables),
@@ -663,9 +664,11 @@ allCards =
       ("the-ruinous-hordes-094", UnitCardDef wolfGobbos),
       ("the-ruinous-hordes-096", UnitCardDef coldOneChampion),
       ("the-ruinous-hordes-097", TacticCardDef testOfWill),
+      ("the-ruinous-hordes-099", UnitCardDef restlessCorpse),
       -- Faith and Steel (Eternal War cycle, pack 6)
       ("faith-and-steel-113", UnitCardDef skulltaker),
       ("faith-and-steel-103", SupportCardDef theEmperorsStatue),
+      ("faith-and-steel-104", UnitCardDef celestialWizardAcolyte),
       ("faith-and-steel-106", UnitCardDef doomSeeker),
       ("faith-and-steel-107", TacticCardDef fearlessInBattle),
       ("faith-and-steel-111", UnitCardDef gobboBigBoss),

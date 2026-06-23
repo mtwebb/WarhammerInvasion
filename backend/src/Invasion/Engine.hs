@@ -446,6 +446,17 @@ instance Run Player where
             elim <- gets (.eliminated)
             when (null deck' && not elim) $
               send $ Eliminate drawing.player DeckedOut
+    DrawFromBottom k -> onKey k do
+      deck <- gets (.deck)
+      case reverse deck of
+        [] -> pure ()
+        (bottom : restRev) -> do
+          hand <- gets (.hand)
+          modify \p -> p {hand = hand <> [bottom], deck = reverse restRev}
+          deck' <- gets (.deck)
+          elim <- gets (.eliminated)
+          when (null deck' && not elim) $
+            send $ Eliminate k DeckedOut
     ReturnResources k -> onKey k $
       modify \p -> p {resources = Resources 0}
     -- CollectResources and QuestDraw set the right values from
@@ -729,6 +740,9 @@ instance Run Game where
       let n = zonePower g k QuestZone
       logIt LogSystem "log.quest.draw" [("player", playerParam k)]
       replicateM_ n (send (Draw (Drawing StandardDraw k)))
+    DrawFromBottom k ->
+      -- The hand/deck mutation happens in Player.receive; Game narrates.
+      logIt LogSystem "log.draw.card" [("player", playerParam k)]
     PlayUnit pk cardKey zone -> do
       -- Server-side zone-entry gate: "Battlefield only."-style
       -- keywords and the Hero-per-zone limit are enforced here, not
@@ -4567,6 +4581,9 @@ totalCounterstrike :: Game -> UnitDetails -> Int
 totalCounterstrike g u =
   sum [n | Counterstrike n <- unitKeywords u]
     + (unitExtrasOf u).selfCounterstrikeBonus g u
+    + sum [n | Modifier (GainCounterstrike n) _ <- mods]
+  where
+    mods = fromMaybe [] (Map.lookup (UnitRef u.key) g.modifiers)
 
 totalToughness :: Game -> UnitDetails -> Int
 totalToughness g u

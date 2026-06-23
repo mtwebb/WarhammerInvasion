@@ -1348,3 +1348,16 @@ furyOfTheForest = tacticCard "hidden-kingdoms-018" "Fury of the Forest" do
   body "Wood Elf only. Ambush 0. Action: Deal 1 damage to each attacking unit."
   ambush 0
   whenResolved \_self -> withCombat \cs -> for_ cs.attackers \k -> dealDamage k 1
+
+restlessCorpse :: CardDef Unit
+restlessCorpse = unitCard "the-ruinous-hordes-099" "Restless Corpse" do
+  cost 2
+  power 1
+  hitPoints 2
+  trait Undead
+  destructionOnly
+  body
+    "Destruction only. Ambush 1. Action: When this unit ambushes, draw a \
+    \card from the bottom of your deck."
+  ambush 1
+  onAmbush \_owner self -> drawFromBottom self.controller

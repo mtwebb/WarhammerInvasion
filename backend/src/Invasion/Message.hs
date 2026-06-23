@@ -41,6 +41,10 @@ data Message where
   -- Phase steps
   ReturnResources :: PlayerKey -> Message
   CollectResources :: PlayerKey -> Message
+  DrawFromBottom :: PlayerKey -> Message
+    -- ^ Draw the bottom card of the player's deck into hand (Restless
+    -- Corpse). Unlike a standard 'Draw', this is not subject to draw
+    -- caps and takes from the bottom rather than the top.
   QuestDraw :: PlayerKey -> Message
   -- Action windows
   OpenActionWindow :: ActionWindowTrigger -> Message

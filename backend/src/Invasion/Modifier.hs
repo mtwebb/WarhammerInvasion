@@ -59,6 +59,10 @@ data ModifierDetails
     -- ^ "This unit gains Toughness N" for the modifier's scope
     -- (Fearless in Battle). Summed into 'totalToughness' alongside the
     -- printed keyword and auras.
+  | GainCounterstrike Int
+    -- ^ "This unit gains Counterstrike N" for the modifier's scope
+    -- (Celestial Wizard Acolyte). Summed into 'totalCounterstrike'
+    -- alongside the printed keyword and 'selfCounterstrikeBonus'.
   | MustDefend
     -- ^ "Target unit must defend this turn, if able." (Animosity,
     -- Alluring Daemonettes.) The defender-declaration step force-
