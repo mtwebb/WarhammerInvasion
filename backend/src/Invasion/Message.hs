@@ -458,6 +458,11 @@ data Message where
   -- Hand interaction
   DiscardRandomFromHand :: PlayerKey -> Message
     -- ^ Discard one card chosen at random from the player's hand.
+  DiscardRandomForResources :: PlayerKey -> Message
+    -- ^ Windcatcher Prism: discard one card chosen at random from the
+    -- player's hand, then gain resources equal to that card's printed
+    -- cost. Done atomically engine-side so the discarded card's cost is
+    -- known.
   -- Resources
   GainResources :: PlayerKey -> Int -> Message
     -- ^ Credit N resources to the named player's pool. Used by tactic

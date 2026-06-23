@@ -586,6 +586,7 @@ allCards =
       ("the-accursed-dead-052", SupportCardDef riftOfBattle),
       ("the-accursed-dead-053", UnitCardDef treasureThieves),
       -- Bloodquest cycle — Vessel of the Winds (pack 4)
+      ("vessel-of-the-winds-061", SupportCardDef windcatcherPrism),
       ("vessel-of-the-winds-075", SupportCardDef templeOfSpite),
       ("vessel-of-the-winds-076", UnitCardDef magePriestOfItza),
       -- Bloodquest cycle — Portent of Doom (pack 5)
@@ -593,6 +594,7 @@ allCards =
       ("portent-of-doom-093", TacticCardDef murderlust),
       ("portent-of-doom-097", TacticCardDef ghostlyApparition),
       -- Bloodquest cycle — Shield of the Gods (pack 6)
+      ("shield-of-the-gods-101", SupportCardDef shieldOfAeons),
       ("shield-of-the-gods-103", UnitCardDef dwarfAdventurer),
       ("shield-of-the-gods-104", SupportCardDef hospitableCave),
       ("shield-of-the-gods-105", UnitCardDef manglerSquigs),

@@ -12,7 +12,7 @@ import Data.Aeson (Value (..), toJSON)
 import Data.Aeson.KeyMap qualified as KM
 import Data.Map.Strict qualified as Map
 import Invasion.Capital (Capital (..), Damage (..), Developments (..), Zone (..))
-import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUnit), allCards, enumerateOptionsPure)
+import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUnit), allCards, enumerateOptionsPure, someCardCost)
 import Invasion.CardDef (ActionTarget (..), CardDef (..), Keyword (..))
 import Invasion.Modifier
 import Invasion.Engine
@@ -927,6 +927,70 @@ main = do
             (not (canTargetAtt pkDS))
         _ -> putStrLn "  FAIL dawnstar def missing from allCards" >> exitFailure
     _ -> putStrLn "  FAIL dawnstar deck dealt too few cards" >> exitFailure
+
+  -- Windcatcher Prism: discard a random card from hand to gain resources
+  -- equal to its printed cost. A mono-deck makes the discarded card's
+  -- cost deterministic.
+  gWP1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-004" Dwarf
+  let pkWP = gWP1.currentPlayer
+      wpHandBefore = length (activePlayer gWP1).hand
+      Resources wpResBefore = (activePlayer gWP1).resources
+      wpCost = maybe (-1) someCardCost (Map.lookup "core-004" allCards)
+  gWP2 <- applyMessage gWP1 (DiscardRandomForResources pkWP)
+  let Resources wpResAfter = (activePlayer gWP2).resources
+  check "windcatcher: one card left the hand"
+    (length (activePlayer gWP2).hand == wpHandBefore - 1)
+  check "windcatcher: gained resources equal to the discarded card's cost"
+    (wpResAfter - wpResBefore == wpCost)
+
+  -- Shield of Aeons: while its host is participating in combat, cancel
+  -- all damage assigned to it. Attach the shield to the scripted
+  -- defender and confirm it absorbs the attack without taking damage.
+  -- A mono-deck of a power-2, toughness-free Hero makes both the
+  -- attacker and the defender deterministic.
+  gSH0 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let fpSH = gSH0.currentPlayer
+  gSH <- applyMessages gSH0 $
+    concat
+      [ [PassPriority fpSH, PassPriority fpSH.next]
+      , [PassPriority fpSH, PassPriority fpSH.next]
+      , [PassPriority fpSH, PassPriority fpSH.next]
+      , [PassPriority fpSH, PassPriority fpSH.next]
+      , [PassPriority fpSH.next, PassPriority fpSH]
+      ]
+  let atkSH = gSH.currentPlayer
+      defSH = atkSH.next
+      playerSH pk g = case pk of Player1 -> g.player1; Player2 -> g.player2
+      atkHandSH = attackerInHand (playerSH atkSH gSH)
+      defHandSH = defenderInHand (playerSH defSH gSH)
+      -- a spare hand card whose key labels the synthetic shield
+      shieldKeySH dk =
+        listToMaybe [c.key | c <- (playerSH defSH gSH).hand, c.key /= dk]
+  case (atkHandSH, defHandSH, Map.lookup "shield-of-the-gods-101" allCards) of
+    (Just (akSH, _, _), Just (dkSH, _, _), Just (SupportCardDef shieldDef))
+      | Just skSH <- shieldKeySH dkSH -> do
+          gShF <- applyMessages gSH
+            [ PutUnitIntoPlay atkSH akSH BattlefieldZone
+            , PutUnitIntoPlay defSH dkSH BattlefieldZone
+            ]
+          let withShield u
+                | u.key == dkSH =
+                    u {attachments = freshSupport skSH defSH u.zone (Just dkSH) shieldDef : u.attachments}
+                | otherwise = u
+              gShA = gShF {units = map withShield gShF.units}
+          gShG <- applyMessagesWithAnswers gShA
+            [PickUnits [dkSH], PickNone, PickNone]
+            ( BeginCombat atkSH BattlefieldZone [akSH]
+                : concat (replicate 5 [PassPriority atkSH, PassPriority defSH])
+            )
+          check "shield of aeons: combat cleared"
+            (isNothing gShG.combat)
+          check "shield of aeons: shielded defender took no damage"
+            ( any
+                (\u -> u.key == dkSH && let Damage d = u.damage in d == 0)
+                gShG.units
+            )
+    _ -> putStrLn "  skip shield-of-aeons (no suitable attacker/defender/shield)"
 
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only

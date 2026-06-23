@@ -167,6 +167,8 @@ data Trait
     -- (Dawnstar Sword, Eye of Sheerian, Windcatcher Prism, …).
   | Shield
     -- ^ Shield item trait (Shield of Aeons).
+  | Arcane
+    -- ^ Arcane artefact trait (Windcatcher Prism, Star Crown Fragments).
   deriving stock (Show, Eq)
 
 mconcat
@@ -523,6 +525,12 @@ data SupportExtras = SupportExtras
     -- (Vigilant Elector after its quest action). When the attachment
     -- leaves play, the discard pile receives this unit def instead of
     -- the synthetic support def.
+  , grantsHostDamageImmunity :: Game -> InPlay Support -> InPlay Unit -> Bool
+    -- ^ "Cancel all (cancellable) damage assigned to the attached unit
+    -- while CONDITION." (Shield of Aeons: while its Hero or legend host
+    -- is participating in combat.) OR-ed into the host's
+    -- 'cancelAllDamageWhen' immunity check by the damage handler;
+    -- uncancellable damage ignores it, like the unit-side field.
   , selfUntargetable :: Game -> InPlay Support -> Maybe Bool
     -- ^ "This card cannot be targeted by card effects." Returns
     -- @Just opponentOnly@ while the immunity is active (@True@ blocks
@@ -632,6 +640,7 @@ instance HasDefaultExtras Support where
     , blanksHost = False
     , hostDestroyRansom = Nothing
     , revertToUnit = Nothing
+    , grantsHostDamageImmunity = \_ _ _ -> False
     , selfUntargetable = \_ _ -> Nothing
     }
 

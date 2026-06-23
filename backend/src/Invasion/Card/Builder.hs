@@ -519,6 +519,16 @@ cannotBeTargetedSelfWhen
 cannotBeTargetedSelfWhen f =
   modifySupportExtras \e -> e {selfUntargetable = f}
 
+-- | "Cancel all damage assigned to the attached unit while CONDITION."
+-- (Shield of Aeons: while its host is participating in combat.) Args:
+-- game, this support, the candidate unit — return True only for the
+-- support's own host while the condition holds.
+grantsHostDamageImmunityWhen
+  :: (Game -> InPlay Support -> InPlay Unit -> Bool)
+  -> CardBuilder Support ()
+grantsHostDamageImmunityWhen f =
+  modifySupportExtras \e -> e {grantsHostDamageImmunity = f}
+
 -- | "If attached unit would be destroyed, you may pay N resources to
 -- leave it in play and remove all damage from it." (Hydra Blade.)
 hostDestroyRansomOf :: Int -> CardBuilder Support ()

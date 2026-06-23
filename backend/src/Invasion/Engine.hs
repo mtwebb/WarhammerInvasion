@@ -865,7 +865,9 @@ instance Run Game where
                   (historyOfScope ThisTurn g).damageTaken
               -- Full conditional immunity (Gustav the Bear): cancel
               -- everything that survived the keyword math.
-              immune = (unitExtrasOf u).cancelAllDamageWhen g u
+              immune =
+                (unitExtrasOf u).cancelAllDamageWhen g u
+                  || any (\s -> s.cardDef.extras.grantsHostDamageImmunity g s u) u.attachments
               capped =
                 if immune then 0 else applyPerTurnCap u already afterPerHit
           -- Damage shields and redirects installed as modifiers
@@ -1768,6 +1770,27 @@ instance Run Game where
               logIt LogSystem
                 "log.hand.discarded"
                 [("player", playerParam pk)]
+            [] -> pure ()
+    DiscardRandomForResources pk -> do
+      g <- get
+      let player = lookupPlayer pk g
+      case player.hand of
+        [] -> pure ()
+        cards -> do
+          idx <- getRandomR (0, length cards - 1)
+          let (before, after) = splitAt idx cards
+          case after of
+            (picked : rest) -> do
+              let player' =
+                    player
+                      { hand = before <> rest
+                      , discard = picked : player.discard
+                      }
+              modify (setPlayer pk player')
+              logIt LogSystem
+                "log.hand.discarded"
+                [("player", playerParam pk)]
+              send $ GainResources pk (someCardCost picked.def)
             [] -> pure ()
     GainResources pk raw -> do
       let amount = max 0 raw

@@ -1415,6 +1415,33 @@ dawnstarSword = supportCard "rising-dawn-001" "Dawnstar Sword" do
           _ -> pure ()
     _ -> pure ()
 
+shieldOfAeons :: CardDef Support
+shieldOfAeons = supportCard "shield-of-the-gods-101" "Shield of Aeons" do
+  cost 4
+  loyalty 0
+  traits [Artefact, Shield, Attachment]
+  orderOnly
+  body
+    "Order only. Attach to a target Hero or legend. This card cannot be \
+    \targeted by card effects. While attached Hero or legend is participating \
+    \in combat, cancel all damage assigned to it."
+  cannotBeTargetedSelf
+  grantsHostDamageImmunityWhen \g s u ->
+    s.attachedTo == Just u.key && (unitIsAttacking g u || unitIsDefending g u)
+
+windcatcherPrism :: CardDef Support
+windcatcherPrism = supportCard "vessel-of-the-winds-061" "Windcatcher Prism" do
+  cost 4
+  loyalty 0
+  traits [Artefact, Arcane, Attachment]
+  body
+    "Attach to a target Hero or legend you control. This card cannot be \
+    \targeted by card effects. Action: Discard a card at random from your \
+    \hand to gain resources equal to the printed cost of the discarded card."
+  cannotBeTargetedSelf
+  action "Channel the winds" 0 \usage ->
+    discardRandomForResources usage.user
+
 ghostlyApparition :: CardDef Tactic
 ghostlyApparition = tacticCard "portent-of-doom-097" "Ghostly Apparition" do
   cost 1

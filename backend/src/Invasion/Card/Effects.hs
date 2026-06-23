@@ -132,6 +132,11 @@ destroyQuest k = push (DestroyQuest k)
 discardRandom :: HasQueue Message m => PlayerKey -> m ()
 discardRandom pk = push (DiscardRandomFromHand pk)
 
+-- | "Discard a card at random from your hand to gain resources equal to
+-- the printed cost of the discarded card." (Windcatcher Prism.)
+discardRandomForResources :: HasQueue Message m => PlayerKey -> m ()
+discardRandomForResources pk = push (DiscardRandomForResources pk)
+
 -- | "Cancel up to N damage assigned to a unit." (Defenders of the
 -- Faith.)
 cancelDamageOnUnit :: HasQueue Message m => UnitKey -> Int -> m ()
