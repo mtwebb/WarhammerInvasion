@@ -1388,3 +1388,21 @@ slumberingTitan = unitCard "hidden-kingdoms-014" "Slumbering Titan" do
     \into a facedown development. It no longer counts as a unit."
   ambush 2
   onMyTurnEnd \_owner self -> turnUnitIntoDevelopment self.key
+
+ghostlyApparition :: CardDef Tactic
+ghostlyApparition = tacticCard "portent-of-doom-097" "Ghostly Apparition" do
+  cost 1
+  trait Undead
+  destructionOnly
+  body
+    "Destruction only. Action: Target Undead unit cannot be targeted by \
+    \opponents' card effects until the end of the turn. If it is participating \
+    \in combat, cancel all damage assigned to it."
+  playableWhen $ hasTarget (UnitMatching \_pk _g u -> hasTrait Undead u)
+  whenResolved \self ->
+    withTarget self.controller (UnitMatching \_pk _g u -> hasTrait Undead u) \k -> do
+      until EndOfTurn $ untargetable True k
+      g <- getGame
+      case findUnit k g of
+        Just u | u.attacking || u.defending -> cancelDamageOnUnit k 999
+        _ -> pure ()

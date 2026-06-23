@@ -497,6 +497,7 @@ allCards =
       ("signs-in-the-stars-065", UnitCardDef squigHopper),
       ("signs-in-the-stars-068", UnitCardDef innerCircleKnight),
       ("signs-in-the-stars-070", UnitCardDef bladelord),
+      ("signs-in-the-stars-071", TacticCardDef shieldOfSaphery),
       ("signs-in-the-stars-072", TacticCardDef cometOfCasandora),
       ("signs-in-the-stars-076", UnitCardDef enragedManticore),
       -- The Morrslieb cycle — The Twin-Tailed Comet (041-060)
@@ -521,6 +522,7 @@ allCards =
       -- The Morrslieb cycle — Portent of Doom (081-100)
       ("portent-of-doom-088", TacticCardDef theSealedVaults),
       -- The Morrslieb cycle — Fiery Dawn (101-120)
+      ("fiery-dawn-105", TacticCardDef deyzBigga),
       ("fiery-dawn-106", TacticCardDef smashEm),
       ("fiery-dawn-107", UnitCardDef veteranGreatsword),
       ("fiery-dawn-112", TacticCardDef furyOfAenarion),
@@ -588,6 +590,7 @@ allCards =
       -- Bloodquest cycle — Portent of Doom (pack 5)
       ("portent-of-doom-089", UnitCardDef princeAlthran),
       ("portent-of-doom-093", TacticCardDef murderlust),
+      ("portent-of-doom-097", TacticCardDef ghostlyApparition),
       -- Bloodquest cycle — Shield of the Gods (pack 6)
       ("shield-of-the-gods-103", UnitCardDef dwarfAdventurer),
       ("shield-of-the-gods-104", SupportCardDef hospitableCave),

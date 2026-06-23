@@ -1154,3 +1154,20 @@ furyOfAenarion = tacticCard "fiery-dawn-112" "Fury of Aenarion" do
         withTarget pk (Or attackingUnit defendingUnit) \case
           TargetUnitOption k -> until EndOfTurn $ buffPower k pw
           _ -> pure ()
+
+shieldOfSaphery :: CardDef Tactic
+shieldOfSaphery = tacticCard "signs-in-the-stars-071" "Shield of Saphery" do
+  race HighElf
+  cost 1
+  loyalty 2
+  trait Spell
+  body
+    "Action: Target [High Elf] unit you control cannot be targeted by \
+    \opponent's card effects until the end of the turn."
+  playableWhen $ hasTarget ownHighElfUnit
+  whenResolved \self ->
+    withTarget self.controller ownHighElfUnit \k ->
+      until EndOfTurn $ untargetable True k
+  where
+    ownHighElfUnit =
+      UnitMatching \pk _g u -> u.controller == pk && HighElf `elem` u.cardDef.races

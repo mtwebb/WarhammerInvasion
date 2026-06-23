@@ -1463,3 +1463,19 @@ sneakyGit = unitCard "signs-in-the-stars-064" "Sneaky Git" do
             (CapitalMatching \pk (owner, _) -> owner == pk)
             \(owner, zk) -> dealZoneDamage owner zk 2
       shuffleDeck self.controller
+
+deyzBigga :: CardDef Tactic
+deyzBigga = tacticCard "fiery-dawn-105" "Dey'z Bigga" do
+  race Orc
+  cost 1
+  loyalty 3
+  body
+    "Action: Each unit with the highest printed cost cannot be targeted by \
+    \card effects until the end of the turn."
+  whenResolved \_self -> do
+    g <- getGame
+    let costOf u = someCardCost (UnitCardDef u.cardDef)
+        maxCost = maximum (0 : map costOf g.units)
+    when (maxCost > 0) $
+      for_ [u.key | u <- g.units, costOf u == maxCost] \k ->
+        until EndOfTurn $ untargetable False k

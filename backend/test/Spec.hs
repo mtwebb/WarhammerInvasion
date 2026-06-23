@@ -12,7 +12,7 @@ import Data.Aeson (Value (..), toJSON)
 import Data.Aeson.KeyMap qualified as KM
 import Data.Map.Strict qualified as Map
 import Invasion.Capital (Capital (..), Damage (..), Developments (..), Zone (..))
-import Invasion.Card (Card (..), SomeCardDef (..), allCards)
+import Invasion.Card (Card (..), SomeCardDef (..), Target (AnyUnit), allCards, enumerateOptionsPure)
 import Invasion.CardDef (ActionTarget (..), CardDef (..), Keyword (..))
 import Invasion.Modifier
 import Invasion.Engine
@@ -884,6 +884,25 @@ main = do
       check "sac-dev cost: the action then revealed the top card"
         (not (null gSD4.lastRevealed))
     _ -> putStrLn "  FAIL reckless-engineer deck dealt no hand" >> exitFailure
+
+  -- Cannot be targeted: a CannotBeTargeted (opponent-only) modifier
+  -- removes a unit from the opponent's target enumeration but not the
+  -- controller's.
+  gCT1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-004" Dwarf
+  let pkCT = gCT1.currentPlayer
+  case firstHandKeys 1 gCT1 of
+    [uk] -> do
+      gCT2 <- applyMessages gCT1
+        [ PutUnitIntoPlay pkCT uk KingdomZone
+        , InstallModifier (UnitRef uk) (Modifier (CannotBeTargeted True) EndOfTurn)
+        ]
+      let canTarget picker =
+            uk `elem` [k | TargetUnitOption k <- enumerateOptionsPure picker gCT2 AnyUnit]
+      check "untargetable: opponent cannot target the protected unit"
+        (not (canTarget pkCT.next))
+      check "untargetable: the controller still can (opponent-only)"
+        (canTarget pkCT)
+    _ -> putStrLn "  FAIL untargetable deck dealt no hand" >> exitFailure
 
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only

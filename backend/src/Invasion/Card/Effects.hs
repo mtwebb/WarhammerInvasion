@@ -741,6 +741,14 @@ buffCounterstrike target n = PendingBuff target (GainCounterstrike n)
 mustDefend :: UnitKey -> PendingBuff
 mustDefend target = PendingBuff target MustDefend
 
+-- | "This card cannot be targeted by card effects." @opponentOnly@ True
+-- blocks only the opponent (Shield of Saphery, Ghostly Apparition);
+-- False blocks every player (the self-protecting attachments). Wrap with
+-- 'until' for the duration ('EndOfTurn' for the tactics, 'Permanent' for
+-- attachments).
+untargetable :: Bool -> UnitKey -> PendingBuff
+untargetable opponentOnly target = PendingBuff target (CannotBeTargeted opponentOnly)
+
 -- | "Target unit cannot attack." Franz's Decree.
 disableAttack :: UnitKey -> PendingBuff
 disableAttack target = PendingBuff target CannotAttack
@@ -1287,9 +1295,23 @@ enumerateOptions pk t = do
 -- | Pure version of 'enumerateOptions'. Used by 'hasTarget' (so that
 -- 'playableWhen \\g pk -> hasTarget t g pk' avoids running a prompt
 -- just to check existence).
+-- | Can player @picker@ legally target the entity with this key (whose
+-- controller is @controller@) given any 'CannotBeTargeted' modifiers on
+-- it? @opponentOnly@ immunity blocks only the controller's opponent;
+-- otherwise it blocks everyone. Works for units and supports alike since
+-- both are keyed in 'g.modifiers' by 'UnitRef'.
+targetableBy :: Game -> PlayerKey -> UnitKey -> PlayerKey -> Bool
+targetableBy g picker key controller =
+  not (any immune (Map.findWithDefault [] (UnitRef key) g.modifiers))
+  where
+    immune (Modifier (CannotBeTargeted opponentOnly) _) =
+      not opponentOnly || controller /= picker
+    immune _ = False
+
 enumerateOptionsPure :: PlayerKey -> Game -> Target a -> [TargetOption]
 enumerateOptionsPure pk g = \case
-  AnyUnit -> [TargetUnitOption u.key | u <- g.units]
+  AnyUnit ->
+    [TargetUnitOption u.key | u <- g.units, targetableBy g pk u.key u.controller]
   AnyCapital ->
     let zonesOf p =
           [ (p.key, z.kind)
@@ -1328,12 +1350,24 @@ enumerateOptionsPure pk g = \case
         , d > 0
         ]
   UnitMatching p ->
-    [TargetUnitOption u.key | u <- g.units, p pk g u]
+    [ TargetUnitOption u.key
+    | u <- g.units
+    , p pk g u
+    , targetableBy g pk u.key u.controller
+    ]
   AnySupportCard ->
-    [TargetSupportOption s.key | s <- g.supports]
-      <> [TargetSupportOption a.key | u <- g.units, a <- u.attachments]
+    [TargetSupportOption s.key | s <- g.supports, targetableBy g pk s.key s.controller]
+      <> [ TargetSupportOption a.key
+         | u <- g.units
+         , a <- u.attachments
+         , targetableBy g pk a.key a.controller
+         ]
   SupportMatching p ->
-    [TargetSupportOption s.key | s <- allInPlaySupports g, p pk g s]
+    [ TargetSupportOption s.key
+    | s <- allInPlaySupports g
+    , p pk g s
+    , targetableBy g pk s.key s.controller
+    ]
   CapitalMatching p ->
     let zonesOf player =
           [ (player.key, z.kind)

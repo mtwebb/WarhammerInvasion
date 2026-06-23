@@ -63,6 +63,13 @@ data ModifierDetails
     -- ^ "This unit gains Counterstrike N" for the modifier's scope
     -- (Celestial Wizard Acolyte). Summed into 'totalCounterstrike'
     -- alongside the printed keyword and 'selfCounterstrikeBonus'.
+  | CannotBeTargeted Bool
+    -- ^ "This card cannot be targeted by card effects." The 'Bool' is
+    -- @opponentOnly@: 'True' blocks only the controller's opponent
+    -- (Shield of Saphery, Tor Elyr); 'False' blocks every player
+    -- including the controller (the self-protecting attachments).
+    -- Applies to units AND supports — both share the 'UnitKey' space —
+    -- and is consulted when enumerating target options.
   | MustDefend
     -- ^ "Target unit must defend this turn, if able." (Animosity,
     -- Alluring Daemonettes.) The defender-declaration step force-
