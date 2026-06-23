@@ -575,6 +575,7 @@ allCards =
       ("fragments-of-power-031", UnitCardDef swornOfKhorne),
       ("fragments-of-power-032", SupportCardDef stolenSkin),
       -- Bloodquest cycle — The Accursed Dead (pack 3)
+      ("the-accursed-dead-043", UnitCardDef recklessEngineer),
       ("the-accursed-dead-045", UnitCardDef lionStandard),
       ("the-accursed-dead-051", UnitCardDef strickenWarrior),
       ("the-accursed-dead-052", SupportCardDef riftOfBattle),

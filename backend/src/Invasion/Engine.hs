@@ -3995,6 +3995,9 @@ canPayExtra _pk srcKey g SacrificeSelf =
     || any (any ((== srcKey) . (.key)) . (.attachments)) g.units
 canPayExtra _pk srcKey g CorruptSelf =
   maybe False (not . (.corrupted)) (findUnit srcKey g)
+canPayExtra pk _srcKey g SacrificeDevelopment =
+  any (\z -> case z.developments of Developments n -> n > 0)
+    (playerOf pk g).capital.zones
 
 -- | Pay every non-resource cost, prompting the player for choices
 -- where needed. Returns the list of 'Payment' receipts on success,
@@ -4039,6 +4042,33 @@ payExtras pk srcKey = go []
     go acc (CorruptSelf : rest) = do
       send (CorruptUnit srcKey)
       go (CorruptedSelf : acc) rest
+    go acc (SacrificeDevelopment : rest) = do
+      g <- get
+      let devZones =
+            [ z.kind
+            | z <- (playerOf pk g).capital.zones
+            , case z.developments of Developments n -> n > 0
+            ]
+      case devZones of
+        [] -> pure Nothing
+        [zk] -> do
+          send (DestroyDevelopment pk zk)
+          go (SacrificedDevelopment zk : acc) rest
+        _ -> do
+          ans <- askPrompt Prompt
+            { player = pk
+            , kind = ChooseTargetOption
+                { options = [TargetZoneOption pk zk | zk <- devZones]
+                , description = "Sacrifice a development (cost)."
+                }
+            , callback = CallbackInlinePrompt
+            }
+          case ans of
+            PickTargetOption (TargetZoneOption owner zk)
+              | owner == pk, zk `elem` devZones -> do
+                  send (DestroyDevelopment pk zk)
+                  go (SacrificedDevelopment zk : acc) rest
+            _ -> pure Nothing
 
 -- | The card title for log lines.
 actionSourceTitle :: ActionSource -> String

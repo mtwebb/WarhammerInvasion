@@ -1331,3 +1331,25 @@ bandTogether = tacticCard "oaths-of-vengeance-026" "Band Together" do
   body "Dwarf only. Ambush 0. Action: Gain 3 resources."
   ambush 0
   whenResolved \self -> gainResources self.controller 3
+
+recklessEngineer :: CardDef Unit
+recklessEngineer = unitCard "the-accursed-dead-043" "Reckless Engineer" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Engineer
+  body
+    "Action: Sacrifice a development to reveal the top card of your deck. If \
+    \the revealed card is a support card, put it into play and deal damage \
+    \equal to its printed cost to this unit. Otherwise, discard it."
+  actionWith "Salvage" 0 [SacrificeDevelopment] \usage ->
+    revealTopOfDeck usage.user 1 \r ->
+      case r.cards of
+        (c : _)
+          | isJust (asSupport c.def) -> do
+              playSupportFromDeck usage.user c.key usage.self.zone
+              dealDamage usage.self.key (someCardCost c.def)
+          | otherwise -> millFromDeck usage.user 1
+        _ -> pure ()

@@ -236,6 +236,11 @@ data ExtraCost
     -- ^ Corrupt the unit hosting this action (Clan Rats, Poison Wind
     -- Globadiers, Deathmaster Sniktch). Validation requires the host
     -- to be an uncorrupted unit.
+  | SacrificeDevelopment
+    -- ^ Sacrifice one of your own developments (Reckless Engineer,
+    -- Mineshaft Engineer). Validation requires at least one development
+    -- in any of the firing player's zones; the engine prompts for which
+    -- zone when more than one has developments.
   deriving stock (Show, Eq)
 
 -- | A receipt for one extra cost paid during action triggering. Cards
@@ -247,6 +252,9 @@ data Payment
     -- 'SacrificeSelf') cost.
   | CorruptedSelf
     -- ^ Receipt for a paid 'CorruptSelf' cost.
+  | SacrificedDevelopment ZoneKind
+    -- ^ Receipt for a paid 'SacrificeDevelopment' cost: the zone the
+    -- development was popped from.
   deriving stock (Show, Eq)
 
 -- | Everything an action's effect body needs to know when it fires:

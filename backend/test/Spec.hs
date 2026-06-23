@@ -13,7 +13,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Map.Strict qualified as Map
 import Invasion.Capital (Capital (..), Damage (..), Developments (..), Zone (..))
 import Invasion.Card (Card (..), SomeCardDef (..), allCards)
-import Invasion.CardDef (CardDef (..), Keyword (..))
+import Invasion.CardDef (ActionTarget (..), CardDef (..), Keyword (..))
 import Invasion.Modifier
 import Invasion.Engine
 import Invasion.Entity (UnitDetails (..))
@@ -863,6 +863,27 @@ main = do
       check "deck rotate: old top card is now on the bottom"
         (not (null (deckR gR3)) && (last (deckR gR3)).key == top.key)
     _ -> putStrLn "  skip deck-rotate (deck too small)"
+
+  -- Sacrifice-development cost (Reckless Engineer): triggering its action
+  -- in the capital window pays by destroying one of the player's
+  -- developments, then reveals the top card.
+  gSD1 <- (`applyMessage` BeginGame) =<< mkMonoGame "the-accursed-dead-043" Dwarf
+  let pkSD = gSD1.currentPlayer
+  gSD2 <- applyMessages gSD1
+    [ PassPriority pkSD, PassPriority pkSD.next     -- begin-of-turn
+    , PassPriority pkSD, PassPriority pkSD.next     -- kingdom → capital window
+    ]
+  case firstHandKeys 1 gSD2 of
+    [ek] -> do
+      gSD3 <- applyMessages gSD2
+        [AddDevelopment pkSD KingdomZone, PutUnitIntoPlay pkSD ek BattlefieldZone]
+      let Developments d0 = (pRec pkSD gSD3).capital.kingdom.developments
+      gSD4 <- applyMessage gSD3 (TriggerCardAction pkSD ek 0 NoTarget)
+      check "sac-dev cost: a development was sacrificed to pay"
+        (let Developments d = (pRec pkSD gSD4).capital.kingdom.developments in d == d0 - 1)
+      check "sac-dev cost: the action then revealed the top card"
+        (not (null gSD4.lastRevealed))
+    _ -> putStrLn "  FAIL reckless-engineer deck dealt no hand" >> exitFailure
 
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only
