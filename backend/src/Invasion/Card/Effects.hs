@@ -147,6 +147,11 @@ putUnitIntoPlay pk origin uk z = push $ case origin of
 adjustSupportTokens :: HasQueue Message m => UnitKey -> Int -> m ()
 adjustSupportTokens k n = push (AdjustSupportTokens k n)
 
+-- | "Place or remove N resource tokens on this unit." (Units can carry
+-- resource tokens too — Shadowlands Hunter, the Capital-cycle tokeners.)
+adjustUnitTokens :: HasQueue Message m => UnitKey -> Int -> m ()
+adjustUnitTokens k n = push (AdjustUnitTokens k n)
+
 -- | "Gain N resources." (Burying the Grudge.)
 gainResources :: HasQueue Message m => PlayerKey -> Int -> m ()
 gainResources pk n = push (GainResources pk n)

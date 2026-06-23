@@ -1043,10 +1043,28 @@ shadowlandsHunter = unitCard "days-of-blood-011" "Shadowlands Hunter" do
   body
     "High Elf only. Ambush 1. Action: When this unit ambushes, put 1 \
     \resource token on a [High Elf] card with at least 1 resource token on it."
-  -- Resource tokens accrue on supports; target a High Elf support that
-  -- already carries at least one.
+  -- A High Elf card of any kind can carry resource tokens (units,
+  -- supports, and quests all have a token count), so enumerate every
+  -- eligible card and dispatch the +1 to the right token store.
   ambush 1
-  onAmbush \_owner self ->
-    withTarget self.controller
-      (SupportMatching \_me _g s -> HighElf `elem` s.cardDef.races && s.tokens >= 1)
-      \k -> adjustSupportTokens k 1
+  onAmbush \_owner self -> do
+    let pk = self.controller
+    g <- getGame
+    let heUnits = [u | u <- g.units, HighElf `elem` u.cardDef.races, u.tokens >= 1]
+        heSupports = [s | s <- g.supports, HighElf `elem` s.cardDef.races, s.tokens >= 1]
+        heQuests = [q | q <- g.quests, HighElf `elem` q.cardDef.races, q.tokens >= 1]
+        unitKeys = map (.key) heUnits
+        supportKeys = map (.key) heSupports
+        eligible =
+          [mkCard u.key (UnitCardDef u.cardDef) | u <- heUnits]
+            <> [mkCard s.key (SupportCardDef s.cardDef) | s <- heSupports]
+            <> [mkCard q.key (QuestCardDef q.cardDef) | q <- heQuests]
+    chooseFromCards pk 0 1 eligible
+      "Put a resource token on a High Elf card that already has one." \chosen ->
+        for_ chosen \c ->
+          if c.key `elem` unitKeys
+            then adjustUnitTokens c.key 1
+            else
+              if c.key `elem` supportKeys
+                then adjustSupportTokens c.key 1
+                else addQuestToken c.key 1
