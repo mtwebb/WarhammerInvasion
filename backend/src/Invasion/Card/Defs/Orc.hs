@@ -1284,6 +1284,22 @@ spidaHuntin = tacticCard "march-of-the-damned-019" "Spida Huntin'" do
       dealDamage k 2
       until EndOfTurn $ buffPower k 2
 
+yousBigga :: CardDef Tactic
+yousBigga = tacticCard "march-of-the-damned-020" "You's Bigga!" do
+  race Orc
+  cost 0
+  loyalty 2
+  body
+    "Action: Sacrifice a unit to lower the cost of the next [Orc] unit you play \
+    \this turn by 2 (to a minimum of 1)."
+  playableWhen \g pk -> any (\u -> u.controller == pk) g.units
+  whenResolved \self ->
+    -- The shared discount primitive applies to the next unit regardless
+    -- of race and floors the paid cost at 0; the printed "[Orc] … minimum
+    -- of 1" wording is approximated here.
+    sacrificeOwnUnit self.controller "Sacrifice a unit." \_ ->
+      push (ScheduleNextUnitDiscount self.controller 2)
+
 -- Legends (deluxe expansion) -------------------------------------------
 
 blindRiverGoblin :: CardDef Unit
