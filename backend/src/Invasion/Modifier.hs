@@ -71,6 +71,14 @@ data ModifierDetails
     -- ^ "This unit gains Savage N" for the modifier's scope (Savage
     -- Rush, Track the Prey). Summed into 'totalSavage' alongside the
     -- printed keyword and attachment grants.
+  | CanDefendAnyZone
+    -- ^ "This unit can defend any of its controller's zones." (Shield of
+    -- the Gods.) Expands the defender candidate pool past the attacked
+    -- zone, like the quester-defends-any-zone quest extra.
+  | SavageDefenseBonus
+    -- ^ "While defending, this unit deals +X combat damage where X is
+    -- its Savage value." (Shield of the Gods.) Read by 'combatDamageOf'
+    -- for a defending unit; the bonus is 'totalSavage'.
   | CannotBeTargeted Bool
     -- ^ "This card cannot be targeted by card effects." The 'Bool' is
     -- @opponentOnly@: 'True' blocks only the controller's opponent

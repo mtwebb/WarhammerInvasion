@@ -497,6 +497,15 @@ supportToughnessAura
 supportToughnessAura f =
   modifySupportExtras \e -> e {supportAuraToughness = f}
 
+-- | Savage X this support grants a unit (Ziggurat of Quetli grants
+-- Lizardmen in a Pyramid zone Savage 1). Args: game, this support,
+-- target unit. Folded into 'totalSavage'.
+supportSavageAura
+  :: (Game -> SupportDetails -> UnitDetails -> Int)
+  -> CardBuilder Support ()
+supportSavageAura f =
+  modifySupportExtras \e -> e {supportAuraSavage = f}
+
 -- | "Whenever you search your deck, you may search an additional
 -- card." (Scout Camp.) Args: game, this support, the searching
 -- player.
@@ -569,6 +578,12 @@ revertsToUnit cd = modifySupportExtras \e -> e {revertToUnit = Just cd}
 questerDefendsAnywhere :: CardBuilder Quest ()
 questerDefendsAnywhere =
   modifyQuestExtras \e -> e {questerDefendsAnyZone = True}
+
+-- | "While a Lizardmen unit is questing on this card, double all damage
+-- assigned by the effects of Savage." (Guardians of the Gods.)
+doublesSavageDamageQuest :: CardBuilder Quest ()
+doublesSavageDamageQuest =
+  modifyQuestExtras \e -> e {doublesSavageDamage = True}
 
 -- | "You may spend resources from this card to pay for Attachment
 -- cards." (Dat's Mine!.)

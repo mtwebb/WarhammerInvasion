@@ -620,6 +620,7 @@ allCards =
       ("portent-of-doom-089", UnitCardDef princeAlthran),
       ("portent-of-doom-093", TacticCardDef murderlust),
       ("portent-of-doom-097", TacticCardDef ghostlyApparition),
+      ("portent-of-doom-098", TacticCardDef shieldOfTheGods),
       -- Bloodquest cycle — Shield of the Gods (pack 6)
       ("shield-of-the-gods-101", SupportCardDef shieldOfAeons),
       ("shield-of-the-gods-103", UnitCardDef dwarfAdventurer),
@@ -627,6 +628,7 @@ allCards =
       ("shield-of-the-gods-105", UnitCardDef manglerSquigs),
       ("shield-of-the-gods-107", UnitCardDef steelStandard),
       ("shield-of-the-gods-109", UnitCardDef ellyrianElite),
+      ("shield-of-the-gods-120", QuestCardDef guardiansOfTheGods),
       -- Legends (deluxe expansion)
       ("legends-003", UnitCardDef veteranSlayer),
       ("legends-005", UnitCardDef dwarfThunderer),
@@ -724,6 +726,7 @@ allCards =
       ("hidden-kingdoms-003", UnitCardDef chameleonStalker),
       ("hidden-kingdoms-005", UnitCardDef saurusOldblood),
       ("hidden-kingdoms-006", SupportCardDef greatTempleOfTlazcotl),
+      ("hidden-kingdoms-008", SupportCardDef zigguratOfQuetli),
       ("hidden-kingdoms-009", TacticCardDef ruinationOfCities),
       ("hidden-kingdoms-013", UnitCardDef shroudedWaywatcher),
       ("hidden-kingdoms-014", UnitCardDef slumberingTitan),

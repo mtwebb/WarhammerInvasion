@@ -521,6 +521,10 @@ data SupportExtras = SupportExtras
     -- ^ Extra Toughness this support grants a unit (Gromril Armour:
     -- +1 to the attached unit). Summed into 'totalToughness'
     -- alongside the unit-side 'unitAuraToughness'.
+  , supportAuraSavage :: Game -> InPlay Support -> InPlay Unit -> Int
+    -- ^ Savage X this support grants a unit (Ziggurat of Quetli:
+    -- Lizardmen in a zone with a Pyramid gain Savage 1). Summed into
+    -- 'totalSavage'.
   , searchDepthBonus :: Game -> InPlay Support -> PlayerKey -> Int
     -- ^ "Whenever you search your deck, you may search an additional
     -- card." (Scout Camp.) Added to the depth of every
@@ -603,6 +607,10 @@ data QuestExtras = QuestExtras
     -- ^ Continuous power this quest grants the controller's units
     -- (Night Raids while it holds 3+ resource tokens). Folded into each
     -- unit's effective power, like the unit/support auras.
+  , doublesSavageDamage :: Bool
+    -- ^ "While a Lizardmen unit is questing on this card, double all
+    -- damage assigned by the effects of Savage." (Guardians of the
+    -- Gods.) Consulted by the 'ResolveSavage' handler.
   }
 
 -- | Tactic-specific tunables. Empty for now.
@@ -658,6 +666,7 @@ instance HasDefaultExtras Support where
     , runeOfFortitudeTax = False
     , capitalShieldPerTurn = False
     , supportAuraToughness = \_ _ _ -> 0
+    , supportAuraSavage = \_ _ _ -> 0
     , searchDepthBonus = \_ _ _ -> 0
     , tacticDamageBonus = \_ _ _ -> 0
     , capitalDamageDoubler = \_ _ _ -> False
@@ -675,6 +684,7 @@ instance HasDefaultExtras Quest where
     , paysForAttachments = False
     , questerAttacksAnyZone = False
     , questUnitAuraPower = \_ _ _ -> 0
+    , doublesSavageDamage = False
     }
 
 instance HasDefaultExtras Tactic where
