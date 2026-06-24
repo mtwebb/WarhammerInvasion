@@ -40,7 +40,7 @@ import Invasion.Auth.Jwt
   , JwtSecret
   , verifyJwt
   )
-import Invasion.Card (Card (..), SomeCardDef (..))
+import Invasion.Card (Card (..), SomeCardDef (..), asUnit)
 import Invasion.CardDef (CardDef (..), Trait (Attachment))
 import Invasion.CardDef qualified as CardDef
 import Invasion.DB (DbPool, runDB)
@@ -575,10 +575,16 @@ handleGameIn env slot user = \case
       case mGame of
         Nothing -> sendGameError slot user "game_not_started"
         Just g -> case findHandCard pk cardKey g of
-          Nothing -> sendGameError slot user "card_not_in_hand"
           Just someCard -> case playMessageFor pk cardKey zone target someCard of
             Left code -> sendGameError slot user code
             Right msg -> postEngineMsg slot user msg
+          -- Not in hand: a Necromancy unit may be played from the
+          -- discard pile instead.
+          Nothing
+            | isNecromancyDiscardCard pk cardKey g -> case zone of
+                Just z -> postEngineMsg slot user (Engine.PlayUnitFromDiscard pk cardKey z)
+                Nothing -> sendGameError slot user "zone_required"
+            | otherwise -> sendGameError slot user "card_not_in_hand"
   GameTriggerAction {source, actionIndex, target, targetZone} ->
     withSeatedPlayer slot user \pk -> do
       let actionTarget = case (target, targetZone) of
@@ -676,6 +682,18 @@ findHandCard pk k g =
         Player1 -> g.player1
         Player2 -> g.player2
    in (.def) <$> find ((== k) . (.key)) player.hand
+
+-- | Is there a Necromancy unit with this key in the player's discard
+-- pile? Used to route a 'GamePlayCard' for a card that isn't in hand to
+-- the discard-play path.
+isNecromancyDiscardCard :: PlayerKey -> UnitKey -> Game -> Bool
+isNecromancyDiscardCard pk k g =
+  let player = case pk of
+        Player1 -> g.player1
+        Player2 -> g.player2
+   in case find ((== k) . (.key)) player.discard of
+        Just c | Just cd <- asUnit c.def -> CardDef.Necromancy `elem` cd.keywords
+        _ -> False
 
 -- | Choose the engine 'Message' that corresponds to the player's
 -- 'GamePlayCard' request, based on the card's static kind. Returns a

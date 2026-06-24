@@ -357,6 +357,10 @@ data Message where
   PlaySupportFromDiscard :: PlayerKey -> UnitKey -> ZoneKind -> Message
     -- ^ Put the named support card from the player's discard pile
     -- directly into the named zone (Repair the Waystones).
+  PlayUnitFromDiscard :: PlayerKey -> UnitKey -> ZoneKind -> Message
+    -- ^ Necromancy: play a unit from the discard pile, paying its
+    -- printed cost (+ loyalty), and schedule its return to the bottom
+    -- of the deck at end of turn.
   PutUnitIntoPlayFromDeck :: PlayerKey -> UnitKey -> ZoneKind -> Message
     -- ^ Pull the named unit card out of the player's deck and put it
     -- into play (Empty the Hold). Cost is skipped.

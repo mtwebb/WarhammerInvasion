@@ -244,6 +244,10 @@ data PendingEffect
     -- ^ Hand control of the named unit to the named player when the
     -- effect fires. Used by Grasping Darkness to return its stolen
     -- unit at end of turn.
+  | PEReturnUnitToDeckBottom UnitKey
+    -- ^ Necromancy: at end of turn, move the named unit (if still in
+    -- play) from play to the bottom of its controller's deck. It is not
+    -- destroyed, so no leave-play / discard hooks fire.
   | PERemoveAnimatedUnit UnitKey
     -- ^ Remove a Bolt of Change animated development from play (the
     -- development itself stays where it was). No leave-play hooks —

@@ -2705,6 +2705,35 @@ instance Run Game where
           logIt LogSystem "log.support.played_from_discard"
             [("player", playerParam pk), ("card", T.pack cardDef.title)]
           send $ SupportEnteredPlay pk cardKey
+    PlayUnitFromDiscard pk cardKey zone -> do
+      g <- get
+      let player = lookupPlayer pk g
+      whenJust (takeUnitFromDiscard cardKey player) \(cardDef, playerWithoutCard) ->
+        when (Necromancy `elem` cardDef.keywords && canPlayNonTactic pk g && canPlayCard pk cardDef g) $
+          case cardDef.cost of
+            Variable -> pure ()
+            Fixed _ -> do
+              let n = effectiveTotalCost g pk cardDef
+              when (player.resources >= Resources n) do
+                markPlayedLimited cardDef
+                recordEvent \h -> h
+                  { playedBy =
+                      Map.insertWith (<>) pk [cardCodeFilter cardDef] h.playedBy
+                  }
+                let paid = playerWithoutCard {resources = player.resources - Resources n}
+                    unit = freshUnit cardKey pk zone cardDef
+                modify \gx ->
+                  let gx' = (setPlayer pk paid gx) {units = unit : gx.units}
+                   in gx'
+                        { pendingEndOfTurn =
+                            PEReturnUnitToDeckBottom cardKey : gx'.pendingEndOfTurn
+                        }
+                logIt LogPlayerAction "log.unit.necromancy"
+                  [ ("player", playerParam pk)
+                  , ("card", T.pack cardDef.title)
+                  , ("cost", tshow n)
+                  ]
+                send $ UnitEnteredPlay pk cardKey
     PutUnitIntoPlayFromDeck pk cardKey zone -> do
       g <- get
       player <- getPlayerS pk
@@ -3467,6 +3496,20 @@ firePendingEffect = \case
     traverse_ (send . DestroyUnit) (historyOfScope ThisPhase g).attackersDeclared
   PEDestroyUnit ukey -> send (DestroyUnit ukey)
   PEGiveControl ukey pk -> send (TakeControlOfUnit pk ukey)
+  PEReturnUnitToDeckBottom ukey -> do
+    g <- get
+    whenJust (findUnit ukey g) \u -> do
+      -- Necromancy: move the unit (and its attachments fall off) from
+      -- play to the bottom of its controller's deck. Not a destruction.
+      for_ u.attachments discardAttachment
+      let player = lookupPlayer u.controller g
+          card = Card {key = ukey, def = UnitCardDef u.cardDef}
+          player' = player {deck = player.deck <> [card]}
+      modify \gx ->
+        (setPlayer u.controller player' gx) {units = removeById ukey gx.units}
+      logIt LogSystem
+        "log.unit.necromancy_returned"
+        [("player", playerParam u.controller), ("card", T.pack u.cardDef.title)]
   PERemoveAnimatedUnit ukey -> do
     g <- get
     whenJust (findUnit ukey g) \u ->

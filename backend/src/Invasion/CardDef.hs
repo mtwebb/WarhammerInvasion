@@ -57,6 +57,11 @@ data Keyword
     -- ^ "You may play this unit from your hand any time you could
     -- take an action." (Nordland Halberdiers.) The engine relaxes the
     -- capital-window gate to tactic timing for cards carrying this.
+  | Necromancy
+    -- ^ "You may play this card from your discard pile. If you do, put
+    -- it on the bottom of your deck at the end of the turn." (March of
+    -- the Damned Undead.) Adds a discard-pile play path that pays the
+    -- printed cost and schedules an end-of-turn return to the deck.
   deriving stock (Show, Eq)
 
 data Cost = PayResources Number | NoCost

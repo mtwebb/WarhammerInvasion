@@ -122,6 +122,11 @@ toughnessX = keyword (Toughness Variable)
 scout :: CardBuilder Unit ()
 scout = keyword Scout
 
+-- | "Necromancy (You may play this card from your discard pile. If you
+-- do, put it on the bottom of your deck at the end of the turn.)"
+necromancy :: CardBuilder Unit ()
+necromancy = keyword Necromancy
+
 -- | Raider X keyword: after combat damage, the attacking player gains
 -- X resources for this unit if it survived the combat it attacked in.
 -- Stacks across multiple instances. Resolved centrally by the combat

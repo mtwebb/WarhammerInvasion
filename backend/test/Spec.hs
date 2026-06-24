@@ -885,6 +885,38 @@ main = do
         (not (null gSD4.lastRevealed))
     _ -> putStrLn "  FAIL reckless-engineer deck dealt no hand" >> exitFailure
 
+  -- Necromancy: play a unit from the discard pile (paying its cost); it
+  -- enters play and is scheduled to return to the bottom of the deck at
+  -- end of turn.
+  gN1 <- (`applyMessage` BeginGame) =<< mkMonoGame "march-of-the-damned-044" Orc
+  let pkN = gN1.currentPlayer
+      getPlN pk g = case pk of Player1 -> g.player1; Player2 -> g.player2
+      setPlN pk p g = case pk of Player1 -> g {player1 = p}; Player2 -> g {player2 = p}
+  gN2 <- applyMessages gN1
+    [PassPriority pkN, PassPriority pkN.next, PassPriority pkN, PassPriority pkN.next]
+  case firstHandKeys 1 gN2 of
+    [nk] -> do
+      let p0 = getPlN pkN gN2
+          moved = [c | c <- p0.hand, c.key == nk]
+          p1 = p0
+            { hand = [c | c <- p0.hand, c.key /= nk]
+            , discard = moved <> p0.discard
+            , resources = Resources 10
+            }
+          gN3 = setPlN pkN p1 gN2
+      gN4 <- applyMessage gN3 (PlayUnitFromDiscard pkN nk BattlefieldZone)
+      check "necromancy: unit entered play from the discard pile"
+        (any ((== nk) . (.key)) gN4.units)
+      check "necromancy: its cost was paid"
+        (let Resources r = (getPlN pkN gN4).resources in r == 8)
+      -- Run the turn to its end; the unit returns to the deck bottom.
+      gNend <- applyMessages gN4 (concat (replicate 12 [PassPriority pkN, PassPriority pkN.next]))
+      check "necromancy: left play at end of turn"
+        (not (any ((== nk) . (.key)) gNend.units))
+      check "necromancy: was put on the bottom of the deck"
+        (not (null (getPlN pkN gNend).deck) && (last (getPlN pkN gNend).deck).key == nk)
+    _ -> putStrLn "  FAIL necromancy deck dealt no hand" >> exitFailure
+
   -- Loyalty waiver (Embassy / Offering): a granted waiver zeroes the
   -- loyalty surcharge of the next matching-race card, and only that race.
   gLW1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-026" Empire

@@ -1584,3 +1584,66 @@ darkAcolyte = unitCard "hidden-kingdoms-031" "Dark Acolyte" do
     case [cd | c <- (playerOf u.controller g).discard, Just cd <- [asUnit c.def]] of
       (cd : _) -> cd.power
       [] -> 0
+
+-- Necromancy (March of the Damned + Hidden Kingdoms Undead) -------------
+
+skeletalHorde :: CardDef Unit
+skeletalHorde = unitCard "march-of-the-damned-044" "Skeletal Horde" do
+  cost 2
+  loyalty 0
+  power 1
+  hitPoints 2
+  traits [Undead, Warrior]
+  destructionOnly
+  necromancy
+  body
+    "Destruction only. Necromancy (You may play this card from your discard \
+    \pile. If you do, put it on the bottom of your deck at the end of the turn.)"
+
+wightLord :: CardDef Unit
+wightLord = unitCard "march-of-the-damned-048" "Wight Lord" do
+  cost 5
+  loyalty 0
+  power 2
+  hitPoints 4
+  traits [Undead, Warrior]
+  destructionOnly
+  necromancy
+  body
+    "Destruction only. Necromancy. Action: When this unit enters play, \
+    \destroy target unit in any corresponding zone."
+  onEnterPlay \_owner self ->
+    withTarget self.controller
+      (UnitMatching \_ _ u -> u.zone == self.zone)
+      destroyUnit
+
+abyssalTerror :: CardDef Unit
+abyssalTerror = unitCard "hidden-kingdoms-029" "Abyssal Terror" do
+  cost 6
+  loyalty 0
+  power 0
+  hitPoints 4
+  traits [Undead, Creature]
+  destructionOnly
+  battlefieldOnly
+  necromancy
+  body
+    "Undead only. Battlefield only. Necromancy. This unit gains {power} for \
+    \each unit in your discard pile."
+  selfPower \g u ->
+    length [c | c <- (playerOf u.controller g).discard, isJust (asUnit c.def)]
+
+cacklingHexwrath :: CardDef Unit
+cacklingHexwrath = unitCard "hidden-kingdoms-032" "Cackling Hexwrath" do
+  cost 2
+  loyalty 0
+  power 1
+  hitPoints 1
+  trait Undead
+  destructionOnly
+  necromancy
+  body
+    "Destruction only. Necromancy. Action: When this unit enters or leaves \
+    \play, discard the top 2 cards of your deck."
+  onEnterPlay \_owner self -> millFromDeck self.controller 2
+  onSelfDestroyed \_owner self -> millFromDeck self.controller 2
