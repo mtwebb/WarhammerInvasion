@@ -1377,6 +1377,27 @@ outlawSorcerer = unitCard "glory-of-days-past-076" "Outlaw Sorcerer" do
   ambush 1
   onAmbush \_owner self -> discardRandom self.controller.next
 
+slaveHunter :: CardDef Unit
+slaveHunter = unitCard "battle-for-the-old-world-056" "Slave Hunter" do
+  race DarkElf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Elite
+  body "Action: When this unit survives an attack on an opponent's zone, sacrifice it to take control of target non-unique unit in that zone. Move that unit to your corresponding zone."
+  onCombatResolveAsAttacker \_owner self cs -> do
+    g <- getGame
+    when (isJust (findUnit self.key g)) $ do
+      let pk = self.controller
+          inZone = UnitMatching \taker _ u ->
+            u.controller /= taker && not u.cardDef.unique && u.zone == cs.targetZone
+      when (any (\u -> u.controller /= pk && not u.cardDef.unique && u.zone == cs.targetZone) g.units) $
+        may pk "Sacrifice Slave Hunter to take control of a non-unique unit in that zone?" $
+          withTarget pk inZone \k -> do
+            destroyUnit self.key
+            push (TakeControlOfUnit pk k)
+
 testOfWill :: CardDef Tactic
 testOfWill = tacticCard "the-ruinous-hordes-097" "Test of Will" do
   race DarkElf

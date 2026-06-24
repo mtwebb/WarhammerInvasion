@@ -1368,6 +1368,20 @@ zoneDevsFor g pk z =
 
 -- Legends (deluxe expansion) -------------------------------------------
 
+battleWizard :: CardDef Unit
+battleWizard = unitCard "legends-018" "Battle Wizard" do
+  race Empire
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  trait Mage
+  body "If this unit defends and survives combat, return all attacking units to their owners' hands."
+  onCombatResolveAsDefender \_owner self cs -> do
+    g <- getGame
+    when (isJust (findUnit self.key g)) $
+      for_ cs.attackers returnUnitToHand
+
 callForReserves :: CardDef Tactic
 callForReserves = tacticCard "legends-021" "Call for Reserves" do
   race Empire

@@ -666,6 +666,7 @@ allCards =
       ("legends-010", UnitCardDef blindRiverGoblin),
       ("legends-011", UnitCardDef redEadBoyz),
       ("legends-012", UnitCardDef frenziedBigUn),
+      ("legends-018", UnitCardDef battleWizard),
       ("legends-021", TacticCardDef callForReserves),
       ("legends-027", SupportCardDef elvenSteed),
       ("legends-028", TacticCardDef masterOfTheEarth),
@@ -721,6 +722,7 @@ allCards =
       ("battle-for-the-old-world-050", UnitCardDef lilea),
       ("battle-for-the-old-world-051", UnitCardDef nagarytheWarrior),
       ("battle-for-the-old-world-053", UnitCardDef norseClansman),
+      ("battle-for-the-old-world-056", UnitCardDef slaveHunter),
       -- Glory of Days Past (Eternal War cycle, pack 4)
       ("glory-of-days-past-063", UnitCardDef mineEngineers),
       ("glory-of-days-past-064", SupportCardDef karakHirnMine),
@@ -731,6 +733,7 @@ allCards =
       ("glory-of-days-past-073", UnitCardDef chaosDragon),
       ("glory-of-days-past-075", SupportCardDef painfulMutation),
       ("glory-of-days-past-076", UnitCardDef outlawSorcerer),
+      ("glory-of-days-past-079", UnitCardDef rogueWarrior),
       ("glory-of-days-past-078", SupportCardDef markedForDeath),
       -- The Ruinous Hordes (Eternal War cycle, pack 5)
       ("the-ruinous-hordes-082", QuestCardDef dominionOfChaos),
