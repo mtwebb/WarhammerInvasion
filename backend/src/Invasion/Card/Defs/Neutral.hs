@@ -1584,6 +1584,19 @@ giantRats = unitCard "hidden-kingdoms-024" "Giant Rats" do
 
 -- Ambush riders (Eternal War cycle) ------------------------------------
 
+rogueWarrior :: CardDef Unit
+rogueWarrior = unitCard "glory-of-days-past-079" "Rogue Warrior" do
+  cost 3
+  power 0
+  hitPoints 2
+  ambush 1
+  raider 1
+  body "Ambush 1. Raider 1. This unit deals +3 damage in combat. Forced: When this unit survives an attack on an opponent's zone, turn this unit facedown as a development."
+  combatPower \_g _self -> 3
+  onCombatResolveAsAttacker \_owner self _cs -> do
+    g <- getGame
+    when (isJust (findUnit self.key g)) $ turnUnitIntoDevelopment self.key
+
 stealthySkink :: CardDef Unit
 stealthySkink = unitCard "oaths-of-vengeance-038" "Stealthy Skink" do
   cost 2

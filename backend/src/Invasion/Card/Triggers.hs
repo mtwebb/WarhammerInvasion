@@ -458,6 +458,21 @@ onCombatResolveAsAttacker handler = onReceive $ Receive \msg owner self -> case 
     when (self.key `elem` cs.attackers) $ handler owner self cs
   _ -> pure ()
 
+-- | "On combat resolve while this in-play card is one of the
+-- defenders." The defender-side mirror of 'onCombatResolveAsAttacker',
+-- used by "if this unit defends and survives combat, …" cards (Battle
+-- Wizard). Combine with an in-play check in the handler for the
+-- "survives" clause.
+onCombatResolveAsDefender
+  :: forall k
+   . HasField "key" (InPlay k) UnitKey
+  => (forall m. TriggerM m => Player -> InPlay k -> CombatState -> m ())
+  -> CardBuilder k ()
+onCombatResolveAsDefender handler = onReceive $ Receive \msg owner self -> case msg of
+  ResolveCombat -> withCombat \cs ->
+    when (self.key `elem` cs.defenders) $ handler owner self cs
+  _ -> pure ()
+
 -- | "When this in-play card is declared as part of an attack."
 onMyAttackDeclared
   :: forall k
