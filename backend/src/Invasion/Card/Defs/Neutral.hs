@@ -1647,3 +1647,43 @@ cacklingHexwrath = unitCard "hidden-kingdoms-032" "Cackling Hexwrath" do
     \play, discard the top 2 cards of your deck."
   onEnterPlay \_owner self -> millFromDeck self.controller 2
   onSelfDestroyed \_owner self -> millFromDeck self.controller 2
+
+lordOfTheDead :: CardDef Unit
+lordOfTheDead = unitCard "hidden-kingdoms-030" "Lord of the Dead" do
+  cost 4
+  loyalty 0
+  power 2
+  hitPoints 2
+  traits [Undead, Vampire]
+  destructionOnly
+  body
+    "Destruction only. Action: When this unit enters play, use the Necromancy \
+    \ability on a card in your discard pile without paying its cost."
+  onEnterPlay \_owner self -> do
+    let pk = self.controller
+    me <- playerOf pk <$> getGame
+    let units = [c | c <- me.discard, isJust (asUnit c.def)]
+    chooseFromCards pk 0 1 units
+      "Choose a unit in your discard pile to reanimate." \chosen ->
+        for_ chosen \c ->
+          withTarget pk MyAnyZone \z -> reanimateFromDiscard pk c.key z
+
+swarmOfBats :: CardDef Unit
+swarmOfBats = unitCard "legends-052" "Swarm of Bats" do
+  cost 2
+  loyalty 0
+  power 1
+  hitPoints 1
+  traits [Undead, Creature]
+  destructionOnly
+  necromancy
+  body
+    "Destruction only. Necromancy. Action: When this unit attacks, discard \
+    \the top four cards of your deck. This unit gains power equal to the \
+    \number of units discarded this way until the end of the turn."
+  onMyAttackDeclared \_owner self _z _atk -> do
+    let pk = self.controller
+    searchTopOfDeck pk 4 \result -> do
+      let n = length [c | c <- result.cards, isJust (asUnit c.def)]
+      millFromDeck pk 4
+      when (n > 0) $ until EndOfTurn $ buffPower self.key n

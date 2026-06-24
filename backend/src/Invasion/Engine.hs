@@ -2734,6 +2734,21 @@ instance Run Game where
                   , ("cost", tshow n)
                   ]
                 send $ UnitEnteredPlay pk cardKey
+    ReanimateUnitFromDiscard pk cardKey zone -> do
+      g <- get
+      player <- getPlayerS pk
+      whenJust (takeUnitFromDiscard cardKey player) \(cardDef, playerWithoutCard) ->
+        when (canEnterZone g pk cardDef zone) do
+          let unit = freshUnit cardKey pk zone cardDef
+          modify \gx ->
+            let gx' = (setPlayer pk playerWithoutCard gx) {units = unit : gx.units}
+             in gx'
+                  { pendingEndOfTurn =
+                      PEReturnUnitToDeckBottom cardKey : gx'.pendingEndOfTurn
+                  }
+          logIt LogPlayerAction "log.unit.necromancy"
+            [("player", playerParam pk), ("card", T.pack cardDef.title), ("cost", "0")]
+          send $ UnitEnteredPlay pk cardKey
     PutUnitIntoPlayFromDeck pk cardKey zone -> do
       g <- get
       player <- getPlayerS pk

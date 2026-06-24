@@ -634,6 +634,7 @@ allCards =
       ("legends-047", SupportCardDef screamingBell),
       ("legends-049", UnitCardDef shadowSentinel),
       ("legends-050", UnitCardDef wildRider),
+      ("legends-052", UnitCardDef swarmOfBats),
       ("legends-053", UnitCardDef bloodDragonKnight),
       ("legends-054", SupportCardDef curseOfYears),
       -- Days of Blood (Eternal War cycle, pack 1)
@@ -711,6 +712,7 @@ allCards =
       ("hidden-kingdoms-021", UnitCardDef ratSwarm),
       ("hidden-kingdoms-024", UnitCardDef giantRats),
       ("hidden-kingdoms-029", UnitCardDef abyssalTerror),
+      ("hidden-kingdoms-030", UnitCardDef lordOfTheDead),
       ("hidden-kingdoms-031", UnitCardDef darkAcolyte),
       ("hidden-kingdoms-032", UnitCardDef cacklingHexwrath),
       ("hidden-kingdoms-038", UnitCardDef shieldBearer),

@@ -154,6 +154,13 @@ putUnitIntoPlay pk origin uk z = push $ case origin of
   FromDiscard -> PutUnitIntoPlayFromDiscard pk uk z
   FromDeck -> PutUnitIntoPlayFromDeck pk uk z
 
+-- | "Use the Necromancy ability on a card in your discard pile without
+-- paying its cost." (Lord of the Dead.) Puts the unit into play for
+-- free; it returns to the deck bottom at end of turn.
+reanimateFromDiscard
+  :: HasQueue Message m => PlayerKey -> UnitKey -> ZoneKind -> m ()
+reanimateFromDiscard pk uk z = push (ReanimateUnitFromDiscard pk uk z)
+
 -- | "Place or remove N resource tokens on this support card."
 adjustSupportTokens :: HasQueue Message m => UnitKey -> Int -> m ()
 adjustSupportTokens k n = push (AdjustSupportTokens k n)

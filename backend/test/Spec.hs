@@ -917,6 +917,46 @@ main = do
         (not (null (getPlN pkN gNend).deck) && (last (getPlN pkN gNend).deck).key == nk)
     _ -> putStrLn "  FAIL necromancy deck dealt no hand" >> exitFailure
 
+  -- Reanimate from discard (Lord of the Dead): put a unit from the
+  -- discard pile into play for free; it returns to the deck bottom at
+  -- end of turn, like Necromancy.
+  gLD1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkLD = gLD1.currentPlayer
+      getPlL pk g = case pk of Player1 -> g.player1; Player2 -> g.player2
+      setPlL pk p g = case pk of Player1 -> g {player1 = p}; Player2 -> g {player2 = p}
+  case firstHandKeys 1 gLD1 of
+    [rk] -> do
+      let p0 = getPlL pkLD gLD1
+          moved = [c | c <- p0.hand, c.key == rk]
+          p1 = p0 {hand = [c | c <- p0.hand, c.key /= rk], discard = moved <> p0.discard}
+          gLD2 = setPlL pkLD p1 gLD1
+      gLD3 <- applyMessage gLD2 (ReanimateUnitFromDiscard pkLD rk BattlefieldZone)
+      check "reanimate: unit entered play from the discard pile for free"
+        (any ((== rk) . (.key)) gLD3.units)
+      gLDend <- applyMessages gLD3 (concat (replicate 12 [PassPriority pkLD, PassPriority pkLD.next]))
+      check "reanimate: returned to the deck bottom at end of turn"
+        (not (any ((== rk) . (.key)) gLDend.units)
+          && not (null (getPlL pkLD gLDend).deck)
+          && (last (getPlL pkLD gLDend).deck).key == rk)
+    _ -> putStrLn "  FAIL reanimate deck dealt no hand" >> exitFailure
+
+  -- Swarm of Bats: on attacking, mills the top 4 of its own deck and
+  -- gains power equal to the units discarded (a mono-deck mills 4 units).
+  gSB1 <- (`applyMessage` BeginGame) =<< mkMonoGame "legends-052" Orc
+  let pkSB = gSB1.currentPlayer
+      deckLenSB g = length (case pkSB of Player1 -> g.player1; Player2 -> g.player2).deck
+  case firstHandKeys 1 gSB1 of
+    [sbK] -> do
+      gSB2 <- applyMessage gSB1 (PutUnitIntoPlay pkSB sbK BattlefieldZone)
+      let deck0 = deckLenSB gSB2
+      gSB3 <- applyMessagesWithAnswers gSB2 [PickNone]
+        [BeginCombat pkSB BattlefieldZone [sbK]]
+      check "swarm of bats: milled the top 4 of its deck on attack"
+        (deckLenSB gSB3 == deck0 - 4)
+      check "swarm of bats: gained power for the units discarded"
+        (any (\u -> u.key == sbK && u.effectivePower == 5) gSB3.units)
+    _ -> putStrLn "  FAIL swarm-of-bats deck dealt no hand" >> exitFailure
+
   -- Loyalty waiver (Embassy / Offering): a granted waiver zeroes the
   -- loyalty surcharge of the next matching-race card, and only that race.
   gLW1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-026" Empire

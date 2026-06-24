@@ -361,6 +361,12 @@ data Message where
     -- ^ Necromancy: play a unit from the discard pile, paying its
     -- printed cost (+ loyalty), and schedule its return to the bottom
     -- of the deck at end of turn.
+  ReanimateUnitFromDiscard :: PlayerKey -> UnitKey -> ZoneKind -> Message
+    -- ^ "Use the Necromancy ability on a card in your discard pile
+    -- without paying its cost." (Lord of the Dead.) Puts the unit into
+    -- play for free regardless of whether it has the keyword, and
+    -- schedules the end-of-turn return to the deck bottom. Invoked by a
+    -- card effect, so it skips the cost / window / keyword checks.
   PutUnitIntoPlayFromDeck :: PlayerKey -> UnitKey -> ZoneKind -> Message
     -- ^ Pull the named unit card out of the player's deck and put it
     -- into play (Empty the Hold). Cost is skipped.
