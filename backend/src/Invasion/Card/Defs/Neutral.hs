@@ -1048,6 +1048,88 @@ enragedVarghulf = unitCard "march-of-the-damned-047" "Enraged Varghulf" do
       withUnit k \u -> when (u.effectivePower > 0) $
         until EndOfTurn $ buffPower self.key u.effectivePower
 
+skinkSkirmishers :: CardDef Unit
+skinkSkirmishers = unitCard "march-of-the-damned-032" "Skink Skirmishers" do
+  cost 2
+  power 1
+  hitPoints 2
+  trait Lizardmen
+  orderOnly
+  body
+    "Order only. Savage 1 (whenever this unit is dealt damage, it may deal 1 \
+    \damage to target unit in any corresponding zone)."
+  savage 1
+
+carnosaurRider :: CardDef Unit
+carnosaurRider = unitCard "march-of-the-damned-036" "Carnosaur Rider" do
+  cost 5
+  power 3
+  hitPoints 4
+  trait Lizardmen
+  orderOnly
+  body
+    "Order only. Savage 3 (whenever this unit is dealt damage, it may deal 3 \
+    \damage to target unit in any corresponding zone)."
+  savage 3
+
+savageRush :: CardDef Tactic
+savageRush = tacticCard "march-of-the-damned-038" "Savage Rush" do
+  cost 2
+  orderOnly
+  body "Order only. Action: Each attacking unit you control gains Savage 1."
+  whenResolved \self -> do
+    g <- getGame
+    for_ [u | u <- g.units, u.controller == self.controller, u.attacking] \u ->
+      until EndOfTurn $ buffSavage u.key 1
+
+cloakOfFeathers :: CardDef Support
+cloakOfFeathers = supportCard "march-of-the-damned-040" "Cloak of Feathers" do
+  cost 1
+  traits [Attachment, Lizardmen]
+  orderOnly
+  body
+    "Order only. Attach to a target Lizardmen unit. Attached unit gains Savage 2 \
+    \(whenever this unit is dealt damage, it may deal 2 damage to target unit in \
+    \any corresponding zone)."
+  attachmentSavage 2
+
+blessedSpawning :: CardDef Tactic
+blessedSpawning = tacticCard "march-of-the-damned-042" "Blessed Spawning" do
+  cost 3
+  traits [Lizardmen]
+  orderOnly
+  body
+    "Order only. Action: Search the top five cards of your deck for a Lizardmen \
+    \unit with printed cost 4 or less and put it into play (in any zone). Then, \
+    \shuffle your deck."
+  whenResolved \self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 5 \result -> do
+      let matches =
+            [ c
+            | c <- result.cards
+            , Just cd <- [asUnit c.def]
+            , Lizardmen `elem` cd.traits
+            , someCardCost c.def <= 4
+            ]
+      chooseFromCards pk 0 1 matches
+        "Choose a Lizardmen unit (cost 4 or less) to put into play." \chosen ->
+        for_ chosen \c ->
+          withTarget pk MyAnyZone \zk -> putUnitIntoPlay pk FromDeck c.key zk
+      shuffleDeck pk
+
+numberlessGraves :: CardDef Support
+numberlessGraves = supportCard "march-of-the-damned-050" "Numberless Graves" do
+  cost 3
+  power 1
+  trait Undead
+  destructionOnly
+  body
+    "Destruction only. Forced: When an opponent's unit is destroyed, draw a card \
+    \from the bottom of your deck."
+  onOpponentUnitLeavePlay \_owner self _uk _zone _code ->
+    drawFromBottom self.controller
+
 corpseCart :: CardDef Support
 corpseCart = supportCard "march-of-the-damned-051" "Corpse Cart" do
   cost 1

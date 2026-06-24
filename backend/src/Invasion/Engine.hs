@@ -920,8 +920,13 @@ instance Run Game where
               , ("amount", tshow landing)
               ]
             let Damage total = newDmg
-            when (total >= u.effectiveMaxHP) $
-              send $ DestroyUnit ukey
+            -- "Savage X": after surviving the damage, the controller may
+            -- retaliate. Snapshot the Savage value now and queue it; the
+            -- prompt fires only if the unit lives through this hit.
+            let savageVal = totalSavage g u
+            if total >= u.effectiveMaxHP
+              then send $ DestroyUnit ukey
+              else when (savageVal > 0) $ send $ ResolveSavage ukey savageVal
     DealDamageToUnitUncancellable ukey amount -> do
       g <- get
       whenJust (findUnit ukey g) \u -> do
@@ -953,6 +958,36 @@ instance Run Game where
             let Damage total = newDmg
             when (total >= u.effectiveMaxHP) $
               send $ DestroyUnit ukey
+    ResolveSavage ukey savageVal -> do
+      g <- get
+      whenJust (findUnit ukey g) \u -> do
+          -- "Corresponding zone" = any zone of the same kind as the
+          -- Savage unit's zone (either player). Candidates are the units
+          -- sitting in such a zone, excluding the Savage unit itself.
+          let candidates =
+                [ t.key
+                | t <- g.units
+                , t.zone == u.zone
+                , t.key /= ukey
+                ]
+          unless (savageVal <= 0 || null candidates) do
+            ans <- askPrompt Prompt
+              { player = u.controller
+              , kind = ChooseUnits
+                  { filterSpec = UnitsFromList candidates
+                  , minPick = 0
+                  , maxPick = 1
+                  , description =
+                      "Savage " <> tshow savageVal
+                        <> ": deal " <> tshow savageVal
+                        <> " damage to a unit in a corresponding zone (or skip)."
+                  }
+              , callback = CallbackInlinePrompt
+              }
+            case ans of
+              PickUnits (chosen : _) | chosen `elem` candidates ->
+                send $ DealDamageToUnit chosen savageVal
+              _ -> pure ()
     HealUnit ukey amount -> do
       g <- get
       whenJust (findUnit ukey g) \u -> do
@@ -4841,6 +4876,17 @@ totalCounterstrike g u =
   sum [n | Counterstrike n <- unitKeywords u]
     + (unitExtrasOf u).selfCounterstrikeBonus g u
     + sum [n | Modifier (GainCounterstrike n) _ <- mods]
+  where
+    mods = fromMaybe [] (Map.lookup (UnitRef u.key) g.modifiers)
+
+-- | Effective Savage X on a unit: the printed 'Savage' keyword, plus
+-- any Savage granted by attached supports (Cloak of Feathers), plus
+-- turn-scoped 'GainSavage' modifiers (Savage Rush, Track the Prey).
+totalSavage :: Game -> UnitDetails -> Int
+totalSavage g u =
+  sum [n | Savage n <- unitKeywords u]
+    + sum [s.cardDef.extras.attachmentSavageBonus | s <- u.attachments]
+    + sum [n | Modifier (GainSavage n) _ <- mods]
   where
     mods = fromMaybe [] (Map.lookup (UnitRef u.key) g.modifiers)
 

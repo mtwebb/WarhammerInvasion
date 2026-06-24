@@ -113,6 +113,12 @@ data Message where
     -- damage-cancel effects. Used by cards with the
     -- 'DamageCannotBeCancelled' keyword or that explicitly call out
     -- uncancellable damage in their text.
+  ResolveSavage :: UnitKey -> Int -> Message
+    -- ^ "Savage X": after a unit survives damage, its controller may
+    -- deal X damage to a target unit in a corresponding zone (any unit
+    -- sharing the Savage unit's zone kind). Pushed by the
+    -- 'DealDamageToUnit' handler; the Int is the Savage value snapshotted
+    -- at damage time.
   HealUnit :: UnitKey -> Int -> Message
     -- ^ Remove up to N damage from a target unit (clamped to 0).
   DestroyUnit :: UnitKey -> Message

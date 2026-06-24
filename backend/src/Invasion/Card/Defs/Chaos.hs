@@ -1607,6 +1607,24 @@ cloyingQuagmire = tacticCard "march-of-the-damned-024" "Cloying Quagmire" do
       corrupt k
       dealDamage k 2
 
+bloodSummoning :: CardDef Tactic
+bloodSummoning = tacticCard "march-of-the-damned-025" "Blood Summoning" do
+  race Chaos
+  cost 0
+  loyalty 3
+  trait Spell
+  body
+    "Action: Corrupt X units you control to lower the cost of the next [Chaos] \
+    \unit you play this turn by X."
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    let candidates = [u.key | u <- g.units, u.controller == pk, not u.corrupted]
+    chooseUpTo pk (length candidates) candidates \chosen -> do
+      traverse_ corrupt chosen
+      let x = length chosen
+      when (x > 0) $ push (ScheduleNextUnitDiscount pk x)
+
 -- Hidden Kingdoms (deluxe expansion) -----------------------------------
 
 seekerChariot :: CardDef Unit

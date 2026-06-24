@@ -67,6 +67,10 @@ data ModifierDetails
     -- ^ "This unit gains Counterstrike N" for the modifier's scope
     -- (Celestial Wizard Acolyte). Summed into 'totalCounterstrike'
     -- alongside the printed keyword and 'selfCounterstrikeBonus'.
+  | GainSavage Int
+    -- ^ "This unit gains Savage N" for the modifier's scope (Savage
+    -- Rush, Track the Prey). Summed into 'totalSavage' alongside the
+    -- printed keyword and attachment grants.
   | CannotBeTargeted Bool
     -- ^ "This card cannot be targeted by card effects." The 'Bool' is
     -- @opponentOnly@: 'True' blocks only the controller's opponent

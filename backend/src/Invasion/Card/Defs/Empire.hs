@@ -1243,6 +1243,28 @@ surrender = tacticCard "assault-on-ulthuan-048" "Surrender!" do
 
 -- March of the Damned --------------------------------------------------
 
+jadeAcolyte :: CardDef Unit
+jadeAcolyte = unitCard "march-of-the-damned-006" "Jade Acolyte" do
+  race Empire
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Mage
+  body
+    "Action: Spend 1 resource and choose a target development you control. That \
+    \development becomes a unit with 2 hit points and {power} until the end of \
+    \the turn. It also counts as a development (limit once per turn)."
+  action "Animate development" 1 \usage -> do
+    g <- getGame
+    let used =
+          any (\m -> m.details == ActionUsedThisTurn)
+            (Map.findWithDefault [] (UnitRef usage.self.key) g.modifiers)
+    unless used do
+      until EndOfTurn (PendingBuff usage.self.key ActionUsedThisTurn)
+      withTarget usage.user MyDevZone \zk ->
+        push (AnimateDevelopment usage.user zk 1 2)
+
 warMachineEmplacement :: CardDef Support
 warMachineEmplacement = supportCard "march-of-the-damned-008" "War Machine Emplacement" do
   race Empire

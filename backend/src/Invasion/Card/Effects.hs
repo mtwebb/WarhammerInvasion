@@ -782,6 +782,11 @@ buffToughness target n = PendingBuff target (GainToughness n)
 buffCounterstrike :: UnitKey -> Int -> PendingBuff
 buffCounterstrike target n = PendingBuff target (GainCounterstrike n)
 
+-- | "Target unit gains Savage N." Folded into 'totalSavage' for the
+-- buff's scope (Savage Rush, Track the Prey).
+buffSavage :: UnitKey -> Int -> PendingBuff
+buffSavage target n = PendingBuff target (GainSavage n)
+
 -- | "Target unit must defend this turn, if able." Animosity,
 -- Alluring Daemonettes.
 mustDefend :: UnitKey -> PendingBuff

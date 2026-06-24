@@ -147,6 +147,13 @@ raider n = keyword (Raider n)
 counterstrike :: Int -> CardBuilder Unit ()
 counterstrike n = keyword (Counterstrike n)
 
+-- | Savage X keyword (Lizardmen): after this unit survives damage, its
+-- controller may deal X damage to a target unit in a corresponding
+-- zone. The engine dispatches this generically off 'totalSavage'; the
+-- builder only stamps the printed keyword.
+savage :: Int -> CardBuilder Unit ()
+savage n = keyword (Savage n)
+
 -- | Ambush X keyword (Hidden Kingdoms): the card may be played facedown
 -- as a development and flipped faceup for X resources during the combat
 -- Ambush step. @ambush 0@ is a free flip.
@@ -396,6 +403,10 @@ attachmentPower n = modifySupportExtras \e -> e {attachmentPowerBonus = n}
 -- | Static HP contribution while attached (Daemonsword).
 attachmentHp :: Int -> CardBuilder Support ()
 attachmentHp n = modifySupportExtras \e -> e {attachmentHPBonus = n}
+
+-- | Grant Savage X to the host while attached (Cloak of Feathers).
+attachmentSavage :: Int -> CardBuilder Support ()
+attachmentSavage n = modifySupportExtras \e -> e {attachmentSavageBonus = n}
 
 -- | While attached, the host unit's combat damage is uncancellable
 -- (Hammer of Sigmar).

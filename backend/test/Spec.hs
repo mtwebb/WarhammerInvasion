@@ -514,6 +514,32 @@ main = do
       putStrLn "  FAIL shield deck dealt no hand"
       exitFailure
 
+  -- Savage X (Skink Skirmishers, Savage 1): after the unit survives
+  -- damage, its controller may deal Savage damage to a unit in a
+  -- corresponding zone (here, the enemy unit in the same battlefield).
+  gSv1 <- (`applyMessage` BeginGame) =<< mkMonoGame "march-of-the-damned-032" HighElf
+  let pkSv = gSv1.currentPlayer
+  case ( take 1 (map (.key) (activePlayer gSv1).hand)
+       , take 1 (map (.key) (case pkSv of
+                              Player1 -> gSv1.player2
+                              Player2 -> gSv1.player1).hand)
+       ) of
+    ([myKey], [foeKey]) -> do
+      gSv2 <- applyMessages gSv1
+        [ PutUnitIntoPlay pkSv myKey BattlefieldZone
+        , PutUnitIntoPlay pkSv.next foeKey BattlefieldZone
+        ]
+      gSv3 <- applyMessagesWithAnswers gSv2
+        [PickUnits [foeKey]]                       -- Savage: hit the enemy
+        [DealDamageToUnit myKey 1]
+      check "savage: enemy in corresponding zone took 1 Savage damage"
+        (any (\u -> u.key == foeKey && u.damage == Damage 1) gSv3.units)
+      check "savage: the Savage unit survived its own 1 damage"
+        (any (\u -> u.key == myKey && u.damage == Damage 1) gSv3.units)
+    _ -> do
+      putStrLn "  FAIL savage deck dealt no hand"
+      exitFailure
+
   -- X hit points (Cold One Chariot): HP tracks developments in the
   -- zone, and the stat sweep clears a chariot whose X collapsed.
   gCC1 <- (`applyMessage` BeginGame) =<< mkMonoGame "tooth-and-claw-053" DarkElf

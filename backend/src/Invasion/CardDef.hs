@@ -43,6 +43,12 @@ data Keyword
     -- Ambush step (after Declare Attackers, before Declare Defenders) on
     -- a development in the defending zone. The card becomes its printed
     -- type; a flipped unit must be declared as a defender that step.
+  | Savage Int
+    -- ^ Savage X (Lizardmen): after this unit is dealt damage and
+    -- survives, its controller may deal X damage to a target unit in a
+    -- corresponding zone (any unit sharing this unit's zone kind). The
+    -- engine dispatches this generically off 'totalSavage', so the value
+    -- can be granted dynamically (Savage Rush, Cloak of Feathers).
   | OrderOnly
     -- ^ Neutral-card restriction: cannot be included in a Destruction
     -- (Chaos / Orc / Dark Elf) deck.
@@ -464,6 +470,9 @@ data SupportExtras = SupportExtras
     -- a unit (Daemonsword, Hammer of Sigmar, etc.).
   , attachmentHPBonus :: Int
     -- ^ Static HP contribution when attached (Daemonsword).
+  , attachmentSavageBonus :: Int
+    -- ^ Static Savage X granted to the host while attached (Cloak of
+    -- Feathers). Summed into the host's 'totalSavage'.
   , grantsUncancellableDamage :: Bool
     -- ^ While attached, the host unit's combat damage is
     -- uncancellable (Hammer of Sigmar).
@@ -638,6 +647,7 @@ instance HasDefaultExtras Support where
   defaultExtras = SupportExtras
     { attachmentPowerBonus = 0
     , attachmentHPBonus = 0
+    , attachmentSavageBonus = 0
     , grantsUncancellableDamage = False
     , supportAuraPower = \_ _ _ -> 0
     , supportCombatBonus = \_ _ _ -> 0
