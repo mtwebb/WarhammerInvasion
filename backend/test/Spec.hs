@@ -1213,6 +1213,25 @@ main = do
         (not stillInPlay)
     _ -> putStrLn "  FAIL star-crown setup (hand too small or def missing)" >> exitFailure
 
+  -- Word of Pain: attaching it makes the host ineligible to attack, via
+  -- the static 'hostCannotAttack' support field consulted by
+  -- 'eligibleAttacker'.
+  gWO1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkWO = gWO1.currentPlayer
+  case (firstHandKeys 2 gWO1, Map.lookup "assault-on-ulthuan-034" allCards) of
+    ([hkWO, akWO], Just (SupportCardDef wopDef)) -> do
+      gWO2 <- applyMessage gWO1 (PutUnitIntoPlay pkWO hkWO BattlefieldZone)
+      check "word of pain: host can attack before the attachment"
+        (eligibleAttacker gWO2 pkWO.next BattlefieldZone hkWO)
+      let withWop u
+            | u.key == hkWO =
+                u {attachments = freshSupport akWO pkWO u.zone (Just hkWO) wopDef : u.attachments}
+            | otherwise = u
+          gWO3 = gWO2 {units = map withWop gWO2.units}
+      check "word of pain: host cannot attack while Word of Pain is attached"
+        (not (eligibleAttacker gWO3 pkWO.next BattlefieldZone hkWO))
+    _ -> putStrLn "  FAIL word-of-pain setup (hand too small or def missing)" >> exitFailure
+
   -- ArrangeDeckCards (the scry reorder primitive behind Scroll of Asur /
   -- Advanced Engineering): named cards are pulled to the top in the given
   -- order, others to the bottom, the rest keep their relative position.

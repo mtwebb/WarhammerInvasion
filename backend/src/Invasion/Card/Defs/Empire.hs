@@ -1241,6 +1241,18 @@ surrender = tacticCard "assault-on-ulthuan-048" "Surrender!" do
   whenResolved \self ->
     withTarget self.controller defendingUnit returnUnitToHand
 
+battleStandard :: CardDef Support
+battleStandard = supportCard "assault-on-ulthuan-047" "Battle Standard" do
+  race Empire
+  cost 0
+  loyalty 1
+  trait Attachment
+  body "Attach to a target unit you control. Action: At the beginning of your battlefield phase, you may move this unit to a different zone."
+  onMyPhaseBegin BattlefieldPhase \_owner self ->
+    for_ self.attachedTo \host ->
+      may self.controller "Move the attached unit to a different zone?" $
+        withTarget self.controller MyAnyZone \z -> moveUnit host z
+
 -- March of the Damned --------------------------------------------------
 
 jadeAcolyte :: CardDef Unit

@@ -3695,6 +3695,7 @@ eligibleAttacker g defender zone ukey = case findUnit ukey g of
     (u.zone `elem` (unitExtrasOf u).attackEligibleZones || rovingAttacker u ukey)
       && not u.corrupted
       && not (hasModifier g.modifiers ukey CannotAttack)
+      && not (any (.cardDef.extras.hostCannotAttack) u.attachments)
       && (unitExtrasOf u).canAttackZone g defender zone u
   where
     -- A unit questing on a Sack Tor Aendris-style quest may attack as

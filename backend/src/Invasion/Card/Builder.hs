@@ -535,6 +535,10 @@ doublesCapitalDamage f =
 blanksAttachedUnit :: CardBuilder Support ()
 blanksAttachedUnit = modifySupportExtras \e -> e {blanksHost = True}
 
+-- | "Attached unit cannot attack." (Word of Pain.)
+preventsHostAttack :: CardBuilder Support ()
+preventsHostAttack = modifySupportExtras \e -> e {hostCannotAttack = True}
+
 -- | "This card cannot be targeted by card effects." Unconditional
 -- self-immunity for the artefact attachments (Dawnstar Sword, Eye of
 -- Sheerian, Windcatcher Prism, …). Blocks every player.
