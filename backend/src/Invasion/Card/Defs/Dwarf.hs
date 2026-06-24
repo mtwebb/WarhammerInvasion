@@ -1354,6 +1354,20 @@ recklessEngineer = unitCard "the-accursed-dead-043" "Reckless Engineer" do
           | otherwise -> millFromDeck usage.user 1
         _ -> pure ()
 
+-- Hidden Kingdoms -------------------------------------------------------
+
+shieldBearer :: CardDef Unit
+shieldBearer = unitCard "hidden-kingdoms-038" "Shield Bearer" do
+  race Dwarf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Warrior
+  body "Action: Sacrifice 1 development to cancel 1 damage assigned to a unit or legend."
+  actionWith "Shield" 0 [SacrificeDevelopment] \usage ->
+    withTarget usage.user AnyUnit \k -> cancelDamageOnUnit k 1
+
 dwarfEmbassy :: CardDef Support
 dwarfEmbassy = supportCard "hidden-kingdoms-040" "Dwarf Embassy" do
   race Dwarf
