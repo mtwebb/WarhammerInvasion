@@ -369,6 +369,7 @@ allCards =
       ("bleeding-sun-113", TacticCardDef smashDerBeards),
       ("bleeding-sun-114", UnitCardDef beastOfRot),
       ("bleeding-sun-115", SupportCardDef necroticSpasms),
+      ("bleeding-sun-117", SupportCardDef soulStealer),
       ("bleeding-sun-118", UnitCardDef grailKnight),
       ("bleeding-sun-119", SupportCardDef advancedEngineering),
       -- The Enemy cycle — The Burning of Derricksburg (001-020)
@@ -520,7 +521,9 @@ allCards =
       ("the-eclipse-of-hope-087", UnitCardDef osterknachtElite),
       ("the-eclipse-of-hope-089", UnitCardDef valorousMage),
       ("the-eclipse-of-hope-093", SupportCardDef brandedByKhorne),
+      ("the-eclipse-of-hope-094", TacticCardDef unleashingTheSpell),
       ("the-eclipse-of-hope-095", UnitCardDef toxicHydra),
+      ("the-eclipse-of-hope-096", TacticCardDef testingTheSpell),
       ("the-eclipse-of-hope-097", QuestCardDef malekithsRage),
       ("the-eclipse-of-hope-098", UnitCardDef wardancer),
       ("the-eclipse-of-hope-099", UnitCardDef deadlySalamander),

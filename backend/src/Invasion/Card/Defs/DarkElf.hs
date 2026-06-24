@@ -761,6 +761,38 @@ toxicHydra = unitCard "the-eclipse-of-hope-095" "Toxic Hydra" do
     for_ [u | u <- g.units, u.controller == opp, u.zone == self.zone] \u ->
       until EndOfTurn $ debuffHP u.key 2
 
+testingTheSpell :: CardDef Tactic
+testingTheSpell = tacticCard "the-eclipse-of-hope-096" "Testing the Spell" do
+  race DarkElf
+  cost 3
+  loyalty 3
+  trait Spell
+  body "Action: Put the top card of your deck into play facedown as a development. Then, take control of target unit with a printed cost of X or lower and move it to your corresponding zone until the end of the turn. X is the number of developments you control."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk MyDevZone \zone -> placeTopAsDevelopments pk zone 1
+    me <- playerOf pk <$> getGame
+    let x = developmentsControlled me + (if null me.deck then 0 else 1)
+    withTarget pk (UnitMatching \taker _ u -> u.controller /= taker && costAtMost x u.cardDef) \k ->
+      withUnit k \u -> do
+        push (TakeControlOfUnit pk k)
+        push (ScheduleControlReturn k u.controller)
+
+soulStealer :: CardDef Support
+soulStealer = supportCard "bleeding-sun-117" "Soul Stealer" do
+  race DarkElf
+  cost 4
+  loyalty 2
+  power 0
+  traits [Attachment, Hex]
+  body "Attach to a target non-Hero unit. Take control of attached unit. Move that unit to your corresponding zone."
+  -- The "non-Hero" attach restriction is not enforced (attachments take
+  -- any unit today); control transfers permanently, and the unit being
+  -- in the controller's zone of the same kind IS the "corresponding
+  -- zone" move.
+  onEnterPlay \_owner self ->
+    for_ self.attachedTo \host -> push (TakeControlOfUnit self.controller host)
+
 enragedManticore :: CardDef Unit
 enragedManticore = unitCard "signs-in-the-stars-076" "Enraged Manticore" do
   race DarkElf
