@@ -703,6 +703,13 @@ playSupportFromDeck
   => PlayerKey -> UnitKey -> ZoneKind -> m ()
 playSupportFromDeck pk key zone = push (PlaySupportFromDeck pk key zone)
 
+-- | "Put that quest into play." Plays the named quest directly from the
+-- player's deck, bypassing the cost/hand path (Ellyrian Patron).
+putQuestIntoPlayFromDeck
+  :: HasQueue Message m
+  => PlayerKey -> UnitKey -> m ()
+putQuestIntoPlayFromDeck pk key = push (PutQuestIntoPlayFromDeck pk key)
+
 -- | "Ask the named player a yes/no question and return their answer."
 -- Defaults to 'False' if no client is attached (test / debug paths).
 askYesNo
@@ -1022,6 +1029,13 @@ burningZoneCount g =
 -- | Number of facedown developments in the named unit's zone. Read by
 -- Toughness X and a couple of dev-scaling cards (Troll Slayers,
 -- Ironbreakers of Ankhor).
+-- | Total facedown developments across all three of a player's zones.
+-- The "X is the number of developments you control" value behind the
+-- the-eclipse-of-hope "Spell" cycle.
+developmentsControlled :: Player -> Int
+developmentsControlled p =
+  sum [d | z <- p.capital.zones, let Developments d = z.developments]
+
 devsInZone :: Game -> UnitDetails -> Int
 devsInZone g u =
   let player = case u.controller of

@@ -97,6 +97,16 @@ someCardTraits = \case
   TacticCardDef cd -> cd.traits
   LegendCardDef cd -> cd.traits
 
+-- | The printed title of any card definition, regardless of kind. Used
+-- by name-matching effects (Squig Trackers' "Squig"/"Squigs" search).
+someCardTitle :: SomeCardDef -> String
+someCardTitle = \case
+  UnitCardDef cd -> cd.title
+  SupportCardDef cd -> cd.title
+  QuestCardDef cd -> cd.title
+  TacticCardDef cd -> cd.title
+  LegendCardDef cd -> cd.title
+
 -- | The printed keywords of any card definition, regardless of kind.
 -- Used by the combat Ambush step, which reads 'Ambush' off facedown
 -- developments without knowing their card kind.

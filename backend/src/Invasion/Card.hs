@@ -513,7 +513,9 @@ allCards =
       ("the-chaos-moon-040", UnitCardDef viciousClanrat),
       -- The Morrslieb cycle — The Eclipse of Hope (081-100)
       ("the-eclipse-of-hope-081", UnitCardDef mountainGuard),
+      ("the-eclipse-of-hope-083", TacticCardDef craftingTheRune),
       ("the-eclipse-of-hope-084", UnitCardDef bigBoss),
+      ("the-eclipse-of-hope-085", TacticCardDef firinDaSpell),
       ("the-eclipse-of-hope-086", UnitCardDef gloriousPreceptor),
       ("the-eclipse-of-hope-087", UnitCardDef osterknachtElite),
       ("the-eclipse-of-hope-089", UnitCardDef valorousMage),
@@ -566,6 +568,7 @@ allCards =
       ("fiery-dawn-112", TacticCardDef furyOfAenarion),
       ("fiery-dawn-114", TacticCardDef callTheBrayherd),
       -- The Capital Cycle — The Inevitable City (001-020)
+      ("the-inevitable-city-002", UnitCardDef squigTrackers),
       ("the-inevitable-city-004", UnitCardDef princeOfCaledor),
       ("the-inevitable-city-005", UnitCardDef doomBearer),
       ("the-inevitable-city-008", UnitCardDef savageForsaken),
@@ -622,6 +625,7 @@ allCards =
       -- Bloodquest cycle — Fragments of Power (pack 2)
       ("fragments-of-power-021", SupportCardDef starCrownFragments),
       ("fragments-of-power-027", UnitCardDef averheimSoldiers),
+      ("fragments-of-power-029", UnitCardDef ellyrianPatron),
       ("fragments-of-power-031", UnitCardDef swornOfKhorne),
       ("fragments-of-power-032", SupportCardDef stolenSkin),
       -- Bloodquest cycle — The Accursed Dead (pack 3)

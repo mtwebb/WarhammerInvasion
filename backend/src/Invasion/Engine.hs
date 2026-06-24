@@ -1240,6 +1240,24 @@ instance Run Game where
             , ("cost", tshow n)
             ]
           send $ QuestEnteredPlay pk cardKey
+    PutQuestIntoPlayFromDeck pk cardKey -> do
+      player <- getPlayerS pk
+      whenJust (takeQuestFromDeck cardKey player) \(cardDef, playerWithoutCard) -> do
+        let hostPlayer
+              | PlayInOpponentArea `elem` cardDef.keywords = pk.next
+              | otherwise = pk
+            quest = QuestDetails
+              { key = cardKey
+              , controller = pk
+              , zoneOwner = hostPlayer
+              , cardDef
+              , tokens = 0
+              , questingUnit = Nothing
+              }
+        modify \gx -> (setPlayer pk playerWithoutCard gx) {quests = quest : gx.quests}
+        logIt LogSystem "log.quest.played_from_deck"
+          [("player", playerParam pk), ("card", T.pack cardDef.title)]
+        send $ QuestEnteredPlay pk cardKey
     QuestEnteredPlay _pk _key ->
       -- Per-card reactions fire via dispatch (see
       -- 'dispatchToInPlayUnits' which now also walks 'Game.supports'
@@ -3594,6 +3612,9 @@ takeSupportFromDeck = takeFromPile deckPile asSupport
 
 takeQuestFromHand :: UnitKey -> Player -> Maybe (CardDef Quest, Player)
 takeQuestFromHand = takeFromPile handPile asQuest
+
+takeQuestFromDeck :: UnitKey -> Player -> Maybe (CardDef Quest, Player)
+takeQuestFromDeck = takeFromPile deckPile asQuest
 
 -- | Fire one scheduled effect by translating it into messages.
 firePendingEffect :: PendingEffect -> StateT Game GameT ()

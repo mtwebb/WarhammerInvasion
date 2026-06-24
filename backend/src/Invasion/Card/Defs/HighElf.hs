@@ -482,6 +482,26 @@ lothernSeaMaster = unitCard "rising-dawn-009" "Lothern Sea Master" do
         indirectDamage usage.user.next u.tokens
         push (AdjustUnitTokens u.key (-1))
 
+-- Bloodquest: Fragments of Power ----------------------------------------
+
+ellyrianPatron :: CardDef Unit
+ellyrianPatron = unitCard "fragments-of-power-029" "Ellyrian Patron" do
+  race HighElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Noble
+  body "Action: When this unit enters play, search the top 5 cards of your deck for a quest and put it into play. Shuffle your deck."
+  onEnterPlay \_owner self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 5 \result -> do
+      let quests = [c | c <- result.cards, isJust (asQuest c.def)]
+      chooseFromCards pk 0 1 quests
+        "Choose a quest to put into play." \chosen ->
+          for_ chosen \c -> putQuestIntoPlayFromDeck pk c.key
+      shuffleDeck pk
+
 -- Bloodquest: The Accursed Dead -----------------------------------------
 
 lionStandard :: CardDef Unit
