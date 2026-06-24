@@ -162,6 +162,10 @@ data Message where
     -- Used by deck-search effects (e.g. Dwarf Cannon Crew).
   PlayQuest :: PlayerKey -> UnitKey -> Message
     -- ^ Play a Quest from hand. Emits 'QuestEnteredPlay'.
+  PutQuestIntoPlayFromDeck :: PlayerKey -> UnitKey -> Message
+    -- ^ Bypass the cost / hand path: pull the named quest card out of
+    -- the player's deck and put it directly into play. Used by
+    -- deck-search effects (Ellyrian Patron). Emits 'QuestEnteredPlay'.
   QuestEnteredPlay :: PlayerKey -> UnitKey -> Message
     -- ^ A Quest has just entered play. The fresh key references the
     -- entry in 'Game.quests'.

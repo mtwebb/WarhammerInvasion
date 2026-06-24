@@ -9,6 +9,7 @@
 -- in the card's local comment.
 module Invasion.Card.Defs.Orc (module Invasion.Card.Defs.Orc) where
 
+import Data.List (isInfixOf)
 import Data.Map.Strict qualified as Map
 import Invasion.Capital
 import Invasion.Card.Builder
@@ -1055,6 +1056,43 @@ bigBoss = unitCard "the-eclipse-of-hope-084" "Big Boss" do
         m = minimum (maxBound : map costOf g.units)
         cands = [u.key | u <- g.units, costOf u == m]
     forcePickUnit self.controller cands "Big Boss: sacrifice the lowest-cost unit." destroyUnit
+
+firinDaSpell :: CardDef Tactic
+firinDaSpell = tacticCard "the-eclipse-of-hope-085" "Firin' Da Spell" do
+  race Orc
+  cost 2
+  loyalty 3
+  trait Spell
+  body "Action: Put the top card of your deck into play facedown as a development. Then, target attacking unit gains [Power] for each development you control."
+  playableWhen $ hasTarget attackingUnit
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk MyDevZone \zone -> placeTopAsDevelopments pk zone 1
+    me <- playerOf pk <$> getGame
+    let x = developmentsControlled me + (if null me.deck then 0 else 1)
+    withTarget pk attackingUnit \k -> until EndOfTurn $ buffPower k x
+
+squigTrackers :: CardDef Unit
+squigTrackers = unitCard "the-inevitable-city-002" "Squig Trackers" do
+  race Orc
+  cost 2
+  loyalty 3
+  power 1
+  hitPoints 1
+  traits [Goblin, Ranger]
+  body "Action: When this unit enters play, search the top five cards of your deck for a card with the word \"Squig\" or \"Squigs\" in its title and put it into play (in any zone). Then, shuffle your deck."
+  onEnterPlay \_owner self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 5 \result -> do
+      let squigs = [c | c <- result.cards, "Squig" `isInfixOf` someCardTitle c.def]
+      chooseFromCards pk 0 1 squigs
+        "Choose a Squig card to put into play." \chosen ->
+          for_ chosen \c ->
+            withTarget pk MyAnyZone \zone ->
+              if isJust (asUnit c.def)
+                then putUnitIntoPlay pk FromDeck c.key zone
+                else when (isJust (asSupport c.def)) $ playSupportFromDeck pk c.key zone
+      shuffleDeck pk
 
 smashEm :: CardDef Tactic
 smashEm = tacticCard "fiery-dawn-106" "Smash 'Em!" do

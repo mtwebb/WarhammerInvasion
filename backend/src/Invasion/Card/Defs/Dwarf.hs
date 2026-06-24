@@ -952,6 +952,20 @@ mountainGuard = unitCard "the-eclipse-of-hope-081" "Mountain Guard" do
   hitPoints 3
   trait Warrior
 
+craftingTheRune :: CardDef Tactic
+craftingTheRune = tacticCard "the-eclipse-of-hope-083" "Crafting the Rune" do
+  race Dwarf
+  cost 3
+  loyalty 3
+  trait Rune
+  body "Action: Put the top card of your deck into play facedown as a development. Then, destroy target support card with cost X or lower. X is the number of developments you control."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk MyDevZone \zone -> placeTopAsDevelopments pk zone 1
+    me <- playerOf pk <$> getGame
+    let x = developmentsControlled me + (if null me.deck then 0 else 1)
+    withTarget pk (SupportMatching \_ _ s -> someCardCost (SupportCardDef s.cardDef) <= x) destroySupport
+
 daemonslayer :: CardDef Unit
 daemonslayer = unitCard "the-twin-tailed-comet-041" "Daemonslayer" do
   race Dwarf

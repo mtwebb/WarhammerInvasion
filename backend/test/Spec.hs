@@ -16,7 +16,7 @@ import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUn
 import Invasion.CardDef (ActionTarget (..), CardDef (..), Keyword (..))
 import Invasion.Modifier
 import Invasion.Engine
-import Invasion.Entity (SupportDetails (..), UnitDetails (..))
+import Invasion.Entity (QuestDetails (..), SupportDetails (..), UnitDetails (..))
 import Invasion.Game
 import Invasion.Player
 import Invasion.Prelude
@@ -1249,6 +1249,20 @@ main = do
       check "hidden grove: power zeroed in a development-less zone"
         (powerOf gHG5 ukHG == Just 0)
     _ -> putStrLn "  FAIL hidden-grove setup (hand too small or def missing)" >> exitFailure
+
+  -- PutQuestIntoPlayFromDeck (behind Ellyrian Patron's "search ... for a
+  -- quest and put it into play"): the named quest leaves the deck and
+  -- enters play.
+  gQD1 <- (`applyMessage` BeginGame) =<< mkMonoGame "assault-on-ulthuan-031" DarkElf
+  let pkQD = gQD1.currentPlayer
+  case (getPl pkQD gQD1).deck of
+    (qc : _) -> do
+      gQD2 <- applyMessage gQD1 (PutQuestIntoPlayFromDeck pkQD qc.key)
+      check "put quest from deck: quest entered play"
+        (any (\q -> q.key == qc.key) gQD2.quests)
+      check "put quest from deck: left the deck"
+        (not (any ((== qc.key) . (.key)) (getPl pkQD gQD2).deck))
+    _ -> putStrLn "  FAIL put-quest-from-deck setup (empty deck)" >> exitFailure
 
   -- ArrangeDeckCards (the scry reorder primitive behind Scroll of Asur /
   -- Advanced Engineering): named cards are pulled to the top in the given
