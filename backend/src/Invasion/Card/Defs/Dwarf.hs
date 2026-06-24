@@ -1353,3 +1353,15 @@ recklessEngineer = unitCard "the-accursed-dead-043" "Reckless Engineer" do
               dealDamage usage.self.key (someCardCost c.def)
           | otherwise -> millFromDeck usage.user 1
         _ -> pure ()
+
+dwarfEmbassy :: CardDef Support
+dwarfEmbassy = supportCard "hidden-kingdoms-040" "Dwarf Embassy" do
+  race Dwarf
+  cost 0
+  loyalty 0
+  trait Tribute
+  body
+    "Non-Dwarf only. Action: Sacrifice this card to ignore the loyalty cost \
+    \of the next [Dwarf] card you play this turn."
+  actionWith "Tribute" 0 [SacrificeSelf] \usage ->
+    grantLoyaltyWaiver usage.user Dwarf

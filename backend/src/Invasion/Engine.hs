@@ -666,6 +666,7 @@ instance Run Game where
             , capitalShields = mempty
             , defenderCounterstrikeBonus = mempty
             , pendingFreeTactic = mempty
+            , loyaltyWaivers = mempty
             , tacticDamageContext = Nothing
             , combatDamageUncancellable = False
             }
@@ -1808,6 +1809,16 @@ instance Run Game where
         logIt LogSystem
           "log.resources.gained"
           [("player", playerParam pk), ("amount", tshow amount)]
+    GrantLoyaltyWaiver pk race -> do
+      g <- get
+      let snapshot = racePlaysThisTurn g pk race
+      modify \gx -> gx
+        { loyaltyWaivers =
+            Map.insertWith (<>) pk [(race, snapshot)] gx.loyaltyWaivers
+        }
+      logIt LogSystem
+        "log.loyalty.waived"
+        [("player", playerParam pk), ("race", tshow race)]
     SpendResources pk raw -> do
       let amount = max 0 raw
       when (amount > 0) $ do
@@ -3104,6 +3115,7 @@ newGame deck1 deck2 opts = do
       , capitalShields = mempty
       , defenderCounterstrikeBonus = mempty
       , pendingFreeTactic = mempty
+      , loyaltyWaivers = mempty
       , tacticDamageContext = Nothing
       , combatDamageUncancellable = False
       }
@@ -4784,10 +4796,33 @@ raceSymbolCount g pk r =
 -- cards we take the most generous (largest) symbol count across the
 -- card's races.
 loyaltySurcharge :: Game -> PlayerKey -> CardDef k -> Int
-loyaltySurcharge g pk cardDef =
-  let perRace = map (raceSymbolCount g pk) cardDef.races
-      bestMatch = if null perRace then 0 else maximum perRace
-   in max 0 (cardDef.loyalty - bestMatch)
+loyaltySurcharge g pk cardDef
+  | loyaltyWaived g pk cardDef = 0
+  | otherwise =
+      let perRace = map (raceSymbolCount g pk) cardDef.races
+          bestMatch = if null perRace then 0 else maximum perRace
+       in max 0 (cardDef.loyalty - bestMatch)
+
+-- | Number of cards of race @r@ that @pk@ has played so far this turn.
+-- Read from the turn history's 'playedBy' filters (which carry races).
+-- Used to snapshot/consume loyalty waivers.
+racePlaysThisTurn :: Game -> PlayerKey -> Race -> Int
+racePlaysThisTurn g pk r =
+  length
+    [ ()
+    | f <- Map.findWithDefault [] pk (historyOfScope ThisTurn g).playedBy
+    , r `elem` f.cfRaces
+    ]
+
+-- | Is this card's loyalty cost waived by a live Embassy/Offering waiver?
+-- A waiver @(race, snapshot)@ is live while no further card of that race
+-- has been played since it was granted (its play count still equals the
+-- snapshot), so the very next matching card consumes it.
+loyaltyWaived :: Game -> PlayerKey -> CardDef k -> Bool
+loyaltyWaived g pk cardDef =
+  any
+    (\(wr, snap) -> wr `elem` cardDef.races && racePlaysThisTurn g pk wr == snap)
+    (Map.findWithDefault [] pk g.loyaltyWaivers)
 
 -- | Card-specific adjustments to the printed (non-loyalty) part of a
 -- play cost. Pulls per-card slices: a self adjustment lives directly

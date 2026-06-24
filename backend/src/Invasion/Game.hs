@@ -579,6 +579,13 @@ data Game = Game
     -- ^ Count of "the next non-Epic tactic you play this turn costs
     -- 0" grants (Runefang of Solland). Consumed on play; cleared at
     -- end of turn.
+  , loyaltyWaivers :: Map PlayerKey [(Race, Int)]
+    -- ^ "Ignore the loyalty cost of the next [Race] card you play this
+    -- turn." (Embassy / Offering supports.) Each entry pairs the waived
+    -- race with the snapshot count of that race's plays this turn at
+    -- grant time; 'loyaltySurcharge' waives a card whose race still
+    -- matches a live snapshot, and the count advancing past the snapshot
+    -- (via 'playedBy') consumes it. Cleared at end of turn.
   , tacticDamageContext :: Maybe PlayerKey
     -- ^ Set while the damage messages queued by a resolving tactic
     -- drain, so 'tacticDamageBonus' supports (Hellcannon Reserves)

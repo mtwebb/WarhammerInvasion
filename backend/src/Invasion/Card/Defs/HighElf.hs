@@ -1242,3 +1242,15 @@ learnedMage = unitCard "vessel-of-the-winds-070" "Learned Mage" do
             if onTop
               then arrangeDeckCards targetPk [c.key] []
               else arrangeDeckCards targetPk [] [c.key]
+
+elvenEmbassy :: CardDef Support
+elvenEmbassy = supportCard "hidden-kingdoms-046" "Elven Embassy" do
+  race HighElf
+  cost 0
+  loyalty 0
+  trait Tribute
+  body
+    "Non-High Elf only. Action: Sacrifice this card to ignore the loyalty \
+    \cost of the next [High Elf] card you play this turn."
+  actionWith "Tribute" 0 [SacrificeSelf] \usage ->
+    grantLoyaltyWaiver usage.user HighElf

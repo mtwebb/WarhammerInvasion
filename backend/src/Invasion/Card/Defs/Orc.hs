@@ -1479,3 +1479,15 @@ deyzBigga = tacticCard "fiery-dawn-105" "Dey'z Bigga" do
     when (maxCost > 0) $
       for_ [u.key | u <- g.units, costOf u == maxCost] \k ->
         until EndOfTurn $ untargetable False k
+
+shinyOffering :: CardDef Support
+shinyOffering = supportCard "hidden-kingdoms-055" "Shiny Offering" do
+  race Orc
+  cost 0
+  loyalty 0
+  trait Tribute
+  body
+    "Non-Orc only. Action: Sacrifice this card to ignore the loyalty cost of \
+    \the next [Orc] card you play this turn."
+  actionWith "Tribute" 0 [SacrificeSelf] \usage ->
+    grantLoyaltyWaiver usage.user Orc

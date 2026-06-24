@@ -475,6 +475,11 @@ data Message where
     -- ^ Credit N resources to the named player's pool. Used by tactic
     -- effects (Burying the Grudge, …) that bypass the kingdom-phase
     -- collection step.
+  GrantLoyaltyWaiver :: PlayerKey -> Race -> Message
+    -- ^ "Ignore the loyalty cost of the next [Race] card you play this
+    -- turn." (Embassy / Offering supports.) Records a turn-scoped waiver
+    -- snapshot that 'loyaltySurcharge' honours for the next matching
+    -- card.
   SpendResources :: PlayerKey -> Int -> Message
     -- ^ Debit N resources from the named player's pool (clamped to
     -- 0). For action-ability costs that fall outside the normal

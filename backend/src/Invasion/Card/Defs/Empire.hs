@@ -1383,3 +1383,15 @@ middenheimLookout = unitCard "days-of-blood-008" "Middenheim Lookout" do
       \k -> do
         moveUnit k self.zone
         until EndOfTurn $ mustDefend k
+
+imperialEmbassy :: CardDef Support
+imperialEmbassy = supportCard "hidden-kingdoms-043" "Imperial Embassy" do
+  race Empire
+  cost 0
+  loyalty 0
+  trait Tribute
+  body
+    "Non-Empire only. Action: Sacrifice this card to ignore the loyalty cost \
+    \of the next [Empire] card you play this turn."
+  actionWith "Tribute" 0 [SacrificeSelf] \usage ->
+    grantLoyaltyWaiver usage.user Empire

@@ -167,6 +167,11 @@ adjustUnitTokens k n = push (AdjustUnitTokens k n)
 gainResources :: HasQueue Message m => PlayerKey -> Int -> m ()
 gainResources pk n = push (GainResources pk n)
 
+-- | "Ignore the loyalty cost of the next [Race] card you play this turn."
+-- (Embassy / Offering supports.)
+grantLoyaltyWaiver :: HasQueue Message m => PlayerKey -> Race -> m ()
+grantLoyaltyWaiver pk race = push (GrantLoyaltyWaiver pk race)
+
 -- | "Move all damage from src to dst." (Stubborn Refusal, Valkia.)
 moveAllDamage :: HasQueue Message m => UnitKey -> UnitKey -> m ()
 moveAllDamage src dst = push (MoveAllDamage src dst)

@@ -707,7 +707,13 @@ allCards =
       ("hidden-kingdoms-018", TacticCardDef furyOfTheForest),
       ("hidden-kingdoms-024", UnitCardDef giantRats),
       ("hidden-kingdoms-039", TacticCardDef defendYourHonor),
+      ("hidden-kingdoms-040", SupportCardDef dwarfEmbassy),
+      ("hidden-kingdoms-043", SupportCardDef imperialEmbassy),
+      ("hidden-kingdoms-046", SupportCardDef elvenEmbassy),
       ("hidden-kingdoms-047", UnitCardDef seekerChariot),
+      ("hidden-kingdoms-049", SupportCardDef daemonicOffering),
+      ("hidden-kingdoms-052", SupportCardDef bloodOffering),
       ("hidden-kingdoms-053", UnitCardDef recklessBoyz),
-      ("hidden-kingdoms-054", TacticCardDef orcishArtillery)
+      ("hidden-kingdoms-054", TacticCardDef orcishArtillery),
+      ("hidden-kingdoms-055", SupportCardDef shinyOffering)
     ]
