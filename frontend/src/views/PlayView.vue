@@ -313,13 +313,33 @@ const inMyCapitalWindow = computed<boolean>(() => {
   return aw.awaiting.contents === mySeatKey.value
 })
 
+// Own discard: units with the printed Necromancy keyword, plus any
+// card granted Necromancy this turn (Countess Iseara).
 const necromancyDiscardCards = computed<EngineCard[]>(() => {
   if (!inMyCapitalWindow.value) return []
   const discard = me.value?.discard
   if (!discard) return []
+  const granted = props.engine.grantedNecromancy ?? []
   return discard.filter(
-    (c) => c.kind === 'Unit' && hasKeyword(c, 'Necromancy'),
+    (c) =>
+      c.kind === 'Unit' && (hasKeyword(c, 'Necromancy') || granted.includes(c.key)),
   )
+})
+
+// Mortis Engine: while you control one, you may play units from the
+// opponent's discard pile as if they had Necromancy.
+const MORTIS_ENGINE_CODE = 'hidden-kingdoms-033'
+const controlsMortisEngine = computed<boolean>(() =>
+  props.engine.supports.some(
+    (s) => s.controller === mySeatKey.value && s.cardDef.code === MORTIS_ENGINE_CODE,
+  ),
+)
+
+const mortisDiscardCards = computed<EngineCard[]>(() => {
+  if (!inMyCapitalWindow.value || !controlsMortisEngine.value) return []
+  const discard = opponent.value?.discard
+  if (!discard) return []
+  return discard.filter((c) => c.kind === 'Unit')
 })
 
 function onNecromancyClick(card: EngineCard, ev: MouseEvent) {
@@ -403,20 +423,37 @@ const popoverStyle = computed<Record<string, string>>(() => {
       />
     </div>
 
-    <!-- Necromancy: units you may play from your discard pile this
-         window. Reuses the normal play popover (the server routes the
-         play to PlayUnitFromDiscard). -->
-    <div v-if="necromancyDiscardCards.length" class="necromancy-strip">
-      <span class="necromancy-strip-label">{{ t('game.play.necromancy.label') }}</span>
-      <button
-        v-for="c in necromancyDiscardCards"
-        :key="c.key"
-        type="button"
-        class="necromancy-card"
-        @click="onNecromancyClick(c, $event)"
-      >
-        {{ c.title }}
-      </button>
+    <!-- Necromancy: units you may play from a discard pile this window.
+         Reuses the normal play popover (the server routes the play to
+         PlayUnitFromDiscard / MortisReanimate). -->
+    <div
+      v-if="necromancyDiscardCards.length || mortisDiscardCards.length"
+      class="necromancy-strip"
+    >
+      <template v-if="necromancyDiscardCards.length">
+        <span class="necromancy-strip-label">{{ t('game.play.necromancy.label') }}</span>
+        <button
+          v-for="c in necromancyDiscardCards"
+          :key="'n' + c.key"
+          type="button"
+          class="necromancy-card"
+          @click="onNecromancyClick(c, $event)"
+        >
+          {{ c.title }}
+        </button>
+      </template>
+      <template v-if="mortisDiscardCards.length">
+        <span class="necromancy-strip-label">{{ t('game.play.necromancy.mortis_label') }}</span>
+        <button
+          v-for="c in mortisDiscardCards"
+          :key="'m' + c.key"
+          type="button"
+          class="necromancy-card"
+          @click="onNecromancyClick(c, $event)"
+        >
+          {{ c.title }}
+        </button>
+      </template>
     </div>
 
     <!-- Combat arrows: attackers → attacked zone / legend. -->

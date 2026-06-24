@@ -1189,16 +1189,14 @@ scrollOfAsur = tacticCard "the-fall-of-karak-grimaz-027" "Scroll of Asur" do
           "Order these cards on top of your deck (first pick = top)." \ordered ->
             arrangeDeckCards pk ordered []
 
--- cards.json records Caradryan's hit points as 0 (a data gap); the
--- printed card is a 0-power, 4-hit-point Phoenix Guard captain.
 caradryan :: CardDef Unit
 caradryan = unitCard "assault-on-ulthuan-005" "Caradryan" do
   race HighElf
   hero
   cost 4
   loyalty 2
-  power 0
-  hitPoints 4
+  power 2
+  hitPoints 3
   body
     "Limit 1 Hero per zone. Quest. Forced: At the beginning of your turn, \
     \look at the top 3 cards of any player's deck. You may discard up to 1 of \

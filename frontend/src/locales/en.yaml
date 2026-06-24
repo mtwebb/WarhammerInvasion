@@ -911,6 +911,7 @@ game:
       reason_burned: Capital burned.
     necromancy:
       label: "Necromancy — play from discard:"
+      mortis_label: "Mortis Engine — play from enemy discard:"
     action:
       heading: Play card
       kingdom: Kingdom

@@ -363,6 +363,9 @@ export interface EngineGame {
   quests: EngineQuest[]
   legends: EngineLegend[]
   nextUnitKey: number
+  // Keys of discard-pile cards granted Necromancy until end of turn
+  // (Countess Iseara). The play-from-discard strip honours these.
+  grantedNecromancy: number[]
   // The engine pauses while this is set. The seated player named in
   // `prompt.player` is expected to reply with GameResolvePrompt.
   pendingPrompt: EnginePrompt | null
