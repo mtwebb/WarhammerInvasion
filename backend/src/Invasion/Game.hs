@@ -583,6 +583,10 @@ data Game = Game
     -- ^ Count of "the next non-Epic tactic you play this turn costs
     -- 0" grants (Runefang of Solland). Consumed on play; cleared at
     -- end of turn.
+  , grantedNecromancy :: [UnitKey]
+    -- ^ Cards in a discard pile that have been granted Necromancy until
+    -- end of turn (Countess Iseara). Consulted by the discard-play path
+    -- alongside the printed keyword. Cleared at end of turn.
   , loyaltyWaivers :: Map PlayerKey [(Race, Int)]
     -- ^ "Ignore the loyalty cost of the next [Race] card you play this
     -- turn." (Embassy / Offering supports.) Each entry pairs the waived

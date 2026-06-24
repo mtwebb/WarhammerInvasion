@@ -666,6 +666,7 @@ instance Run Game where
             , capitalShields = mempty
             , defenderCounterstrikeBonus = mempty
             , pendingFreeTactic = mempty
+            , grantedNecromancy = []
             , loyaltyWaivers = mempty
             , tacticDamageContext = Nothing
             , combatDamageUncancellable = False
@@ -1809,6 +1810,8 @@ instance Run Game where
         logIt LogSystem
           "log.resources.gained"
           [("player", playerParam pk), ("amount", tshow amount)]
+    GrantNecromancyToDiscardCard cardKey ->
+      modify \gx -> gx {grantedNecromancy = cardKey : gx.grantedNecromancy}
     GrantLoyaltyWaiver pk race -> do
       g <- get
       let snapshot = racePlaysThisTurn g pk race
@@ -2708,8 +2711,9 @@ instance Run Game where
     PlayUnitFromDiscard pk cardKey zone -> do
       g <- get
       let player = lookupPlayer pk g
+          hasNecromancy cd = Necromancy `elem` cd.keywords || cardKey `elem` g.grantedNecromancy
       whenJust (takeUnitFromDiscard cardKey player) \(cardDef, playerWithoutCard) ->
-        when (Necromancy `elem` cardDef.keywords && canPlayNonTactic pk g && canPlayCard pk cardDef g) $
+        when (hasNecromancy cardDef && canPlayNonTactic pk g && canPlayCard pk cardDef g) $
           case cardDef.cost of
             Variable -> pure ()
             Fixed _ -> do
@@ -2734,6 +2738,50 @@ instance Run Game where
                   , ("cost", tshow n)
                   ]
                 send $ UnitEnteredPlay pk cardKey
+    MortisReanimate pk cardKey zone -> do
+      g <- get
+      let opp = pk.next
+          oppPlayer = lookupPlayer opp g
+          player = lookupPlayer pk g
+      when (controlsMortisEngine pk g && canPlayNonTactic pk g) $
+        whenJust (takeUnitFromDiscard cardKey oppPlayer) \(cardDef, oppWithoutCard) ->
+          when (canEnterZone g pk cardDef zone) $ case cardDef.cost of
+            Variable -> pure ()
+            Fixed printed -> do
+              -- "ignoring loyalty costs": printed (+ adjustments) only.
+              let n = max 0 (printed + printedCostAdjustment g pk cardDef)
+              when (player.resources >= Resources n) do
+                recordEvent \h -> h
+                  { playedBy =
+                      Map.insertWith (<>) pk [cardCodeFilter cardDef] h.playedBy
+                  }
+                let paid = player {resources = player.resources - Resources n}
+                    unit = freshUnit cardKey pk zone cardDef
+                modify \gx ->
+                  let gx' = setPlayer opp oppWithoutCard (setPlayer pk paid gx)
+                      gx'' = gx' {units = unit : gx'.units}
+                   in gx''
+                        { pendingEndOfTurn =
+                            PEReturnUnitToDeckBottom cardKey : gx''.pendingEndOfTurn
+                        }
+                logIt LogPlayerAction "log.unit.necromancy"
+                  [("player", playerParam pk), ("card", T.pack cardDef.title), ("cost", tshow n)]
+                send $ UnitEnteredPlay pk cardKey
+    ReanimateUnitFromDiscard pk cardKey zone -> do
+      g <- get
+      player <- getPlayerS pk
+      whenJust (takeUnitFromDiscard cardKey player) \(cardDef, playerWithoutCard) ->
+        when (canEnterZone g pk cardDef zone) do
+          let unit = freshUnit cardKey pk zone cardDef
+          modify \gx ->
+            let gx' = (setPlayer pk playerWithoutCard gx) {units = unit : gx.units}
+             in gx'
+                  { pendingEndOfTurn =
+                      PEReturnUnitToDeckBottom cardKey : gx'.pendingEndOfTurn
+                  }
+          logIt LogPlayerAction "log.unit.necromancy"
+            [("player", playerParam pk), ("card", T.pack cardDef.title), ("cost", "0")]
+          send $ UnitEnteredPlay pk cardKey
     PutUnitIntoPlayFromDeck pk cardKey zone -> do
       g <- get
       player <- getPlayerS pk
@@ -3144,6 +3192,7 @@ newGame deck1 deck2 opts = do
       , capitalShields = mempty
       , defenderCounterstrikeBonus = mempty
       , pendingFreeTactic = mempty
+      , grantedNecromancy = []
       , loyaltyWaivers = mempty
       , tacticDamageContext = Nothing
       , combatDamageUncancellable = False
@@ -4955,7 +5004,9 @@ recomputeUnitStats g = g {units = map update g.units}
     -- Witch Hag's Curse: blanked-ness is derived from attachments
     -- up-front so that within this pass every cross-unit read agrees
     -- on who is blanked.
-    isBlankedNow u = any (.cardDef.extras.blanksHost) u.attachments
+    isBlankedNow u =
+      any (.cardDef.extras.blanksHost) u.attachments
+        || hasModifier g.modifiers u.key Blanked
     extrasOf u = if isBlankedNow u then defaultExtras @'Unit else u.cardDef.extras
     update u0 =
       let u = (u0 {blanked = isBlankedNow u0}) :: UnitDetails
@@ -5089,6 +5140,16 @@ replaceUnit = replaceById
 
 replaceSupport :: SupportDetails -> [SupportDetails] -> [SupportDetails]
 replaceSupport = replaceById
+
+-- | Card code of Mortis Engine; its discard-play ability is wired into
+-- the engine and gated on controlling a copy.
+mortisEngineCode :: CardCode
+mortisEngineCode = "hidden-kingdoms-033"
+
+-- | Does @pk@ control a Mortis Engine in play?
+controlsMortisEngine :: PlayerKey -> Game -> Bool
+controlsMortisEngine pk g =
+  any (\s -> s.controller == pk && s.cardDef.code == mortisEngineCode) g.supports
 
 -- | Write back a support whether it's free-standing (in 'g.supports') or
 -- attached (inside some unit's 'attachments'), matched by key.

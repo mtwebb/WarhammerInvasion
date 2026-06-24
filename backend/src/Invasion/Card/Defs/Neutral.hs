@@ -1647,3 +1647,118 @@ cacklingHexwrath = unitCard "hidden-kingdoms-032" "Cackling Hexwrath" do
     \play, discard the top 2 cards of your deck."
   onEnterPlay \_owner self -> millFromDeck self.controller 2
   onSelfDestroyed \_owner self -> millFromDeck self.controller 2
+
+lordOfTheDead :: CardDef Unit
+lordOfTheDead = unitCard "hidden-kingdoms-030" "Lord of the Dead" do
+  cost 4
+  loyalty 0
+  power 2
+  hitPoints 2
+  traits [Undead, Vampire]
+  destructionOnly
+  body
+    "Destruction only. Action: When this unit enters play, use the Necromancy \
+    \ability on a card in your discard pile without paying its cost."
+  onEnterPlay \_owner self -> do
+    let pk = self.controller
+    me <- playerOf pk <$> getGame
+    let units = [c | c <- me.discard, isJust (asUnit c.def)]
+    chooseFromCards pk 0 1 units
+      "Choose a unit in your discard pile to reanimate." \chosen ->
+        for_ chosen \c ->
+          withTarget pk MyAnyZone \z -> reanimateFromDiscard pk c.key z
+
+swarmOfBats :: CardDef Unit
+swarmOfBats = unitCard "legends-052" "Swarm of Bats" do
+  cost 2
+  loyalty 0
+  power 1
+  hitPoints 1
+  traits [Undead, Creature]
+  destructionOnly
+  necromancy
+  body
+    "Destruction only. Necromancy. Action: When this unit attacks, discard \
+    \the top four cards of your deck. This unit gains power equal to the \
+    \number of units discarded this way until the end of the turn."
+  onMyAttackDeclared \_owner self _z _atk -> do
+    let pk = self.controller
+    searchTopOfDeck pk 4 \result -> do
+      let n = length [c | c <- result.cards, isJust (asUnit c.def)]
+      millFromDeck pk 4
+      when (n > 0) $ until EndOfTurn $ buffPower self.key n
+
+drownedZombies :: CardDef Unit
+drownedZombies = unitCard "march-of-the-damned-045" "Drowned Zombies" do
+  cost 3
+  loyalty 0
+  power 1
+  hitPoints 2
+  traits [Undead, Warrior]
+  destructionOnly
+  necromancy
+  body
+    "Destruction only. Necromancy. Action: When this unit enters play, target \
+    \development becomes a unit with 2 hit points and {power} until the end of \
+    \the turn. It also counts as a development."
+  onEnterPlay \_owner self ->
+    withTarget self.controller AnyDevelopmentZone \(owner, zk) ->
+      push (AnimateDevelopment owner zk 1 2)
+
+countessIseara :: CardDef Unit
+countessIseara = unitCard "march-of-the-damned-049" "Countess Iseara" do
+  hero
+  cost 6
+  loyalty 0
+  power 3
+  hitPoints 4
+  traits [Undead, Vampire]
+  destructionOnly
+  body
+    "Destruction only. Limit one Hero per zone. Action: Spend 1 resource and \
+    \choose a target unit in your discard pile. That unit gains Necromancy \
+    \until the end of the turn."
+  action "Raise the dead" 1 \usage -> do
+    let pk = usage.user
+    me <- playerOf pk <$> getGame
+    let units = [c | c <- me.discard, isJust (asUnit c.def)]
+    chooseFromCards pk 0 1 units
+      "Choose a unit in your discard pile to grant Necromancy." \chosen ->
+        for_ chosen \c -> grantNecromancy c.key
+
+zombieDragon :: CardDef Unit
+zombieDragon = unitCard "karaz-a-karak-076" "Zombie Dragon" do
+  cost 6
+  loyalty 0
+  power 3
+  hitPoints 3
+  traits [Undead, Dragon]
+  destructionOnly
+  necromancy
+  feared 1
+  body
+    "Destruction only. Necromancy. Feared 1. Action: When this unit enters \
+    \play, all Undead units gain {power} until the end of the turn."
+  onEnterPlay \_owner self -> do
+    g <- getGame
+    for_ [u.key | u <- g.units, hasTrait Undead u] \k ->
+      until EndOfTurn $ buffPower k 1
+  -- Feared 1: while attacking, blank one target unit's text box.
+  onMyAttackDeclared \_owner self _z _atk ->
+    withTarget self.controller AnyUnit \k ->
+      until EndOfTurn $ blankUnit k
+
+-- Mortis Engine has no per-card effect body: the "play units from any
+-- opponent's discard pile as if they had Necromancy" ability is wired
+-- into the discard-play path in the engine, gated on controlling a copy
+-- of this support (looked up by its card code).
+mortisEngine :: CardDef Support
+mortisEngine = supportCard "hidden-kingdoms-033" "Mortis Engine" do
+  cost 4
+  loyalty 0
+  power 2
+  traits [Undead, WarMachine]
+  destructionOnly
+  body
+    "Undead only. You may play units from any opponent's discard pile as if \
+    \they had Necromancy and were in your discard pile, ignoring loyalty costs."

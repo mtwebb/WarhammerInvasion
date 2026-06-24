@@ -23,6 +23,10 @@ data ModifierDetails
     -- ^ Excludes the unit from the legal defender pool.
   | CannotBeCorrupted
     -- ^ The unit ignores 'CorruptUnit' messages (Blessing of Isha).
+  | Blanked
+    -- ^ The unit's printed text box is treated as blank (except Traits)
+    -- while this modifier holds (Feared X). Folds into the same
+    -- 'blanked' flag the support-side 'blanksHost' drives.
   | RedirectedThisTurn
     -- ^ A marker that some once-per-turn redirect has fired for
     -- this unit (Warrior Priests). Cleared at end of turn via

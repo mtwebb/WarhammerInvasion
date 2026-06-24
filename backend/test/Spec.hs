@@ -917,6 +917,116 @@ main = do
         (not (null (getPlN pkN gNend).deck) && (last (getPlN pkN gNend).deck).key == nk)
     _ -> putStrLn "  FAIL necromancy deck dealt no hand" >> exitFailure
 
+  -- Granted Necromancy (Countess Iseara): a non-Necromancy unit can't be
+  -- played from discard until it's granted Necromancy for the turn.
+  gGN1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkGN = gGN1.currentPlayer
+      getPlG pk g = case pk of Player1 -> g.player1; Player2 -> g.player2
+      setPlG pk p g = case pk of Player1 -> g {player1 = p}; Player2 -> g {player2 = p}
+  gGN2 <- applyMessages gGN1
+    [PassPriority pkGN, PassPriority pkGN.next, PassPriority pkGN, PassPriority pkGN.next]
+  case firstHandKeys 1 gGN2 of
+    [gk] -> do
+      let p0 = getPlG pkGN gGN2
+          moved = [c | c <- p0.hand, c.key == gk]
+          p1 = p0
+            { hand = [c | c <- p0.hand, c.key /= gk]
+            , discard = moved <> p0.discard
+            , resources = Resources 10
+            }
+          gGN3 = setPlG pkGN p1 gGN2
+      gGN4 <- applyMessage gGN3 (PlayUnitFromDiscard pkGN gk BattlefieldZone)
+      check "granted necromancy: a plain unit can't be played from discard"
+        (not (any ((== gk) . (.key)) gGN4.units))
+      gGN5 <- applyMessages gGN3
+        [GrantNecromancyToDiscardCard gk, PlayUnitFromDiscard pkGN gk BattlefieldZone]
+      check "granted necromancy: after the grant it plays from discard"
+        (any ((== gk) . (.key)) gGN5.units)
+    _ -> putStrLn "  FAIL granted-necromancy deck dealt no hand" >> exitFailure
+
+  -- Feared / Blanked modifier: a unit carrying the Blanked modifier is
+  -- treated as text-blanked (the flag the engine derives each recompute).
+  gBL1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkBL = gBL1.currentPlayer
+  case firstHandKeys 1 gBL1 of
+    [bk] -> do
+      gBL2 <- applyMessages gBL1
+        [ PutUnitIntoPlay pkBL bk BattlefieldZone
+        , InstallModifier (UnitRef bk) (Modifier Blanked EndOfTurn)
+        ]
+      check "blanked: the modifier marks the unit text-blanked"
+        (any (\u -> u.key == bk && u.blanked) gBL2.units)
+    _ -> putStrLn "  FAIL blanked deck dealt no hand" >> exitFailure
+
+  -- Mortis Engine: play a unit from the opponent's discard pile under
+  -- your control while you control a Mortis Engine.
+  gME1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkME = gME1.currentPlayer
+      oppME = pkME.next
+  gME2 <- applyMessages gME1
+    [PassPriority pkME, PassPriority pkME.next, PassPriority pkME, PassPriority pkME.next]
+  case (firstHandKeys 1 gME2, Map.lookup "hidden-kingdoms-033" allCards) of
+    ([meSupKey], Just (SupportCardDef meDef)) ->
+      case (getPlG oppME gME2).hand of
+        (oppCard : _) -> do
+          let oppUnitKey = oppCard.key
+              oppP = getPlG oppME gME2
+              oppP' = oppP
+                { hand = [c | c <- oppP.hand, c.key /= oppUnitKey]
+                , discard = oppCard : oppP.discard
+                }
+              pkP = (getPlG pkME gME2) {resources = Resources 10}
+              gME3 = setPlG oppME oppP' (setPlG pkME pkP gME2)
+              gME4 = gME3
+                {supports = freshSupport meSupKey pkME KingdomZone Nothing meDef : gME3.supports}
+          gME5 <- applyMessage gME4 (MortisReanimate pkME oppUnitKey BattlefieldZone)
+          check "mortis engine: opponent's discard unit enters play under your control"
+            (any (\u -> u.key == oppUnitKey && u.controller == pkME) gME5.units)
+          check "mortis engine: it left the opponent's discard pile"
+            (not (any ((== oppUnitKey) . (.key)) (getPlG oppME gME5).discard))
+        _ -> putStrLn "  skip mortis-engine (opponent hand empty)"
+    _ -> putStrLn "  FAIL mortis-engine setup (hand too small or def missing)" >> exitFailure
+
+  -- Reanimate from discard (Lord of the Dead): put a unit from the
+  -- discard pile into play for free; it returns to the deck bottom at
+  -- end of turn, like Necromancy.
+  gLD1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkLD = gLD1.currentPlayer
+      getPlL pk g = case pk of Player1 -> g.player1; Player2 -> g.player2
+      setPlL pk p g = case pk of Player1 -> g {player1 = p}; Player2 -> g {player2 = p}
+  case firstHandKeys 1 gLD1 of
+    [rk] -> do
+      let p0 = getPlL pkLD gLD1
+          moved = [c | c <- p0.hand, c.key == rk]
+          p1 = p0 {hand = [c | c <- p0.hand, c.key /= rk], discard = moved <> p0.discard}
+          gLD2 = setPlL pkLD p1 gLD1
+      gLD3 <- applyMessage gLD2 (ReanimateUnitFromDiscard pkLD rk BattlefieldZone)
+      check "reanimate: unit entered play from the discard pile for free"
+        (any ((== rk) . (.key)) gLD3.units)
+      gLDend <- applyMessages gLD3 (concat (replicate 12 [PassPriority pkLD, PassPriority pkLD.next]))
+      check "reanimate: returned to the deck bottom at end of turn"
+        (not (any ((== rk) . (.key)) gLDend.units)
+          && not (null (getPlL pkLD gLDend).deck)
+          && (last (getPlL pkLD gLDend).deck).key == rk)
+    _ -> putStrLn "  FAIL reanimate deck dealt no hand" >> exitFailure
+
+  -- Swarm of Bats: on attacking, mills the top 4 of its own deck and
+  -- gains power equal to the units discarded (a mono-deck mills 4 units).
+  gSB1 <- (`applyMessage` BeginGame) =<< mkMonoGame "legends-052" Orc
+  let pkSB = gSB1.currentPlayer
+      deckLenSB g = length (case pkSB of Player1 -> g.player1; Player2 -> g.player2).deck
+  case firstHandKeys 1 gSB1 of
+    [sbK] -> do
+      gSB2 <- applyMessage gSB1 (PutUnitIntoPlay pkSB sbK BattlefieldZone)
+      let deck0 = deckLenSB gSB2
+      gSB3 <- applyMessagesWithAnswers gSB2 [PickNone]
+        [BeginCombat pkSB BattlefieldZone [sbK]]
+      check "swarm of bats: milled the top 4 of its deck on attack"
+        (deckLenSB gSB3 == deck0 - 4)
+      check "swarm of bats: gained power for the units discarded"
+        (any (\u -> u.key == sbK && u.effectivePower == 5) gSB3.units)
+    _ -> putStrLn "  FAIL swarm-of-bats deck dealt no hand" >> exitFailure
+
   -- Loyalty waiver (Embassy / Offering): a granted waiver zeroes the
   -- loyalty surcharge of the next matching-race card, and only that race.
   gLW1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-026" Empire

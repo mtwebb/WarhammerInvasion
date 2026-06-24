@@ -127,6 +127,13 @@ scout = keyword Scout
 necromancy :: CardBuilder Unit ()
 necromancy = keyword Necromancy
 
+-- | "Feared X (while this unit is attacking, blank the text box of X
+-- target units except for Traits)." The blanking itself is wired per
+-- card via an attack-declared trigger; this records the keyword for
+-- display and future generic handling.
+feared :: Int -> CardBuilder Unit ()
+feared n = keyword (Feared n)
+
 -- | Raider X keyword: after combat damage, the attacking player gains
 -- X resources for this unit if it survived the combat it attacked in.
 -- Stacks across multiple instances. Resolved centrally by the combat
