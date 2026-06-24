@@ -1547,3 +1547,40 @@ ghostlyApparition = tacticCard "portent-of-doom-097" "Ghostly Apparition" do
       case findUnit k g of
         Just u | u.attacking || u.defending -> cancelDamageOnUnit k 999
         _ -> pure ()
+
+-- Hidden Kingdoms — minor-faction Neutral cards -------------------------
+
+highbornChampion :: CardDef Unit
+highbornChampion = unitCard "hidden-kingdoms-015" "Highborn Champion" do
+  cost 4
+  loyalty 0
+  power 0
+  hitPoints 3
+  traits [WoodElf, Elite]
+  orderOnly
+  body "Order only. This unit gains {power} for each development in this zone."
+  selfPower \g u -> devsInZone g u
+
+ratSwarm :: CardDef Unit
+ratSwarm = unitCard "hidden-kingdoms-021" "Rat Swarm" do
+  cost 0
+  loyalty 0
+  power 0
+  hitPoints 1
+  traits [Skaven, Creature]
+  destructionOnly
+  body "Skaven only. You may have up to 6 copies of this unit in your deck."
+
+darkAcolyte :: CardDef Unit
+darkAcolyte = unitCard "hidden-kingdoms-031" "Dark Acolyte" do
+  cost 3
+  loyalty 0
+  power 1
+  hitPoints 3
+  traits [Undead, Vampire]
+  destructionOnly
+  body "Destruction only. This unit gains the power of the topmost unit in your discard pile."
+  selfPower \g u ->
+    case [cd | c <- (playerOf u.controller g).discard, Just cd <- [asUnit c.def]] of
+      (cd : _) -> cd.power
+      [] -> 0

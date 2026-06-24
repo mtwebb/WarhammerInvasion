@@ -1110,6 +1110,39 @@ main = do
         (not (isCorrupt gEY3))
     _ -> putStrLn "  FAIL eye-of-sheerian setup (hand too small or def missing)" >> exitFailure
 
+  -- Highborn Champion (Hidden Kingdoms): gains +power per development in
+  -- its zone.
+  gHC1 <- (`applyMessage` BeginGame) =<< mkMonoGame "hidden-kingdoms-015" HighElf
+  let pkHC = gHC1.currentPlayer
+  case firstHandKeys 1 gHC1 of
+    [hcK] -> do
+      gHC2 <- applyMessages gHC1
+        [ PutUnitIntoPlay pkHC hcK KingdomZone
+        , AddDevelopment pkHC KingdomZone
+        , AddDevelopment pkHC KingdomZone
+        ]
+      check "highborn champion: power scales with developments in its zone"
+        (any (\u -> u.key == hcK && u.effectivePower == 2) gHC2.units)
+    _ -> putStrLn "  FAIL highborn-champion deck dealt no hand" >> exitFailure
+
+  -- Dark Acolyte (Hidden Kingdoms): gains the power of the topmost unit in
+  -- its controller's discard pile (a Dark Acolyte, printed power 1, so the
+  -- in-play copy reads base 1 + 1 = 2).
+  gDA1 <- (`applyMessage` BeginGame) =<< mkMonoGame "hidden-kingdoms-031" Orc
+  let pkDA = gDA1.currentPlayer
+      getPlD pk g = case pk of Player1 -> g.player1; Player2 -> g.player2
+      setPlD pk p g = case pk of Player1 -> g {player1 = p}; Player2 -> g {player2 = p}
+  case firstHandKeys 2 gDA1 of
+    [daK, seedK] -> do
+      let p0 = getPlD pkDA gDA1
+          seedCard = [c | c <- p0.hand, c.key == seedK]
+          p1 = p0 {hand = [c | c <- p0.hand, c.key /= seedK], discard = seedCard <> p0.discard}
+          gDA1b = setPlD pkDA p1 gDA1
+      gDA2 <- applyMessage gDA1b (PutUnitIntoPlay pkDA daK BattlefieldZone)
+      check "dark acolyte: power includes the topmost discard unit's power"
+        (any (\u -> u.key == daK && u.effectivePower == 2) gDA2.units)
+    _ -> putStrLn "  FAIL dark-acolyte deck dealt too few cards" >> exitFailure
+
   -- Wire redaction: hidden information must not reach the wrong
   -- viewer. Player1's view keeps their own hand but sees only
   -- key-stubs of Player2's hand; deck contents are hidden from
