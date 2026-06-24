@@ -460,6 +460,26 @@ globalCostAdjust
   -> CardBuilder Support ()
 globalCostAdjust f = modifySupportExtras \e -> e {globalCostAdjustment = f}
 
+-- | "Lower the cost of the first card matching @match@ that the support's
+-- controller plays each turn by @amount@." The reduction applies only
+-- while the controller has not yet played a matching card this turn
+-- (tracked via the per-turn 'cardsPlayedThisTurn' history), so it hits
+-- exactly the first one. The "first … you play each turn" cost cycle
+-- (Sun Temple of Chotec, Master Moulder).
+reducesFirstPerTurn
+  :: (CardCodeFilter -> Bool)
+  -> (Game -> PlayerKey -> Int)
+  -> CardBuilder Support ()
+reducesFirstPerTurn match amount = modifySupportExtras \e ->
+  e
+    { globalCostAdjustment = \g s pk filt ->
+        if pk == s.controller
+          && match filt
+          && not (any match (cardsPlayedThisTurn g pk))
+          then negate (amount g pk)
+          else 0
+    }
+
 -- | Cost-of-play adjustment this in-play unit imposes on other cards
 -- being played (Nuln Tinkerers: -1 on the controller's first support
 -- of the turn). Mirrors 'globalCostAdjust' on the support side.

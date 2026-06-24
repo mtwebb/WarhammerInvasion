@@ -1165,6 +1165,14 @@ withHistory
   :: HasGame m => Scope -> (History -> m ()) -> m ()
 withHistory s k = historyOf s >>= k
 
+-- | The 'CardCodeFilter' of every card a player has played this turn, in
+-- play order. Read purely (no monad) so cost-adjustment callbacks can
+-- ask "have I played a matching card yet this turn?" — the basis for the
+-- "lower the cost of the first … you play each turn" cards.
+cardsPlayedThisTurn :: Game -> PlayerKey -> [CardCodeFilter]
+cardsPlayedThisTurn g pk =
+  Map.findWithDefault [] pk (Map.findWithDefault mempty ThisTurn g.history).playedBy
+
 -- | True iff any section of this player's capital is currently
 -- burning. The 'Player'-shaped counterpart to 'controllerBurning'.
 capitalBurning :: Player -> Bool

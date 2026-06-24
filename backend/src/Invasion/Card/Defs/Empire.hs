@@ -1467,3 +1467,23 @@ imperialEmbassy = supportCard "hidden-kingdoms-043" "Imperial Embassy" do
     \of the next [Empire] card you play this turn."
   actionWith "Tribute" 0 [SacrificeSelf] \usage ->
     grantLoyaltyWaiver usage.user Empire
+
+stalemate :: CardDef Tactic
+stalemate = tacticCard "hidden-kingdoms-042" "Stalemate" do
+  race Empire
+  cost 0
+  loyalty 2
+  body "Action: Return target attacking unit and target defending unit with the same cost to their owners' hand."
+  playableWhen $ hasTarget attackingUnit
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk attackingUnit \a -> do
+      g <- getGame
+      whenJust (findUnit a g) \ua -> do
+        let ac = someCardCost (UnitCardDef ua.cardDef)
+        withTarget
+          pk
+          (UnitMatching \_ _ u -> u.defending && someCardCost (UnitCardDef u.cardDef) == ac)
+          \d -> do
+            returnUnitToHand a
+            returnUnitToHand d

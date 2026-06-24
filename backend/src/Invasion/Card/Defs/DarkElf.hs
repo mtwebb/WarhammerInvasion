@@ -1432,3 +1432,16 @@ bloodOffering = supportCard "hidden-kingdoms-052" "Blood Offering" do
     \[Dark Elf] card you play this turn."
   actionWith "Tribute" 0 [SacrificeSelf] \usage ->
     grantLoyaltyWaiver usage.user DarkElf
+
+bloodlust :: CardDef Tactic
+bloodlust = tacticCard "hidden-kingdoms-051" "Bloodlust" do
+  race DarkElf
+  cost 2
+  loyalty 2
+  body "Play only if you control at least 1 unit. Action: Each player targets a unit. Then, destroy each targeted unit."
+  playableWhen \g pk -> any (\u -> u.controller == pk) g.units
+  -- Approximation: each player picks and their pick is destroyed in turn
+  -- order, rather than all picks being locked in before any destruction.
+  whenResolved \_self ->
+    eachPlayer \chooser ->
+      withTarget chooser AnyUnit destroyUnit
