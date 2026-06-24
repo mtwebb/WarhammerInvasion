@@ -1139,6 +1139,26 @@ mountainBarracks = supportCard "assault-on-ulthuan-044" "Mountain Barracks" do
       then 1
       else 0
 
+lureThemOut :: CardDef Tactic
+lureThemOut = tacticCard "assault-on-ulthuan-045" "Lure Them Out" do
+  race Dwarf
+  cost 1
+  loyalty 2
+  body "Action: Choose two target units, each in a different battlefield. Each target unit counts its power and deals that amount of damage to the other."
+  playableWhen $ hasTarget (unitWhere \u -> u.zone == BattlefieldZone)
+  whenResolved \self ->
+    withTarget self.controller (unitWhere \u -> u.zone == BattlefieldZone) \k1 -> do
+      g <- getGame
+      whenJust (findUnit k1 g) \u1 ->
+        withTarget
+          self.controller
+          (unitWhere \u -> u.zone == BattlefieldZone && u.controller /= u1.controller)
+          \k2 -> do
+            g2 <- getGame
+            whenJust (findUnit k2 g2) \u2 -> do
+              dealDamage k2 u1.effectivePower
+              dealDamage k1 u2.effectivePower
+
 -- March of the Damned --------------------------------------------------
 
 serpentSlayer :: CardDef Unit

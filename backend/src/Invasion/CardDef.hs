@@ -538,6 +538,11 @@ data SupportExtras = SupportExtras
     -- ^ "While attached unit is attacking, double all damage dealt to
     -- the defending opponent's capital." (Basha's Bloodaxe.) Args:
     -- game, this support, the player whose capital is being damaged.
+  , hostCannotAttack :: Bool
+    -- ^ "Attached unit cannot attack." (Word of Pain.) Consulted by
+    -- 'eligibleAttacker' by scanning the would-be attacker's
+    -- attachments, so it is a static, no-upkeep restriction that
+    -- follows the host while the attachment stays in play.
   , blanksHost :: Bool
     -- ^ "Treat attached unit as though its printed text box were
     -- blank (except for Traits)." (Witch Hag's Curse.) The engine
@@ -670,6 +675,7 @@ instance HasDefaultExtras Support where
     , searchDepthBonus = \_ _ _ -> 0
     , tacticDamageBonus = \_ _ _ -> 0
     , capitalDamageDoubler = \_ _ _ -> False
+    , hostCannotAttack = False
     , blanksHost = False
     , hostDestroyRansom = Nothing
     , revertToUnit = Nothing

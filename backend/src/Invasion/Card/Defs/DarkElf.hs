@@ -6,6 +6,7 @@
 -- the Dark Elf range arrives in later sets.
 module Invasion.Card.Defs.DarkElf (module Invasion.Card.Defs.DarkElf) where
 
+import Data.List (nub)
 import Data.Map.Strict qualified as Map
 import Invasion.Capital
 import Invasion.Card.Builder
@@ -1108,6 +1109,44 @@ sackTorAendris = questCard "assault-on-ulthuan-032" "Sack Tor Aendris" do
                 h.combats
             )
             (addQuestToken self.key 1)
+
+wordOfPain :: CardDef Support
+wordOfPain = supportCard "assault-on-ulthuan-034" "Word of Pain" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  power 0
+  traits [Attachment, Hex]
+  body "Attach to a target unit. Attached unit cannot attack."
+  preventsHostAttack
+
+batheInBlood :: CardDef Tactic
+batheInBlood = tacticCard "assault-on-ulthuan-040" "Bathe in Blood" do
+  race DarkElf
+  cost 1
+  loyalty 1
+  body "Action: Choose one target [Dark Elf] unit. Double that unit's power until the end of the turn. At the end of the turn, sacrifice it."
+  playableWhen $ hasTarget (unitWhere \u -> DarkElf `elem` u.cardDef.races)
+  whenResolved \self ->
+    withTarget self.controller (unitWhere \u -> DarkElf `elem` u.cardDef.races) \k -> do
+      g <- getGame
+      whenJust (findUnit k g) \u -> do
+        until EndOfTurn $ buffPower k u.effectivePower
+        queueEoTSacrifice k
+
+invokeKhainesWrath :: CardDef Tactic
+invokeKhainesWrath = tacticCard "assault-on-ulthuan-042" "Invoke Khaine's Wrath" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  trait Spell
+  body "Play at the end of any battlefield phase. Action: Destroy all units that participated in combat this phase."
+  -- Approximation: combat participation is tracked per turn, not per
+  -- phase. In 1v1 there is a single battlefield phase per turn, so the
+  -- distinction does not arise in practice.
+  whenResolved \_self ->
+    withHistory ThisTurn \h ->
+      for_ (nub (concatMap (\r -> r.attackerKeys <> r.defenderKeys) h.combats)) destroyUnit
 
 -- March of the Damned --------------------------------------------------
 

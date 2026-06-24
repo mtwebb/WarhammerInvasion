@@ -916,6 +916,126 @@ giftOfLife = tacticCard "assault-on-ulthuan-020" "Gift of Life" do
     highElfUnitsIn cards =
       [c | c <- cards, Just cd <- [asUnit c.def], HighElf `elem` cd.races]
 
+shadowWarrior :: CardDef Unit
+shadowWarrior = unitCard "assault-on-ulthuan-002" "Shadow Warrior" do
+  race HighElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 1
+  trait Ranger
+  body "Forced: At the beginning of your turn, each opponent must assign 1 damage to any unit in his battlefield."
+  onMyTurnBegin \_owner self ->
+    eachPlayer \pk ->
+      when (pk /= self.controller) $
+        withTarget pk
+          (unitWhere \u -> u.controller == pk && u.zone == BattlefieldZone)
+          \k -> dealDamage k 1
+
+illyriel :: CardDef Unit
+illyriel = unitCard "assault-on-ulthuan-008" "Illyriel" do
+  race HighElf
+  cost 4
+  loyalty 3
+  power 2
+  hitPoints 4
+  traits [Hero, Warrior]
+  hero
+  limitOneHeroPerZone
+  battlefieldOnly
+  body "Limit 1 Hero per zone. Battlefield. Action: At the beginning of your turn, return one target unit to its owner's hand unless its owner pays you 2 resources."
+  battlefield $ onMyTurnBegin \_owner self ->
+    withTarget self.controller AnyUnit \k -> do
+      g <- getGame
+      case findUnit k g of
+        Nothing -> pure ()
+        Just u -> do
+          let owner = u.controller
+              Resources r = (playerOf owner g).resources
+          paid <-
+            if r >= 2
+              then askYesNo owner "Pay Illyriel's controller 2 resources to keep this unit in play?"
+              else pure False
+          if paid
+            then do
+              payResources owner 2
+              gainResources self.controller 2
+            else returnUnitToHand k
+
+dragonPrince :: CardDef Unit
+dragonPrince = unitCard "assault-on-ulthuan-009" "Dragon Prince" do
+  race HighElf
+  cost 4
+  loyalty 2
+  power 1
+  hitPoints 4
+  trait Warrior
+  body "Forced: After Dragon Prince enters play from your hand, each player chooses up to 2 units in his battlefield. All other units in that zone are sacrificed."
+  onEnterPlay \_owner _self -> eachPlayer \pk -> do
+    g <- getGame
+    let zoneUnits =
+          [u.key | u <- g.units, u.controller == pk, u.zone == BattlefieldZone]
+    chooseUpTo pk 2 zoneUnits \kept ->
+      for_ zoneUnits \uk -> when (uk `notElem` kept) $ destroyUnit uk
+
+theGlitteringTower :: CardDef Support
+theGlitteringTower = supportCard "assault-on-ulthuan-013" "The Glittering Tower" do
+  race HighElf
+  cost 2
+  loyalty 1
+  power 1
+  trait Building
+  body "Kingdom. Action: Whenever you heal a unit, deal 1 damage to one target enemy unit or one target section of an opponent's capital."
+  -- Approximation: 'HealUnit' carries no controller, so (like Isha's
+  -- Gaze) this reacts to any heal while the building is in its
+  -- controller's kingdom.
+  onReceive $ Receive \msg _owner self -> case msg of
+    HealUnit _ n
+      | n > 0, self.zone == KingdomZone ->
+          withTarget self.controller (enemyUnit `Or` enemyCapital) \case
+            TargetUnitOption u -> dealDamage u 1
+            TargetZoneOption owner z -> dealZoneDamage owner z 1
+    _ -> pure ()
+
+shrineOfAsuryan :: CardDef Support
+shrineOfAsuryan = supportCard "assault-on-ulthuan-014" "Shrine of Asuryan" do
+  race HighElf
+  cost 2
+  loyalty 1
+  power 1
+  trait Building
+  body "Kingdom. Action: At the beginning of your turn, you may restore one target corrupted unit."
+  kingdom $ onMyTurnBegin \_owner self ->
+    may self.controller "Restore one corrupted unit?" $
+      push (RestoreOneCorruptCard self.controller)
+
+defendTorAendris :: CardDef Quest
+defendTorAendris = questCard "assault-on-ulthuan-011" "Defend Tor Aendris" do
+  race HighElf
+  cost 2
+  loyalty 1
+  body
+    "Quest. Any unit questing here may defend any zone. \
+    \Quest. You may spend resources on this quest to pay for cards and effects. \
+    \Quest. Forced: At the end of any turn in which the questing unit defended, \
+    \place 2 resource tokens on this card."
+  -- Partial: the "spend resources on this quest to pay for cards and
+  -- effects" clause is approximated by 'paysAttachmentCosts' (the
+  -- engine only drains quest tokens for Attachment plays today), the
+  -- same limitation noted on Sack Tor Aendris.
+  questerDefendsAnywhere
+  paysAttachmentCosts
+  onMyTurnEnd \_owner self ->
+    withQuest self.key \q ->
+      whenJust q.questingUnit \uk ->
+        withHistory ThisTurn \h ->
+          when
+            ( any
+                (\rec -> uk `elem` rec.defenderKeys)
+                h.combats
+            )
+            (addQuestToken self.key 2)
+
 -- March of the Damned --------------------------------------------------
 
 seaGuardCaptain :: CardDef Unit
