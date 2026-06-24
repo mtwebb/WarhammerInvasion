@@ -510,6 +510,7 @@ allCards =
       ("the-eclipse-of-hope-095", UnitCardDef toxicHydra),
       ("the-eclipse-of-hope-097", QuestCardDef malekithsRage),
       ("the-eclipse-of-hope-098", UnitCardDef wardancer),
+      ("the-eclipse-of-hope-099", UnitCardDef deadlySalamander),
       -- The Morrslieb cycle — Signs in the Stars (061-080)
       ("signs-in-the-stars-062", SupportCardDef karakAzulForge),
       ("signs-in-the-stars-064", UnitCardDef sneakyGit),
@@ -568,6 +569,7 @@ allCards =
       ("the-iron-rock-045", UnitCardDef rugludsArmouredOrcs),
       ("the-iron-rock-050", TacticCardDef snotlingAmbush),
       ("the-iron-rock-054", UnitCardDef beastmanShaman),
+      ("the-iron-rock-058", UnitCardDef chakax),
       ("the-iron-rock-060", QuestCardDef raidingParties),
       -- The Capital Cycle — Karaz-a-Karak (061-080)
       ("karaz-a-karak-061", UnitCardDef mountainSentry),
@@ -645,6 +647,8 @@ allCards =
       ("legends-040", UnitCardDef monsterOfTheDeep),
       ("legends-042", TacticCardDef bladewind),
       ("legends-043", UnitCardDef terradonRider),
+      ("legends-044", UnitCardDef kroxigor),
+      ("legends-045", TacticCardDef trackThePrey),
       ("legends-046", UnitCardDef stormvermin),
       ("legends-047", SupportCardDef screamingBell),
       ("legends-049", UnitCardDef shadowSentinel),
@@ -718,6 +722,7 @@ allCards =
       ("faith-and-steel-111", UnitCardDef gobboBigBoss),
       -- Hidden Kingdoms (deluxe expansion)
       ("hidden-kingdoms-003", UnitCardDef chameleonStalker),
+      ("hidden-kingdoms-005", UnitCardDef saurusOldblood),
       ("hidden-kingdoms-006", SupportCardDef greatTempleOfTlazcotl),
       ("hidden-kingdoms-009", TacticCardDef ruinationOfCities),
       ("hidden-kingdoms-013", UnitCardDef shroudedWaywatcher),

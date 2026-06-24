@@ -1130,6 +1130,101 @@ numberlessGraves = supportCard "march-of-the-damned-050" "Numberless Graves" do
   onOpponentUnitLeavePlay \_owner self _uk _zone _code ->
     drawFromBottom self.controller
 
+-- Savage cluster (other cycles) — unblocked by the Savage X keyword -----
+
+deadlySalamander :: CardDef Unit
+deadlySalamander = unitCard "the-eclipse-of-hope-099" "Deadly Salamander" do
+  cost 4
+  power 2
+  hitPoints 3
+  traits [Lizardmen, Creature]
+  orderOnly
+  body
+    "Order only. Savage 2 (whenever this unit is dealt damage, it may deal 2 \
+    \damage to target unit in any corresponding zone). Action: When this unit is \
+    \opposed in combat, deal 1 damage to each attacking and defending unit."
+  savage 2
+  onReceive $ Receive \msg _owner self -> case msg of
+    DeclareDefenders _ -> do
+      g <- getGame
+      when (isOpposed g self) $ push (DealDamageToEachUnitInCombat 1)
+    _ -> pure ()
+
+kroxigor :: CardDef Unit
+kroxigor = unitCard "legends-044" "Kroxigor" do
+  cost 6
+  power 3
+  hitPoints 4
+  traits [Lizardmen, Warrior]
+  orderOnly
+  body
+    "Order only. Savage 2. Action: Spend 1 resource and discard a card from your \
+    \hand to cancel the next 1 damage dealt to this unit."
+  savage 2
+  action "Stone hide" 1 \usage -> do
+    let pk = usage.user
+    me <- playerOf pk <$> getGame
+    unless (null me.hand) $
+      chooseFromCards pk 1 1 me.hand "Discard a card to cancel the next damage." \chosen ->
+        unless (null chosen) do
+          push (DiscardCardsFromHand pk (map (.key) chosen))
+          until EndOfTurn $ PendingBuff usage.self.key (DamageShield 1)
+
+trackThePrey :: CardDef Tactic
+trackThePrey = tacticCard "legends-045" "Track the Prey" do
+  traits [Lizardmen]
+  cost 2
+  orderOnly
+  body
+    "Order only. Action: Target unit you control gains Savage X, where X is its \
+    \printed power (whenever this unit is dealt damage, it may deal X damage to \
+    \target unit in any corresponding zone)."
+  playableWhen $ hasTarget ownUnit
+  whenResolved \self ->
+    withTarget self.controller ownUnit \k ->
+      withUnit k \u ->
+        when (u.cardDef.power > 0) $
+          until EndOfTurn $ buffSavage k u.cardDef.power
+
+chakax :: CardDef Unit
+chakax = unitCard "the-iron-rock-058" "Chakax" do
+  hero
+  cost 4
+  power 1
+  hitPoints 3
+  trait Lizardmen
+  orderOnly
+  body
+    "Order only. Limit one Hero per zone. Savage 2. Action: When you play a unit \
+    \with Savage from your hand, deal 1 damage to that unit."
+  savage 2
+  onFriendlyUnitEnterPlay \_owner _self uk ->
+    withUnit uk \u ->
+      when (any isSavageKeyword u.cardDef.keywords) $ dealDamage uk 1
+  where
+    isSavageKeyword = \case
+      Savage _ -> True
+      _ -> False
+
+saurusOldblood :: CardDef Unit
+saurusOldblood = unitCard "hidden-kingdoms-005" "Saurus Oldblood" do
+  cost 4
+  power 2
+  hitPoints 5
+  trait Lizardmen
+  orderOnly
+  body
+    "Order only. Savage 2. Action: When another Lizardmen unit leaves play, deal \
+    \this unit 1 damage."
+  savage 2
+  onReceive $ Receive \msg _owner self -> case msg of
+    UnitLeftPlay du
+      | du.controller == self.controller
+      , du.key /= self.key
+      , Lizardmen `elem` du.cardDef.traits ->
+          dealDamage self.key 1
+    _ -> pure ()
+
 corpseCart :: CardDef Support
 corpseCart = supportCard "march-of-the-damned-051" "Corpse Cart" do
   cost 1
