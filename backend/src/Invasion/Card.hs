@@ -594,6 +594,7 @@ allCards =
       ("karaz-a-karak-064", UnitCardDef runeblades),
       ("karaz-a-karak-070", TacticCardDef leaveNoTrace),
       ("karaz-a-karak-076", UnitCardDef zombieDragon),
+      ("karaz-a-karak-079", TacticCardDef buildingPlans),
       ("karaz-a-karak-080", QuestCardDef buildingForWar),
       -- The Capital Cycle — City of Winter (081-100)
       ("city-of-winter-087", UnitCardDef bannermanOfTheCrag),
@@ -608,9 +609,11 @@ allCards =
       ("the-imperial-throne-108", UnitCardDef wingedRidersOfKislev),
       ("the-imperial-throne-112", TacticCardDef doublingOfTheGuard),
       ("the-imperial-throne-115", SupportCardDef sacrificialPyre),
+      ("the-imperial-throne-118", TacticCardDef aPromiseOfWar),
       ("the-imperial-throne-120", QuestCardDef recruitingForWar),
       -- Bloodquest cycle — Rising Dawn (pack 1)
       ("rising-dawn-001", SupportCardDef dawnstarSword),
+      ("rising-dawn-004", TacticCardDef callingTheCouncil),
       ("rising-dawn-005", UnitCardDef orcBully),
       ("rising-dawn-008", TacticCardDef rageOfTheBear),
       ("rising-dawn-009", UnitCardDef lothernSeaMaster),
@@ -643,8 +646,10 @@ allCards =
       ("shield-of-the-gods-103", UnitCardDef dwarfAdventurer),
       ("shield-of-the-gods-104", SupportCardDef hospitableCave),
       ("shield-of-the-gods-105", UnitCardDef manglerSquigs),
+      ("shield-of-the-gods-106", SupportCardDef creaturePen),
       ("shield-of-the-gods-107", UnitCardDef steelStandard),
       ("shield-of-the-gods-109", UnitCardDef ellyrianElite),
+      ("shield-of-the-gods-112", TacticCardDef necrodomosProphecy),
       ("shield-of-the-gods-120", QuestCardDef guardiansOfTheGods),
       -- Legends (deluxe expansion)
       ("legends-003", UnitCardDef veteranSlayer),

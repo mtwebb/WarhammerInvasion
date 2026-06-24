@@ -643,6 +643,17 @@ searchTopOfDeck pk n body = do
     player <- getPlayer pk
     body SearchResult {cards = take (n + bonus) player.deck}
 
+-- | "Search your deck for a card." Runs the body with a 'SearchResult'
+-- handle exposing the WHOLE deck (the private full-deck look behind
+-- A Promise of War / Necrodomo's Prophecy). Callers are expected to
+-- shuffle afterwards, exactly as the printed cards require.
+searchWholeDeck
+  :: HasGame m
+  => PlayerKey -> (SearchResult -> m ()) -> m ()
+searchWholeDeck pk body = do
+  player <- getPlayer pk
+  body SearchResult {cards = player.deck}
+
 -- | "Reveal the top N cards of your deck, then act on them." Surfaces
 -- the cards to both players (records them in 'Game.lastRevealed' for the
 -- UI) and runs @body@ with the same cards. The cards are NOT removed —

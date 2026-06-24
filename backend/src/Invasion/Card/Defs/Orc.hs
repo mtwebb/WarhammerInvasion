@@ -841,6 +841,24 @@ manglerSquigs = unitCard "shield-of-the-gods-105" "Mangler Squigs" do
             until EndOfTurn $ buffPower self.key u.effectivePower
           else dealDamage self.key 2
 
+creaturePen :: CardDef Support
+creaturePen = supportCard "shield-of-the-gods-106" "Creature Pen" do
+  race Orc
+  cost 2
+  loyalty 1
+  power 1
+  trait Location
+  body "Quest. Action: At the beginning of your turn, search the top 5 cards of your deck for a Creature unit, reveal it, and add it to your hand. Shuffle your deck."
+  quest $ onMyTurnBegin \_owner self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 5 \result -> do
+      let creatures = [c | c <- result.cards, Just cd <- [asUnit c.def], Creature `elem` cd.traits]
+      chooseFromCards pk 0 1 creatures
+        "Choose a Creature unit to reveal and add to your hand." \chosen -> do
+          push (RevealCards pk chosen)
+          push (TakeCardsFromDeckToHand pk (map (.key) chosen))
+      shuffleDeck pk
+
 -- The Capital Cycle ----------------------------------------------------
 
 rugludsArmouredOrcs :: CardDef Unit
