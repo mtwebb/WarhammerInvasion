@@ -723,6 +723,17 @@ willpower = tacticCard "the-inevitable-city-019" "Willpower" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+nimbleSpearman :: CardDef Unit
+nimbleSpearman = unitCard "omens-of-ruin-019" "Nimble Spearman" do
+  cost 2
+  power 1
+  hitPoints 2
+  trait WoodElf
+  orderOnly
+  body "Order only. Action: When this unit enters play, put the top card of your deck into this zone facedown as a development."
+  onEnterPlay \_owner self ->
+    placeTopAsDevelopments self.controller self.zone 1
+
 viciousClanrat :: CardDef Unit
 viciousClanrat = unitCard "the-chaos-moon-040" "Vicious Clanrat" do
   cost 4

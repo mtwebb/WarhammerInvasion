@@ -1272,6 +1272,18 @@ tiranocChariot = unitCard "omens-of-ruin-010" "Tiranoc Chariot" do
               putUnitIntoPlay self.controller FromDeck c.key BattlefieldZone
         _ -> pure ()
 
+eatineHarbour :: CardDef Support
+eatineHarbour = supportCard "omens-of-ruin-011" "Eatine Harbour" do
+  race HighElf
+  cost 2
+  loyalty 2
+  power 1
+  trait Building
+  body "Units in a zone with no developments lose all triggered abilities."
+  -- Modelled as full text-box blanking (also suppresses keywords), a
+  -- slight over-reach vs. the printed "triggered abilities" wording.
+  unitsBlankedInEmptyZones
+
 furyOfAenarion :: CardDef Tactic
 furyOfAenarion = tacticCard "fiery-dawn-112" "Fury of Aenarion" do
   race HighElf

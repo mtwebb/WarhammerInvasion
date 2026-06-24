@@ -992,6 +992,16 @@ riverTroll = unitCard "omens-of-ruin-004" "River Troll" do
   body "Forced: At the beginning of your turn, heal all damage from this unit."
   onMyTurnBegin \_owner self -> healUnit self.key 99
 
+boarPen :: CardDef Support
+boarPen = supportCard "omens-of-ruin-005" "Boar Pen" do
+  race Orc
+  cost 2
+  loyalty 2
+  power 1
+  trait Building
+  body "Units in a zone with no developments cannot defend."
+  unitsCannotDefendInEmptyZones
+
 squigHopper :: CardDef Unit
 squigHopper = unitCard "signs-in-the-stars-065" "Squig Hopper" do
   race Orc
