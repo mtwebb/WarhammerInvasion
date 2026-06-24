@@ -563,7 +563,7 @@ flameCannon :: CardDef Support
 flameCannon = supportCard "the-warpstone-chronicles-083" "Flame Cannon" do
   race Dwarf
   cost 0
-  loyalty 1
+  loyalty 2
   traits [Attachment, Weapon]
   body
     "Attach to a target unit. While attached unit is attacking or defending, it gains \

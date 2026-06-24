@@ -394,7 +394,7 @@ chosenOfTzeentch = unitCard "the-skavenblight-threat-010" "Chosen of Tzeentch" d
   race Chaos
   cost 3
   loyalty 2
-  power 2
+  power 1
   hitPoints 2
   trait Sorceror
   body "Quest. Action: Spend 1 resource to deal 1 damage to one target damaged unit (limit once per turn)."
@@ -442,7 +442,7 @@ blueHorrors = unitCard "tooth-and-claw-051" "Blue Horrors" do
   race Chaos
   cost 2
   loyalty 2
-  power 2
+  power 1
   hitPoints 2
   trait Daemon
   body
@@ -491,7 +491,7 @@ greatUncleanOne = unitCard "the-deathmaster-s-dance-073" "Great Unclean One" do
   race Chaos
   cost 6
   loyalty 4
-  power 3
+  power 4
   hitPoints 6
   trait Daemon
   body "Battlefield. Action: Sacrifice a corrupt unit to give this unit {power} until the end of the turn."
@@ -537,7 +537,7 @@ alluringDaemonettes = unitCard "the-warpstone-chronicles-093" "Alluring Daemonet
   race Chaos
   cost 5
   loyalty 1
-  power 1
+  power 2
   hitPoints 3
   trait Daemon
   body "Action: When this unit attacks, target unit must defend if able."
