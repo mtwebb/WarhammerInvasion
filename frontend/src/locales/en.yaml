@@ -909,6 +909,8 @@ game:
       you_lose: "{name} wins."
       reason_decked: Decked out.
       reason_burned: Capital burned.
+    necromancy:
+      label: "Necromancy — play from discard:"
     action:
       heading: Play card
       kingdom: Kingdom

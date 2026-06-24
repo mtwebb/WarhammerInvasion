@@ -292,6 +292,44 @@ const canPlayDevelopment = computed<boolean>(() => {
   return aw.awaiting.contents === mySeatKey.value
 })
 
+// --- Necromancy: play a unit from your own discard pile ---
+// The engine accepts a GamePlayCard whose key is a Necromancy unit in
+// the discard pile (Invasion.Server.WebSocket routes it to
+// PlayUnitFromDiscard). We surface those cards as a small strip while
+// it's our capital window, reusing the normal play popover.
+function hasKeyword(card: EngineCardDef, name: string): boolean {
+  return card.keywords.some((k) =>
+    k && typeof k === 'object'
+      ? (k as { tag?: string }).tag === name
+      : String(k) === name,
+  )
+}
+
+const inMyCapitalWindow = computed<boolean>(() => {
+  const e = props.engine
+  if (!e || mySeatKey.value !== e.currentPlayer) return false
+  const aw = e.actionWindow
+  if (!aw || aw.trigger !== 'CapitalActionWindow') return false
+  return aw.awaiting.contents === mySeatKey.value
+})
+
+const necromancyDiscardCards = computed<EngineCard[]>(() => {
+  if (!inMyCapitalWindow.value) return []
+  const discard = me.value?.discard
+  if (!discard) return []
+  return discard.filter(
+    (c) => c.kind === 'Unit' && hasKeyword(c, 'Necromancy'),
+  )
+})
+
+function onNecromancyClick(card: EngineCard, ev: MouseEvent) {
+  if (!isSeated.value) return
+  const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect()
+  // No handPlayability entry exists for discard cards; the popover opens
+  // straight to the zone picker and the server validates cost/window.
+  openPlay.value = { card, anchor: rect, issue: null }
+}
+
 // For the attachment picker: all in-play units in the game (Branded by
 // Khorne can attach to the opponent), grouped by side.
 const attachmentTargets = computed(() => {
@@ -363,6 +401,22 @@ const popoverStyle = computed<Record<string, string>>(() => {
         @hand-card-click="onHandCardClick"
         @play-to-zone="onPlayToZone"
       />
+    </div>
+
+    <!-- Necromancy: units you may play from your discard pile this
+         window. Reuses the normal play popover (the server routes the
+         play to PlayUnitFromDiscard). -->
+    <div v-if="necromancyDiscardCards.length" class="necromancy-strip">
+      <span class="necromancy-strip-label">{{ t('game.play.necromancy.label') }}</span>
+      <button
+        v-for="c in necromancyDiscardCards"
+        :key="c.key"
+        type="button"
+        class="necromancy-card"
+        @click="onNecromancyClick(c, $event)"
+      >
+        {{ c.title }}
+      </button>
     </div>
 
     <!-- Combat arrows: attackers → attacked zone / legend. -->
@@ -514,6 +568,46 @@ const popoverStyle = computed<Record<string, string>>(() => {
 
 .half.top { align-items: flex-start; padding-bottom: 0.3rem; }
 .half.bottom { align-items: flex-end; padding-top: 0.3rem; }
+
+/* ───────── Necromancy play-from-discard strip ───────── */
+.necromancy-strip {
+  position: absolute;
+  left: 50%;
+  bottom: 0.5rem;
+  transform: translateX(-50%);
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: calc(100% - 1rem);
+  padding: 0.35rem 0.55rem;
+  border-radius: 0.6rem;
+  background: rgba(28, 14, 38, 0.92);
+  border: 1px solid rgba(168, 122, 224, 0.55);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+}
+
+.necromancy-strip-label {
+  font-size: 0.78rem;
+  color: #d9c2f2;
+  white-space: nowrap;
+}
+
+.necromancy-card {
+  min-height: 44px;
+  padding: 0.3rem 0.7rem;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(168, 122, 224, 0.7);
+  background: linear-gradient(180deg, #3a2350, #281636);
+  color: #f1e8fb;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.necromancy-card:hover { border-color: #c79df0; background: linear-gradient(180deg, #472a63, #311a44); }
+.necromancy-card:active { transform: translateY(1px); }
 
 /* ───────── game-over overlay ───────── */
 
