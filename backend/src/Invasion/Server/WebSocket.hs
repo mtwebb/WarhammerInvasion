@@ -584,6 +584,10 @@ handleGameIn env slot user = \case
             | isNecromancyDiscardCard pk cardKey g -> case zone of
                 Just z -> postEngineMsg slot user (Engine.PlayUnitFromDiscard pk cardKey z)
                 Nothing -> sendGameError slot user "zone_required"
+            -- Mortis Engine: a unit in the opponent's discard pile.
+            | isMortisReanimatable pk cardKey g -> case zone of
+                Just z -> postEngineMsg slot user (Engine.MortisReanimate pk cardKey z)
+                Nothing -> sendGameError slot user "zone_required"
             | otherwise -> sendGameError slot user "card_not_in_hand"
   GameTriggerAction {source, actionIndex, target, targetZone} ->
     withSeatedPlayer slot user \pk -> do
@@ -692,8 +696,21 @@ isNecromancyDiscardCard pk k g =
         Player1 -> g.player1
         Player2 -> g.player2
    in case find ((== k) . (.key)) player.discard of
-        Just c | Just cd <- asUnit c.def -> CardDef.Necromancy `elem` cd.keywords
+        Just c
+          | Just cd <- asUnit c.def ->
+              CardDef.Necromancy `elem` cd.keywords || k `elem` g.grantedNecromancy
         _ -> False
+
+-- | Is there a unit with this key in the OPPONENT's discard pile while
+-- the player controls a Mortis Engine? Routes a 'GamePlayCard' to the
+-- Mortis Engine reanimate path.
+isMortisReanimatable :: PlayerKey -> UnitKey -> Game -> Bool
+isMortisReanimatable pk k g =
+  Engine.controlsMortisEngine pk g
+    && let opp = case pk of Player1 -> g.player2; Player2 -> g.player1
+        in case find ((== k) . (.key)) opp.discard of
+             Just c -> isJust (asUnit c.def)
+             _ -> False
 
 -- | Choose the engine 'Message' that corresponds to the player's
 -- 'GamePlayCard' request, based on the card's static kind. Returns a

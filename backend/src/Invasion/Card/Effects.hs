@@ -161,6 +161,11 @@ reanimateFromDiscard
   :: HasQueue Message m => PlayerKey -> UnitKey -> ZoneKind -> m ()
 reanimateFromDiscard pk uk z = push (ReanimateUnitFromDiscard pk uk z)
 
+-- | "That unit gains Necromancy until the end of the turn." (Countess
+-- Iseara.) Marks a discard-pile card so the discard-play path accepts it.
+grantNecromancy :: HasQueue Message m => UnitKey -> m ()
+grantNecromancy uk = push (GrantNecromancyToDiscardCard uk)
+
 -- | "Place or remove N resource tokens on this support card."
 adjustSupportTokens :: HasQueue Message m => UnitKey -> Int -> m ()
 adjustSupportTokens k n = push (AdjustSupportTokens k n)
@@ -789,6 +794,11 @@ mustDefend target = PendingBuff target MustDefend
 -- attachments).
 untargetable :: Bool -> UnitKey -> PendingBuff
 untargetable opponentOnly target = PendingBuff target (CannotBeTargeted opponentOnly)
+
+-- | "Blank the text box of this unit (except Traits)." Feared X. Wrap
+-- with 'until EndOfTurn' for the while-attacking duration.
+blankUnit :: UnitKey -> PendingBuff
+blankUnit target = PendingBuff target Blanked
 
 -- | "Target unit cannot attack." Franz's Decree.
 disableAttack :: UnitKey -> PendingBuff

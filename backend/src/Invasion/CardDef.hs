@@ -62,6 +62,10 @@ data Keyword
     -- it on the bottom of your deck at the end of the turn." (March of
     -- the Damned Undead.) Adds a discard-pile play path that pays the
     -- printed cost and schedules an end-of-turn return to the deck.
+  | Feared Int
+    -- ^ "Feared X (while this unit is attacking, blank the text box of X
+    -- target units except for Traits)." (Zombie Dragon, Spawn of
+    -- Kintearer.) Implemented per-card via an attack-declared trigger.
   deriving stock (Show, Eq)
 
 data Cost = PayResources Number | NoCost

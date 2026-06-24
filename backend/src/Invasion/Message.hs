@@ -361,6 +361,14 @@ data Message where
     -- ^ Necromancy: play a unit from the discard pile, paying its
     -- printed cost (+ loyalty), and schedule its return to the bottom
     -- of the deck at end of turn.
+  MortisReanimate :: PlayerKey -> UnitKey -> ZoneKind -> Message
+    -- ^ Mortis Engine: play a unit from an OPPONENT's discard pile under
+    -- your control, as if it had Necromancy, ignoring loyalty. Pays the
+    -- printed cost (no loyalty surcharge); returns to your deck bottom at
+    -- end of turn. Gated on controlling a Mortis Engine.
+  GrantNecromancyToDiscardCard :: UnitKey -> Message
+    -- ^ Countess Iseara: a chosen unit in a discard pile gains Necromancy
+    -- until the end of the turn, so it can be played from discard.
   ReanimateUnitFromDiscard :: PlayerKey -> UnitKey -> ZoneKind -> Message
     -- ^ "Use the Necromancy ability on a card in your discard pile
     -- without paying its cost." (Lord of the Dead.) Puts the unit into
