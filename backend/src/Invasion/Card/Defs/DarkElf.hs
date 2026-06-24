@@ -115,7 +115,7 @@ malusDarkblade = unitCard "the-skavenblight-threat-012" "Malus Darkblade" do
   hero
   race DarkElf
   cost 5
-  loyalty 4
+  loyalty 3
   power 3
   hitPoints 3
   body
@@ -150,7 +150,7 @@ morathisPegasus :: CardDef Unit
 morathisPegasus = unitCard "the-skavenblight-threat-013" "Morathi's Pegasus" do
   race DarkElf
   cost 3
-  loyalty 4
+  loyalty 2
   power 1
   hitPoints 3
   trait Cavalry
@@ -295,7 +295,7 @@ naggarothSpearmen :: CardDef Unit
 naggarothSpearmen = unitCard "the-warpstone-chronicles-096" "Naggaroth Spearmen" do
   race DarkElf
   cost 3
-  loyalty 3
+  loyalty 2
   power 1
   hitPoints 2
   trait Warrior
@@ -330,7 +330,7 @@ slaverRaid :: CardDef Quest
 slaverRaid = questCard "the-warpstone-chronicles-098" "Slaver Raid" do
   race DarkElf
   cost 1
-  loyalty 3
+  loyalty 2
   trait QuestTrait
   body
     "Quest. Action: Discard 3 resource tokens from this card to put a unit from an \
@@ -351,7 +351,7 @@ slaveDriver :: CardDef Unit
 slaveDriver = unitCard "arcane-fire-116" "Slave Driver" do
   race DarkElf
   cost 2
-  loyalty 4
+  loyalty 2
   power 1
   hitPoints 1
   trait Warrior
