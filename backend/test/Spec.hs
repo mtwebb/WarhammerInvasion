@@ -1071,6 +1071,24 @@ main = do
         (loyaltySurcharge gLW2 pkLW chaosDef == 1)
     _ -> putStrLn "  FAIL loyalty-waiver: core defs missing" >> exitFailure
 
+  -- Sun Temple of Chotec (reducesFirstPerTurn): with the temple in play
+  -- (itself a Pyramid), the first Lizardmen unit costs 1 less while none
+  -- has been played this turn.
+  gST1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-026" Empire
+  let pkST = gST1.currentPlayer
+  case
+    ( Map.lookup "hidden-kingdoms-005" allCards
+    , Map.lookup "hidden-kingdoms-007" allCards
+    , firstHandKeys 1 gST1
+    ) of
+    (Just (UnitCardDef saurusDef), Just (SupportCardDef sunDef), [stk]) -> do
+      check "sun temple: Lizardmen unit at full cost without the temple"
+        (effectiveTotalCost gST1 pkST saurusDef == 4)
+      let gST2 = gST1 {supports = freshSupport stk pkST KingdomZone Nothing sunDef : gST1.supports}
+      check "sun temple: first Lizardmen unit costs 1 less"
+        (effectiveTotalCost gST2 pkST saurusDef == 3)
+    _ -> putStrLn "  FAIL sun-temple: defs missing" >> exitFailure
+
   -- Cannot be targeted: a CannotBeTargeted (opponent-only) modifier
   -- removes a unit from the opponent's target enumeration but not the
   -- controller's.

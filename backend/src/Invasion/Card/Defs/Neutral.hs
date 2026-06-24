@@ -1582,6 +1582,55 @@ giantRats = unitCard "hidden-kingdoms-024" "Giant Rats" do
       , u.cardDef.code == self.cardDef.code
       ]
 
+sunTempleOfChotec :: CardDef Support
+sunTempleOfChotec = supportCard "hidden-kingdoms-007" "Sun Temple of Chotec" do
+  cost 1
+  loyalty 0
+  traits [Lizardmen, Pyramid]
+  orderOnly
+  body "Order only. Lower the cost of the first Lizardmen unit you play each turn into a zone with at least 1 Pyramid card by 1."
+  -- Approximation: the "into a zone with a Pyramid" clause is modelled as
+  -- "while you control a Pyramid card" (the destination zone is not known
+  -- at cost-calculation time).
+  reducesFirstPerTurn
+    (\filt -> filt.cfKind == Unit && Lizardmen `elem` filt.cfTraits)
+    ( \g pk ->
+        if any (\s -> s.controller == pk && Pyramid `elem` s.cardDef.traits) (allInPlaySupports g)
+          then 1
+          else 0
+    )
+
+masterMoulder :: CardDef Unit
+masterMoulder = unitCard "hidden-kingdoms-022" "Master Moulder" do
+  cost 3
+  loyalty 0
+  power 1
+  hitPoints 3
+  trait Skaven
+  destructionOnly
+  body "Destruction only. Lower the cost of the first Skaven unit you play each turn by 1 for each corrupted Skaven unit you control."
+  -- Master Moulder is a unit, so it carries the cost reduction via a
+  -- unit-side adjustment rather than the support builder.
+  unitCostAdjust \g self pk filt ->
+    if pk == self.controller
+      && filt.cfKind == Unit
+      && Skaven `elem` filt.cfTraits
+      && not (any (\f -> f.cfKind == Unit && Skaven `elem` f.cfTraits) (cardsPlayedThisTurn g pk))
+      then negate (length [u | u <- g.units, u.controller == pk, u.corrupted, Skaven `elem` u.cardDef.traits])
+      else 0
+
+blooddrinker :: CardDef Support
+blooddrinker = supportCard "hidden-kingdoms-034" "Blooddrinker" do
+  cost 1
+  loyalty 0
+  traits [Undead, Weapon, Artefact]
+  destructionOnly
+  body "Destruction only. Attach to a target Vampire unit or legend you control. Attached unit or legend gains hit points equal to the number of cards in all opponents' hands."
+  supportHPAura \g self u ->
+    if self.attachedTo == Just u.key
+      then length (playerOf self.controller.next g).hand
+      else 0
+
 -- Ambush riders (Eternal War cycle) ------------------------------------
 
 rogueWarrior :: CardDef Unit
