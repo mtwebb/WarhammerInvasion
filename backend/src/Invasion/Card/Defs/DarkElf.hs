@@ -1289,9 +1289,6 @@ testOfWill = tacticCard "the-ruinous-hordes-097" "Test of Will" do
             "Choose an attacking unit to sacrifice." destroyUnit
           else cancelAttack
 
--- The catalog text for Blood Offering reads "[High Elf]", but it is a
--- Dark Elf card and every other Offering/Embassy waives its own race —
--- a catalog typo. Implemented as Dark Elf.
 bloodOffering :: CardDef Support
 bloodOffering = supportCard "hidden-kingdoms-052" "Blood Offering" do
   race DarkElf
