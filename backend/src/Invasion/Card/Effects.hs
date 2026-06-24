@@ -73,6 +73,11 @@ placeTopAsDevelopments pk zone n = push (PlaceTopAsDevelopments pk zone n)
 turnUnitIntoDevelopment :: HasQueue Message m => UnitKey -> m ()
 turnUnitIntoDevelopment k = push (TurnUnitIntoDevelopment k)
 
+-- | Turn a free-standing support card into a facedown development in its
+-- current zone (Rodrik's Raiders).
+turnSupportIntoDevelopment :: HasQueue Message m => UnitKey -> m ()
+turnSupportIntoDevelopment k = push (TurnSupportIntoDevelopment k)
+
 -- | "Until the end of the phase, @watcher@ draws a card for each damage
 -- dealt to (@owner@, @zone@)." (Get 'Em Ladz!)
 watchZoneForDamageDraw

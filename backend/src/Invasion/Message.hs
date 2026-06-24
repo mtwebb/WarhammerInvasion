@@ -47,6 +47,10 @@ data Message where
     -- current zone (Slumbering Titan). The card stays in play but stops
     -- being a unit; this is a transformation, not a leave-play, so no
     -- leave-play hooks fire.
+  TurnSupportIntoDevelopment :: UnitKey -> Message
+    -- ^ Transform an in-play support into a facedown development in its
+    -- current zone (Rodrik's Raiders). Like 'TurnUnitIntoDevelopment' but
+    -- for support cards; a transformation, not a leave-play.
   WatchZoneForDamageDraw :: PlayerKey -> PlayerKey -> ZoneKind -> Message
     -- ^ "Until the end of the phase, draw a card for each damage dealt
     -- to that zone." (Get 'Em Ladz!) Args: watching player, zone owner,

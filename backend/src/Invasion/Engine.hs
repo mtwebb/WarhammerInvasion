@@ -1732,6 +1732,28 @@ instance Run Game where
         logIt LogSystem
           "log.unit.became_development"
           [("player", playerParam pk), ("zone", zoneParam zone)]
+    TurnSupportIntoDevelopment skey -> do
+      g <- get
+      whenJust (findSupport skey g) \s -> do
+        let pk = s.controller
+            zone = s.zone
+            player = lookupPlayer pk g
+            zoneL = getZone zone player
+            Developments d = zoneL.developments
+            zoneL' = (zoneL {developments = Developments (d + 1)}) :: Zone
+            existing = Map.findWithDefault [] zone player.developmentCards
+            player' =
+              (setZone zone zoneL' player)
+                { developmentCards =
+                    Map.insert
+                      zone
+                      (mkCard skey (SupportCardDef s.cardDef) : existing)
+                      player.developmentCards
+                }
+        modify \gx -> (setPlayer pk player' gx) {supports = removeById skey gx.supports}
+        logIt LogSystem
+          "log.unit.became_development"
+          [("player", playerParam pk), ("zone", zoneParam zone)]
     PlaceTopAsDevelopments pk zone n -> do
       g <- get
       let player = lookupPlayer pk g

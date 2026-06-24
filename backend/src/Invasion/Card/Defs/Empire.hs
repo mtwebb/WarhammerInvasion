@@ -1265,6 +1265,20 @@ jadeAcolyte = unitCard "march-of-the-damned-006" "Jade Acolyte" do
       withTarget usage.user MyDevZone \zk ->
         push (AnimateDevelopment usage.user zk 1 2)
 
+rodriksRaiders :: CardDef Unit
+rodriksRaiders = unitCard "march-of-the-damned-007" "Rodrik's Raiders" do
+  race Empire
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  traits [Warrior, Noble]
+  body
+    "Action: When this unit enters play, turn target support card facedown into \
+    \a development."
+  onEnterPlay \_owner self ->
+    withTarget self.controller AnySupportCard turnSupportIntoDevelopment
+
 warMachineEmplacement :: CardDef Support
 warMachineEmplacement = supportCard "march-of-the-damned-008" "War Machine Emplacement" do
   race Empire

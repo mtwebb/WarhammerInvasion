@@ -1175,6 +1175,36 @@ slavePen = supportCard "march-of-the-damned-029" "Slave Pen" do
       until EndOfTurn (PendingBuff usage.self.key ActionUsedThisTurn)
       adjustSupportTokens usage.self.key 1
 
+aSlaveForEveryOccasion :: CardDef Tactic
+aSlaveForEveryOccasion = tacticCard "march-of-the-damned-030" "A Slave for Every Occasion" do
+  race DarkElf
+  cost 4
+  loyalty 3
+  body
+    "Play during your turn. Action: Put target non-Hero unit in your opponent's \
+    \discard pile into play under your control (you choose which zone the unit \
+    \enters)."
+  playableWhen \g pk ->
+    g.currentPlayer == pk
+      && any
+          (\c -> maybe False (\cd -> Hero `notElem` cd.traits) (asUnit c.def))
+          (playerOf pk.next g).discard
+  whenResolved \self -> do
+    let pk = self.controller
+        opp = pk.next
+    oppPlayer <- playerOf opp <$> getGame
+    let units =
+          [ c
+          | c <- oppPlayer.discard
+          , Just cd <- [asUnit c.def]
+          , Hero `notElem` cd.traits
+          ]
+    chooseFromCards pk 0 1 units
+      "Choose a non-Hero unit from the opponent's discard pile." \chosen ->
+      for_ chosen \c ->
+        withTarget pk MyAnyZone \zk ->
+          push (StealUnitFromDiscard pk opp c.key zk False)
+
 -- Legends (deluxe expansion) -------------------------------------------
 
 thiefOfEssence :: CardDef Unit

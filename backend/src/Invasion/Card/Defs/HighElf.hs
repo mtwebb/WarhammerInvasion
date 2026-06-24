@@ -948,6 +948,28 @@ keeperOfTheFlame = unitCard "march-of-the-damned-012" "Keeper of the Flame" do
     withTarget usage.user (SupportMatching \_pk _g s -> Attachment `elem` s.cardDef.traits)
       destroySupport
 
+citadelOfDusk :: CardDef Support
+citadelOfDusk = supportCard "march-of-the-damned-013" "Citadel of Dusk" do
+  race HighElf
+  cost 2
+  loyalty 2
+  power 1
+  trait Building
+  body
+    "When this card enters play, place 3 resource tokens on it. Action: Remove a \
+    \resource token from this card to have it gain {power} until the end of the \
+    \turn (limit once per turn)."
+  onEnterPlay \_owner self -> adjustSupportTokens self.key 3
+  action "Empower" 0 \usage -> do
+    g <- getGame
+    let used =
+          any (\m -> m.details == ActionUsedThisTurn)
+            (Map.findWithDefault [] (UnitRef usage.self.key) g.modifiers)
+    when (not used && usage.self.tokens > 0) do
+      until EndOfTurn (PendingBuff usage.self.key ActionUsedThisTurn)
+      adjustSupportTokens usage.self.key (-1)
+      until EndOfTurn $ buffPower usage.self.key 1
+
 elvenWarship :: CardDef Support
 elvenWarship = supportCard "march-of-the-damned-014" "Elven Warship" do
   race HighElf
