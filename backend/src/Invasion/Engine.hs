@@ -986,7 +986,9 @@ instance Run Game where
               }
             case ans of
               PickUnits (chosen : _) | chosen `elem` candidates ->
-                send $ DealDamageToUnit chosen savageVal
+                -- Guardians of the Gods doubles Savage damage while a
+                -- Lizardmen unit quests on it.
+                send $ DealDamageToUnit chosen (savageVal * savageDamageMultiplier g)
               _ -> pure ()
     HealUnit ukey amount -> do
       g <- get
@@ -3643,6 +3645,7 @@ combatDamageOf g side u =
             | s <- allInPlaySupports g
             ]
         + modifierCombatBonus
+        + savageDefenseBonus
         - runeOfFortitudePenalty
     )
   where
@@ -3650,10 +3653,21 @@ combatDamageOf g side u =
       Just cs -> side == cs.attackingPlayer && u.key `elem` cs.attackers
       Nothing -> False
 
+    isDefender = case g.combat of
+      Just cs -> u.key `elem` cs.defenders
+      Nothing -> False
+
     -- "+N damage in combat" modifiers (Naggaroth Spearmen).
     modifierCombatBonus =
       let mods = fromMaybe [] (Map.lookup (UnitRef u.key) g.modifiers)
        in sum [n | Modifier (GainCombatDamage n) _ <- mods]
+
+    -- Shield of the Gods: a defending unit deals +X where X is its
+    -- Savage value.
+    savageDefenseBonus =
+      if isDefender && hasModifier g.modifiers u.key SavageDefenseBonus
+        then totalSavage g u
+        else 0
 
     -- Rune of Fortitude (core-013): if BeginCombat couldn't charge
     -- the per-attacker tax, every attacker eats -1 power for this
@@ -3896,7 +3910,9 @@ eligibleDefenderCandidates g defender zone =
   [ u.key
   | u <- g.units
   , u.controller == defender
-  , u.zone == zone || rovingDefender u.key
+  , u.zone == zone
+      || rovingDefender u.key
+      || hasModifier g.modifiers u.key CanDefendAnyZone
   , not u.corrupted
   , not (hasModifier g.modifiers u.key CannotDefend)
   , not (unitExtrasOf u).cannotDefend
@@ -4909,8 +4925,22 @@ totalSavage g u =
   sum [n | Savage n <- unitKeywords u]
     + sum [s.cardDef.extras.attachmentSavageBonus | s <- u.attachments]
     + sum [n | Modifier (GainSavage n) _ <- mods]
+    + sum [s.cardDef.extras.supportAuraSavage g s u | s <- allInPlaySupports g]
   where
     mods = fromMaybe [] (Map.lookup (UnitRef u.key) g.modifiers)
+
+-- | Damage multiplier applied to Savage effects: 2 while any in-play
+-- quest that doubles Savage damage (Guardians of the Gods) has a
+-- Lizardmen unit questing on it, else 1.
+savageDamageMultiplier :: Game -> Int
+savageDamageMultiplier g =
+  if any active g.quests then 2 else 1
+  where
+    active q =
+      q.cardDef.extras.doublesSavageDamage
+        && case q.questingUnit of
+             Just uk -> maybe False (\qu -> Lizardmen `elem` qu.cardDef.traits) (findUnit uk g)
+             Nothing -> False
 
 totalToughness :: Game -> UnitDetails -> Int
 totalToughness g u

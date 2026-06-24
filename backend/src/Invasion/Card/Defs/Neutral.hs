@@ -1225,6 +1225,56 @@ saurusOldblood = unitCard "hidden-kingdoms-005" "Saurus Oldblood" do
           dealDamage self.key 1
     _ -> pure ()
 
+zigguratOfQuetli :: CardDef Support
+zigguratOfQuetli = supportCard "hidden-kingdoms-008" "Ziggurat of Quetli" do
+  cost 2
+  power 1
+  traits [Lizardmen, Pyramid]
+  orderOnly
+  body
+    "Order only. Lizardmen units in a zone with at least 1 Pyramid card gain \
+    \Savage 1."
+  supportSavageAura \g s u ->
+    if Lizardmen `elem` u.cardDef.traits
+      && u.controller == s.controller
+      && zoneHasPyramid g u.controller u.zone
+      then 1
+      else 0
+  where
+    zoneHasPyramid g pk z =
+      any (\x -> x.controller == pk && x.zone == z && Pyramid `elem` x.cardDef.traits) g.units
+        || any
+            (\x -> x.controller == pk && x.zone == z && Pyramid `elem` x.cardDef.traits)
+            (allInPlaySupports g)
+
+shieldOfTheGods :: CardDef Tactic
+shieldOfTheGods = tacticCard "portent-of-doom-098" "Shield of the Gods" do
+  traits [Lizardmen]
+  cost 2
+  orderOnly
+  body
+    "Order only. Action: Until the end of the turn, Lizardmen units you control \
+    \can defend any of your zones and deal +X damage in combat while defending. \
+    \X is equal to the amount of Savage they have."
+  whenResolved \self -> do
+    g <- getGame
+    for_
+      [u | u <- g.units, u.controller == self.controller, Lizardmen `elem` u.cardDef.traits]
+      \u -> do
+        until EndOfTurn $ PendingBuff u.key CanDefendAnyZone
+        until EndOfTurn $ PendingBuff u.key SavageDefenseBonus
+
+guardiansOfTheGods :: CardDef Quest
+guardiansOfTheGods = questCard "shield-of-the-gods-120" "Guardians of the Gods" do
+  traits [Lizardmen]
+  cost 1
+  orderOnly
+  body
+    "Order only. Quest. While a Lizardmen unit is questing on this card, double \
+    \all damage assigned to units by the effects of Savage as it is being \
+    \assigned."
+  doublesSavageDamageQuest
+
 corpseCart :: CardDef Support
 corpseCart = supportCard "march-of-the-damned-051" "Corpse Cart" do
   cost 1
