@@ -882,6 +882,27 @@ brandedByKhorne = supportCard "the-eclipse-of-hope-093" "Branded by Khorne" do
   body "Attach to a target unit. If attached unit is damaged, destroy that unit."
   onHostDamaged \_owner _self hostKey _n -> destroyUnit hostKey
 
+unleashingTheSpell :: CardDef Tactic
+unleashingTheSpell = tacticCard "the-eclipse-of-hope-094" "Unleashing the Spell" do
+  race Chaos
+  cost 3
+  loyalty 3
+  trait Spell
+  body "Action: Put the top card of your deck into play facedown as a development. Then, sacrifice X developments to deal X damage to target unit or capital."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk MyDevZone \zone -> placeTopAsDevelopments pk zone 1
+    me <- playerOf pk <$> getGame
+    -- X is capped at developments physically present now; the freshly
+    -- placed one resolves after this action, so it cannot be sacrificed
+    -- within the same resolution.
+    x <- chooseAmount pk 0 (developmentsControlled me) "Sacrifice how many developments?"
+    when (x > 0) do
+      replicateM_ x $ withTarget pk MyDevZone \zone -> destroyDevelopment pk zone
+      withTarget pk (AnyUnit `Or` AnyCapital) \case
+        TargetUnitOption u -> dealDamage u x
+        TargetZoneOption owner z -> dealZoneDamage owner z x
+
 -- Omens of Ruin --------------------------------------------------------
 
 markOfChaos :: CardDef Support
