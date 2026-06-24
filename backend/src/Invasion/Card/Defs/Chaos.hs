@@ -1643,3 +1643,15 @@ callTheBrayherd = tacticCard "fiery-dawn-114" "Call the Brayherd" do
             putUnitIntoPlay pk FromDeck c.key BattlefieldZone
           _ -> pure ()
       shuffleDeck pk
+
+daemonicOffering :: CardDef Support
+daemonicOffering = supportCard "hidden-kingdoms-049" "Daemonic Offering" do
+  race Chaos
+  cost 0
+  loyalty 0
+  trait Tribute
+  body
+    "Non-Chaos only. Action: Sacrifice this card to ignore the loyalty cost \
+    \of the next [Chaos] card you play this turn."
+  actionWith "Tribute" 0 [SacrificeSelf] \usage ->
+    grantLoyaltyWaiver usage.user Chaos

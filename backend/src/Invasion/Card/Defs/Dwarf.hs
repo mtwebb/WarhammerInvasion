@@ -1367,3 +1367,15 @@ shieldBearer = unitCard "hidden-kingdoms-038" "Shield Bearer" do
   body "Action: Sacrifice 1 development to cancel 1 damage assigned to a unit or legend."
   actionWith "Shield" 0 [SacrificeDevelopment] \usage ->
     withTarget usage.user AnyUnit \k -> cancelDamageOnUnit k 1
+
+dwarfEmbassy :: CardDef Support
+dwarfEmbassy = supportCard "hidden-kingdoms-040" "Dwarf Embassy" do
+  race Dwarf
+  cost 0
+  loyalty 0
+  trait Tribute
+  body
+    "Non-Dwarf only. Action: Sacrifice this card to ignore the loyalty cost \
+    \of the next [Dwarf] card you play this turn."
+  actionWith "Tribute" 0 [SacrificeSelf] \usage ->
+    grantLoyaltyWaiver usage.user Dwarf

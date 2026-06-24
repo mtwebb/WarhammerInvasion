@@ -885,6 +885,24 @@ main = do
         (not (null gSD4.lastRevealed))
     _ -> putStrLn "  FAIL reckless-engineer deck dealt no hand" >> exitFailure
 
+  -- Loyalty waiver (Embassy / Offering): a granted waiver zeroes the
+  -- loyalty surcharge of the next matching-race card, and only that race.
+  gLW1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-026" Empire
+  let pkLW = gLW1.currentPlayer
+      unitDefOf code = case Map.lookup code allCards of
+        Just (UnitCardDef cd) -> Just cd
+        _ -> Nothing
+  case (unitDefOf "core-001", unitDefOf "core-081") of
+    (Just dwarfDef, Just chaosDef) -> do
+      check "loyalty waiver: Empire player pays a Dwarf card's loyalty up front"
+        (loyaltySurcharge gLW1 pkLW dwarfDef == 1)
+      gLW2 <- applyMessage gLW1 (GrantLoyaltyWaiver pkLW Dwarf)
+      check "loyalty waiver: the next Dwarf card's loyalty is waived"
+        (loyaltySurcharge gLW2 pkLW dwarfDef == 0)
+      check "loyalty waiver: a different race is not waived"
+        (loyaltySurcharge gLW2 pkLW chaosDef == 1)
+    _ -> putStrLn "  FAIL loyalty-waiver: core defs missing" >> exitFailure
+
   -- Cannot be targeted: a CannotBeTargeted (opponent-only) modifier
   -- removes a unit from the opponent's target enumeration but not the
   -- controller's.

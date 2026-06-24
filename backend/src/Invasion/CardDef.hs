@@ -171,6 +171,9 @@ data Trait
     -- ^ Arcane artefact trait (Windcatcher Prism, Star Crown Fragments).
   | Portent
     -- ^ Portent artefact trait (Eye of Sheerian).
+  | Tribute
+    -- ^ Tribute support trait — the Hidden Kingdoms Embassy / Offering
+    -- loyalty-waiver supports.
   deriving stock (Show, Eq)
 
 mconcat
