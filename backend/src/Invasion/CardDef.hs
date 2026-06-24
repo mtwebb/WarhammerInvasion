@@ -563,6 +563,19 @@ data SupportExtras = SupportExtras
     -- is participating in combat.) OR-ed into the host's
     -- 'cancelAllDamageWhen' immunity check by the damage handler;
     -- uncancellable damage ignores it, like the unit-side field.
+  , imposesNoPowerOn :: Game -> InPlay Support -> InPlay Unit -> Bool
+    -- ^ "Units in a zone with no developments lose all power." (Hidden
+    -- Grove.) When any in-play support returns 'True' for a unit, that
+    -- unit's effective power is forced to 0 in 'recomputeUnitStats'.
+  , imposesCannotDefendOn :: Game -> InPlay Support -> InPlay Unit -> Bool
+    -- ^ "Units in a zone with no developments cannot defend." (Boar
+    -- Pen.) OR-ed into the 'CannotDefend' check by
+    -- 'eligibleDefenderCandidates'.
+  , imposesBlankOn :: Game -> InPlay Support -> InPlay Unit -> Bool
+    -- ^ "Units in a zone with no developments lose all triggered
+    -- abilities." (Eatine Harbour.) Folded into the engine's
+    -- blank-derivation ('isBlankedNow'), so the unit's text box —
+    -- triggers, keywords, actions — is suppressed while it holds.
   , selfUntargetable :: Game -> InPlay Support -> Maybe Bool
     -- ^ "This card cannot be targeted by card effects." Returns
     -- @Just opponentOnly@ while the immunity is active (@True@ blocks
@@ -680,6 +693,9 @@ instance HasDefaultExtras Support where
     , hostDestroyRansom = Nothing
     , revertToUnit = Nothing
     , grantsHostDamageImmunity = \_ _ _ -> False
+    , imposesNoPowerOn = \_ _ _ -> False
+    , imposesCannotDefendOn = \_ _ _ -> False
+    , imposesBlankOn = \_ _ _ -> False
     , selfUntargetable = \_ _ -> Nothing
     }
 

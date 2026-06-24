@@ -1021,6 +1021,16 @@ steamTank = unitCard "omens-of-ruin-006" "Steam Tank" do
   selfPower \_g self -> self.tokens
   onMyTurnBegin \_owner self -> push (AdjustUnitTokens self.key 1)
 
+hiddenGrove :: CardDef Support
+hiddenGrove = supportCard "omens-of-ruin-007" "Hidden Grove" do
+  race Empire
+  cost 2
+  loyalty 2
+  power 1
+  trait Building
+  body "Units in a zone with no developments lose all power."
+  unitsLoseAllPowerInEmptyZones
+
 gloriousPreceptor :: CardDef Unit
 gloriousPreceptor = unitCard "the-eclipse-of-hope-086" "Glorious Preceptor" do
   race Empire

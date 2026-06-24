@@ -884,6 +884,18 @@ hallOfHeroes = supportCard "cataclysm-006" "Hall of Heroes" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+ancientLongbeards :: CardDef Unit
+ancientLongbeards = unitCard "omens-of-ruin-001" "Ancient Longbeards" do
+  race Dwarf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  traits [Warrior, Elite]
+  body "Action: When this unit attacks or defends, put the top card of your deck into this zone as a development."
+  onMyAttackOrDefend \_owner self ->
+    placeTopAsDevelopments self.controller self.zone 1
+
 bugmansRangers :: CardDef Unit
 bugmansRangers = unitCard "the-chaos-moon-022" "Bugman's Rangers" do
   race Dwarf

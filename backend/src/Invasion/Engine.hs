@@ -3917,6 +3917,7 @@ eligibleDefenderCandidates g defender zone =
   , not u.corrupted
   , not (hasModifier g.modifiers u.key CannotDefend)
   , not (unitExtrasOf u).cannotDefend
+  , not (any (\s -> s.cardDef.extras.imposesCannotDefendOn g s u) (allInPlaySupports g))
   ]
   where
     rovingDefender k =
@@ -5106,6 +5107,7 @@ recomputeUnitStats g = g {units = map update g.units}
     isBlankedNow u =
       any (.cardDef.extras.blanksHost) u.attachments
         || hasModifier g.modifiers u.key Blanked
+        || any (\s -> s.cardDef.extras.imposesBlankOn g s u) inPlaySupports
     extrasOf u = if isBlankedNow u then defaultExtras @'Unit else u.cardDef.extras
     update u0 =
       let u = (u0 {blanked = isBlankedNow u0}) :: UnitDetails
@@ -5116,15 +5118,17 @@ recomputeUnitStats g = g {units = map update g.units}
             , defending = u.key `elem` combatDefenders
             }
             :: UnitDetails
-    computePower u =
-      u.cardDef.power
-        + sum (map (attachmentPowerBonus u) u.attachments)
-        + modifierPowerBonus u
-        + sum [(extrasOf v).unitAuraPower g v u | v <- g.units]
-        + sum [s.cardDef.extras.supportAuraPower g s u | s <- inPlaySupports]
-        + sum [q.cardDef.extras.questUnitAuraPower g q u | q <- g.quests]
-        + (extrasOf u).selfPowerBonus g u
-        + activeBonusPower ((extrasOf u).runtimeEffects g u)
+    computePower u
+      | any (\s -> s.cardDef.extras.imposesNoPowerOn g s u) inPlaySupports = 0
+      | otherwise =
+          u.cardDef.power
+            + sum (map (attachmentPowerBonus u) u.attachments)
+            + modifierPowerBonus u
+            + sum [(extrasOf v).unitAuraPower g v u | v <- g.units]
+            + sum [s.cardDef.extras.supportAuraPower g s u | s <- inPlaySupports]
+            + sum [q.cardDef.extras.questUnitAuraPower g q u | q <- g.quests]
+            + (extrasOf u).selfPowerBonus g u
+            + activeBonusPower ((extrasOf u).runtimeEffects g u)
     computeMaxHP u =
       let printedHP = case u.cardDef.hitPoints of
             Just (Fixed n) -> n

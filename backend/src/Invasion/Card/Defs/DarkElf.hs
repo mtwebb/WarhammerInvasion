@@ -730,6 +730,16 @@ darkElfInfiltrator = unitCard "omens-of-ruin-016" "Dark Elf Infiltrator" do
       payResources opp n
       gainResources pk n
 
+malekithsThrone :: CardDef Support
+malekithsThrone = supportCard "omens-of-ruin-017" "Malekith's Throne" do
+  race DarkElf
+  cost 2
+  loyalty 2
+  power 1
+  trait Building
+  body "Units in a zone with no developments get -1 hit points."
+  unitsHPInEmptyZones (-1)
+
 toxicHydra :: CardDef Unit
 toxicHydra = unitCard "the-eclipse-of-hope-095" "Toxic Hydra" do
   race DarkElf

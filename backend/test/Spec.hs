@@ -1232,6 +1232,24 @@ main = do
         (not (eligibleAttacker gWO3 pkWO.next BattlefieldZone hkWO))
     _ -> putStrLn "  FAIL word-of-pain setup (hand too small or def missing)" >> exitFailure
 
+  -- Hidden Grove (Omens of Ruin "empty zone" cycle): a unit in a zone
+  -- with no developments loses all power; adding a development restores
+  -- it. Exercises the imposesNoPowerOn support hook.
+  gHG1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkHG = gHG1.currentPlayer
+      powerOf g k = listToMaybe [u.effectivePower | u <- g.units, u.key == k]
+  case (firstHandKeys 2 gHG1, Map.lookup "omens-of-ruin-007" allCards) of
+    ([ukHG, skHG], Just (SupportCardDef groveDef)) -> do
+      gHG2 <- applyMessage gHG1 (PutUnitIntoPlay pkHG ukHG KingdomZone)
+      let gHG3 = gHG2 {supports = freshSupport skHG pkHG KingdomZone Nothing groveDef : gHG2.supports}
+      gHG4 <- applyMessage gHG3 (AddDevelopment pkHG KingdomZone)
+      check "hidden grove: power intact while a development is present"
+        (powerOf gHG4 ukHG == Just 2)
+      gHG5 <- applyMessage gHG4 (DestroyDevelopment pkHG KingdomZone)
+      check "hidden grove: power zeroed in a development-less zone"
+        (powerOf gHG5 ukHG == Just 0)
+    _ -> putStrLn "  FAIL hidden-grove setup (hand too small or def missing)" >> exitFailure
+
   -- ArrangeDeckCards (the scry reorder primitive behind Scroll of Asur /
   -- Advanced Engineering): named cards are pulled to the top in the given
   -- order, others to the bottom, the rest keep their relative position.

@@ -484,6 +484,30 @@ supportHPAura
   -> CardBuilder Support ()
 supportHPAura f = modifySupportExtras \e -> e {supportAuraHP = f}
 
+-- | "Units in a zone with no developments lose all power." (Hidden
+-- Grove.) The Omens of Ruin "empty zone" building cycle.
+unitsLoseAllPowerInEmptyZones :: CardBuilder Support ()
+unitsLoseAllPowerInEmptyZones =
+  modifySupportExtras \e -> e {imposesNoPowerOn = \g _s u -> devsInZone g u == 0}
+
+-- | "Units in a zone with no developments cannot defend." (Boar Pen.)
+unitsCannotDefendInEmptyZones :: CardBuilder Support ()
+unitsCannotDefendInEmptyZones =
+  modifySupportExtras \e -> e {imposesCannotDefendOn = \g _s u -> devsInZone g u == 0}
+
+-- | "Units in a zone with no developments lose all triggered abilities."
+-- (Eatine Harbour.) Modelled as full text-box blanking, which also
+-- suppresses keywords — a slight over-reach noted on the card.
+unitsBlankedInEmptyZones :: CardBuilder Support ()
+unitsBlankedInEmptyZones =
+  modifySupportExtras \e -> e {imposesBlankOn = \g _s u -> devsInZone g u == 0}
+
+-- | "Units in a zone with no developments get N hit points." (Malekith's
+-- Throne: -1.)
+unitsHPInEmptyZones :: Int -> CardBuilder Support ()
+unitsHPInEmptyZones n =
+  modifySupportExtras \e -> e {supportAuraHP = \g _s u -> if devsInZone g u == 0 then n else 0}
+
 -- | Mark the printed Rune of Fortitude effect on this support.
 imposesRuneOfFortitudeTax :: CardBuilder Support ()
 imposesRuneOfFortitudeTax =
