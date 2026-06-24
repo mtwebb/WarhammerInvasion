@@ -721,6 +721,47 @@ willpower = tacticCard "the-inevitable-city-019" "Willpower" do
       whenJust (findUnit k g) \u ->
         until EndOfTurn $ buffPower k u.cardDef.loyalty
 
+buildingPlans :: CardDef Tactic
+buildingPlans = tacticCard "karaz-a-karak-079" "Building Plans" do
+  cost 1
+  loyalty 0
+  limited
+  body "Limited. Action: Search the top five cards of your deck for up to two non-Attachment support cards, reveal them, and add them to your hand. Then, shuffle your deck."
+  whenResolved \self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 5 \result -> do
+      let supports =
+            [ c
+            | c <- result.cards
+            , Just cd <- [asSupport c.def]
+            , Attachment `notElem` cd.traits
+            ]
+      chooseFromCards pk 0 2 supports
+        "Choose up to two non-Attachment support cards to add to your hand." \chosen -> do
+          push (RevealCards pk chosen)
+          push (TakeCardsFromDeckToHand pk (map (.key) chosen))
+      shuffleDeck pk
+
+aPromiseOfWar :: CardDef Tactic
+aPromiseOfWar = tacticCard "the-imperial-throne-118" "A Promise of War" do
+  cost 2
+  loyalty 0
+  body "Play only if you control a Capital Center or a legend. Action: Search your deck for a unit, reveal it, and add it to your hand. Then, shuffle your deck."
+  playableWhen \g pk ->
+    isJust (legendOf pk g)
+      || any
+        (\s -> s.controller == pk && CapitalCenter `elem` s.cardDef.traits)
+        (allInPlaySupports g)
+  whenResolved \self -> do
+    let pk = self.controller
+    searchWholeDeck pk \result -> do
+      let units = [c | c <- result.cards, isJust (asUnit c.def)]
+      chooseFromCards pk 0 1 units
+        "Choose a unit to reveal and add to your hand." \chosen -> do
+          push (RevealCards pk chosen)
+          push (TakeCardsFromDeckToHand pk (map (.key) chosen))
+      shuffleDeck pk
+
 -- The Morrslieb cycle ---------------------------------------------------
 
 nimbleSpearman :: CardDef Unit

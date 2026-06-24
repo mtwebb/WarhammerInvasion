@@ -1199,6 +1199,26 @@ strickenWarrior = unitCard "the-accursed-dead-051" "Stricken Warrior" do
         _ -> pure ()
     _ -> pure ()
 
+-- Bloodquest: Shield of the Gods ----------------------------------------
+
+necrodomosProphecy :: CardDef Tactic
+necrodomosProphecy = tacticCard "shield-of-the-gods-112" "Necrodomo's Prophecy" do
+  race Chaos
+  cost 0
+  loyalty 5
+  body "Action: Sacrifice a unit to search your deck for a [Chaos] card, reveal it, and shuffle your deck. Then, put that card on top of your deck."
+  playableWhen \g pk -> any (\u -> u.controller == pk) g.units
+  whenResolved \self -> do
+    let pk = self.controller
+    sacrificeOwnUnit pk "Sacrifice a unit to search your deck for a Chaos card." \_ ->
+      searchWholeDeck pk \result -> do
+        let chaos = [c | c <- result.cards, isRace c.def Chaos]
+        chooseFromCards pk 0 1 chaos
+          "Choose a Chaos card to reveal and put on top of your deck." \chosen -> do
+            push (RevealCards pk chosen)
+            shuffleDeck pk
+            arrangeDeckCards pk (map (.key) chosen) []
+
 -- The Capital Cycle ----------------------------------------------------
 
 savageForsaken :: CardDef Unit

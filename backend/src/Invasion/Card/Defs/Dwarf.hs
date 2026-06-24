@@ -716,6 +716,30 @@ veteranThunderers = unitCard "days-of-blood-005" "Veteran Thunderers" do
   raider 2
   body "Raider 2."
 
+-- Bloodquest: Rising Dawn -----------------------------------------------
+
+callingTheCouncil :: CardDef Tactic
+callingTheCouncil = tacticCard "rising-dawn-004" "Calling the Council" do
+  race Dwarf
+  cost 1
+  loyalty 2
+  limited
+  body "Limited. Action: Search the top 5 cards of your deck for a [Dwarf] unit or legend, reveal it, and add it to your hand. Shuffle your deck."
+  whenResolved \self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 5 \result -> do
+      let matches =
+            [ c
+            | c <- result.cards
+            , isRace c.def Dwarf
+            , isJust (asUnit c.def) || isJust (asLegend c.def)
+            ]
+      chooseFromCards pk 0 1 matches
+        "Choose a Dwarf unit or legend to reveal and add to your hand." \chosen -> do
+          push (RevealCards pk chosen)
+          push (TakeCardsFromDeckToHand pk (map (.key) chosen))
+      shuffleDeck pk
+
 -- Bloodquest: Shield of the Gods ----------------------------------------
 
 dwarfAdventurer :: CardDef Unit
