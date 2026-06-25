@@ -13,10 +13,11 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Map.Strict qualified as Map
 import Invasion.Capital (Capital (..), Damage (..), Developments (..), Zone (..))
 import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUnit, TargetPlayer), allCards, enumerateOptionsPure, someCardCost)
+import Invasion.Card.Builder (attachmentHp, hitPoints, legendCard, legendDefendsAnyZone, legendPower, supportCard)
 import Invasion.CardDef (ActionTarget (..), CardDef (..), Keyword (..))
 import Invasion.Modifier
 import Invasion.Engine
-import Invasion.Entity (QuestDetails (..), SupportDetails (..), UnitDetails (..))
+import Invasion.Entity (LegendDetails (..), QuestDetails (..), SupportDetails (..), UnitDetails (..))
 import Invasion.Game
 import Invasion.Player
 import Invasion.Prelude
@@ -1102,12 +1103,13 @@ main = do
       gAK2 <- applyMessage gAK1 (PutUnitIntoPlay pkAK hkAK BattlefieldZone)
       let withAtts u
             | u.key == hkAK =
-                u
-                  { attachments =
-                      freshSupport csK pkAK u.zone (Just hkAK) duelDef
-                        : freshSupport tgK pkAK u.zone (Just hkAK) horseDef
-                        : u.attachments
-                  }
+                ( u
+                    { attachments =
+                        freshSupport csK pkAK u.zone (Just hkAK) duelDef
+                          : freshSupport tgK pkAK u.zone (Just hkAK) horseDef
+                          : u.attachments
+                    }
+                ) :: UnitDetails
             | otherwise = u
           gAK3 = gAK2 {units = map withAtts gAK2.units}
           host g = listToMaybe [u | u <- g.units, u.key == hkAK]
@@ -1148,7 +1150,7 @@ main = do
         Just (SupportCardDef ddef) -> do
           let withAtt u
                 | u.key == hk =
-                    u {attachments = freshSupport ak pkDS u.zone (Just hk) ddef : u.attachments}
+                    (u {attachments = freshSupport ak pkDS u.zone (Just hk) ddef : u.attachments} :: UnitDetails)
                 | otherwise = u
               gDS3 = gDS2 {units = map withAtt gDS2.units}
               canTargetAtt picker =
@@ -1207,7 +1209,7 @@ main = do
             ]
           let withShield u
                 | u.key == dkSH =
-                    u {attachments = freshSupport skSH defSH u.zone (Just dkSH) shieldDef : u.attachments}
+                    (u {attachments = freshSupport skSH defSH u.zone (Just dkSH) shieldDef : u.attachments} :: UnitDetails)
                 | otherwise = u
               gShA = gShF {units = map withShield gShF.units}
           gShG <- applyMessagesWithAnswers gShA
@@ -1237,7 +1239,7 @@ main = do
       gSC2 <- applyMessage gSC1 (PutUnitIntoPlay pkSC hk BattlefieldZone)
       let withAtt u
             | u.key == hk =
-                u {attachments = freshSupport sk pkSC u.zone (Just hk) scDef : u.attachments}
+                (u {attachments = freshSupport sk pkSC u.zone (Just hk) scDef : u.attachments} :: UnitDetails)
             | otherwise = u
           p0 = getPl pkSC gSC2
           seeded = [c | c <- p0.hand, c.key `elem` [d1, d2]]
@@ -1271,7 +1273,7 @@ main = do
         (eligibleAttacker gWO2 pkWO.next BattlefieldZone hkWO)
       let withWop u
             | u.key == hkWO =
-                u {attachments = freshSupport akWO pkWO u.zone (Just hkWO) wopDef : u.attachments}
+                (u {attachments = freshSupport akWO pkWO u.zone (Just hkWO) wopDef : u.attachments} :: UnitDetails)
             | otherwise = u
           gWO3 = gWO2 {units = map withWop gWO2.units}
       check "word of pain: host cannot attack while Word of Pain is attached"
@@ -1363,7 +1365,7 @@ main = do
       gEC2 <- applyMessage gEC1 (PutUnitIntoPlay pkEC hkE BattlefieldZone)
       let withAtt u
             | u.key == hkE =
-                u {attachments = freshSupport skE pkEC u.zone (Just hkE) eyeDef : u.attachments}
+                (u {attachments = freshSupport skE pkEC u.zone (Just hkE) eyeDef : u.attachments} :: UnitDetails)
             | otherwise = u
           gEC3 = gEC2 {units = map withAtt gEC2.units}
           isCorrupt g =
@@ -1456,6 +1458,55 @@ main = do
       (cardFields (deckOf p1) == [] && cardFields (deckOf p2) == [])
     check "redact: deck count preserved"
       (arrayLen (deckOf p1) == length gCor1.player1.deck)
+
+  -- ------------------------------------------------------------------
+  -- Legend engine. No legend card is registered yet (per-zone stats
+  -- pending), so we inject a fixture legend directly and exercise the
+  -- engine functions: per-zone power, HP + attachment threshold, heal,
+  -- and the zone-defender eligibility guard (incl. the targetLegend
+  -- double-count exclusion).
+  -- ------------------------------------------------------------------
+  gLeg0 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-004" Dwarf
+  let legPk = gLeg0.currentPlayer
+      legKey = UnitKey 9001
+      legendOnly = mkLegend legPk []
+      gLegIn = gLeg0 {legends = [legendOnly]}
+
+  -- Per-zone power: the legend adds its kingdom/quest/battlefield value
+  -- to that zone, simultaneously, for its controller.
+  check "legend power: +2 kingdom"
+    (zonePower gLegIn legPk KingdomZone - zonePower gLeg0 legPk KingdomZone == 2)
+  check "legend power: +1 quest"
+    (zonePower gLegIn legPk QuestZone - zonePower gLeg0 legPk QuestZone == 1)
+  check "legend power: +3 battlefield"
+    (zonePower gLegIn legPk BattlefieldZone - zonePower gLeg0 legPk BattlefieldZone == 3)
+
+  -- Effective HP folds in attachment HP bonus.
+  let legendWithAtt = legendOnly {attachments = [mkLegendAttachment legPk]} :: LegendDetails
+  check "legend HP: printed only = 4" (legendEffectiveHP legendOnly == 4)
+  check "legend HP: +4 attachment = 8" (legendEffectiveHP legendWithAtt == 8)
+
+  -- Damage threshold: destroyed at >= effective HP, survives below.
+  gLegDmg <- applyMessage gLegIn (DealDamageToLegend legKey 3)
+  check "legend damage: survives below HP"
+    (case gLegDmg.legends of [l] -> l.damage == Damage 3; _ -> False)
+  gLegKill <- applyMessage gLegIn (DealDamageToLegend legKey 4)
+  check "legend damage: destroyed at >= HP" (null gLegKill.legends)
+
+  -- Heal removes damage.
+  gLegHeal <- applyMessage gLegDmg (HealLegend legKey 3)
+  check "legend heal: damage cleared"
+    (case gLegHeal.legends of [l] -> l.damage == Damage 0; _ -> False)
+
+  -- Zone-defender eligibility: a legend with the defend-any-zone grant
+  -- is offered as a defender, but NOT while it is itself the
+  -- directly-targeted legend (which would double-count it).
+  let gGrant = gLeg0 {legends = [legendWithAtt]}
+      withCombat tl = gGrant {combat = Just (mkTestCombat legPk tl)}
+  check "legend defend: granted legend is an eligible zone defender"
+    (legKey `elem` eligibleDefenderCandidates (withCombat Nothing) legPk BattlefieldZone)
+  check "legend defend: excluded while it is the targeted legend"
+    (legKey `notElem` eligibleDefenderCandidates (withCombat (Just legKey)) legPk BattlefieldZone)
 
   putStrLn "Phase / turn smoke test: OK"
 
@@ -1590,6 +1641,48 @@ defenderInHand p = go p.hand
     isToughness = \case
       Toughness _ -> True
       _ -> False
+
+-- | A test-only legend with distinct per-zone power (k=2, q=1, b=3) and
+-- 4 printed HP. Used to exercise the legend engine before real legend
+-- cards (per-zone stats pending) are registered.
+testLegendDef :: CardDef Legend
+testLegendDef = legendCard "test-legend-001" "Test Legend" do
+  legendPower 2 1 3
+  hitPoints 4
+
+-- | A test-only attachment: +4 HP and the defend-any-zone grant
+-- (Descendant of Gods shape).
+testLegendAttachmentDef :: CardDef Support
+testLegendAttachmentDef = supportCard "test-legend-attach" "Test Aegis" do
+  attachmentHp 4
+  legendDefendsAnyZone
+
+mkLegend :: PlayerKey -> [SupportDetails] -> LegendDetails
+mkLegend pk atts = LegendDetails
+  { key = UnitKey 9001
+  , controller = pk
+  , zone = BattlefieldZone
+  , cardDef = testLegendDef
+  , damage = Damage 0
+  , corrupted = False
+  , attachments = atts
+  }
+
+mkLegendAttachment :: PlayerKey -> SupportDetails
+mkLegendAttachment pk =
+  freshSupport (UnitKey 9002) pk BattlefieldZone (Just (UnitKey 9001)) testLegendAttachmentDef
+
+mkTestCombat :: PlayerKey -> Maybe UnitKey -> CombatState
+mkTestCombat defender tl = CombatState
+  { attackingPlayer = defender.next
+  , defendingPlayer = defender
+  , targetZone = BattlefieldZone
+  , targetLegend = tl
+  , attackers = []
+  , defenders = []
+  , attackerPowerPenalty = 0
+  , pendingAssignments = []
+  }
 
 check :: String -> Bool -> IO ()
 check label ok =
