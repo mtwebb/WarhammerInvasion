@@ -111,6 +111,9 @@ healCapital pk n = push (HealCapital pk n)
 healUnit :: HasQueue Message m => UnitKey -> Int -> m ()
 healUnit k n = push (HealUnit k n)
 
+healLegend :: HasQueue Message m => UnitKey -> Int -> m ()
+healLegend k n = push (HealLegend k n)
+
 -- | "Deal N uncancellable damage to a unit." (Mark of Chaos's turn-
 -- start tick, Orc Shaman's self-damage.)
 dealUncancellableDamage :: HasQueue Message m => UnitKey -> Int -> m ()
@@ -1079,7 +1082,10 @@ isOpposed g u = case g.combat of
 -- attached to a unit. Used when an effect needs to consult every
 -- support regardless of attachment status.
 allInPlaySupports :: Game -> [SupportDetails]
-allInPlaySupports g = g.supports ++ concatMap (.attachments) g.units
+allInPlaySupports g =
+  g.supports
+    ++ concatMap (.attachments) g.units
+    ++ concatMap (.attachments) g.legends
 
 -- | "the highest loyalty on a [Race] card you control." Scans every
 -- in-play unit and support controlled by @pk@ that carries the race
@@ -1203,6 +1209,11 @@ zoneBurning g pk zk =
 -- on the wire-side variant directly rather than nested 'Either'.
 data Target a where
   AnyUnit :: Target UnitKey
+  AnyLegend :: Target UnitKey
+    -- ^ An in-play legend (either controller's), identified by its
+    -- legend key. Combine with 'AnyUnit' via 'Or' for "a unit or
+    -- legend" effects. The key shares the unit key space, so callers
+    -- must route it to legend-aware handlers (e.g. 'healLegend').
   AnyCapital :: Target (PlayerKey, ZoneKind)
     -- ^ A capital zone. Standalone 'withTarget' enumerates every
     -- unburned zone across both players and prompts.
@@ -1310,6 +1321,11 @@ pickTarget pk = \case
     opts <- enumerateOptions pk AnyUnit
     promptForOption pk opts >>= \case
       Just (TargetUnitOption k) -> pure (Just k)
+      _ -> pure Nothing
+  AnyLegend -> do
+    opts <- enumerateOptions pk AnyLegend
+    promptForOption pk opts >>= \case
+      Just (TargetLegendOption k) -> pure (Just k)
       _ -> pure Nothing
   AnyCapital -> do
     opts <- enumerateOptions pk AnyCapital
@@ -1425,6 +1441,8 @@ enumerateOptionsPure :: PlayerKey -> Game -> Target a -> [TargetOption]
 enumerateOptionsPure pk g = \case
   AnyUnit ->
     [TargetUnitOption u.key | u <- g.units, targetableBy g pk u.key u.controller]
+  AnyLegend ->
+    [TargetLegendOption l.key | l <- g.legends, targetableBy g pk l.key l.controller]
   AnyCapital ->
     let zonesOf p =
           [ (p.key, z.kind)

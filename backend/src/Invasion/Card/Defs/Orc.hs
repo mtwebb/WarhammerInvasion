@@ -1406,6 +1406,28 @@ yousBigga = tacticCard "march-of-the-damned-020" "You's Bigga!" do
     sacrificeOwnUnit self.controller "Sacrifice a unit." \_ ->
       push (ScheduleNextUnitDiscount self.controller 2)
 
+-- Bloodquest cycle — Fragments of Power -------------------------------
+
+daGreatLeader :: CardDef Tactic
+daGreatLeader = tacticCard "fragments-of-power-026" "Da Great Leader" do
+  race Orc
+  cost 3
+  loyalty 2
+  body
+    "Play only if you control a legend or Artefact support card. Action: \
+    \Each [Orc] unit you control gains {power}{power} until the end of the \
+    \turn."
+  playableWhen \g pk ->
+    isJust (legendOf pk g)
+      || any
+        (\s -> s.controller == pk && Artefact `elem` s.cardDef.traits)
+        (allInPlaySupports g)
+  whenResolved \self -> do
+    g <- getGame
+    for_
+      [u | u <- g.units, u.controller == self.controller, Orc `elem` u.cardDef.races]
+      \u -> until EndOfTurn $ buffPower u.key 2
+
 -- Legends (deluxe expansion) -------------------------------------------
 
 blindRiverGoblin :: CardDef Unit

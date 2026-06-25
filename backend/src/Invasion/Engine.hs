@@ -1002,6 +1002,18 @@ instance Run Game where
             [ ("card", T.pack u.cardDef.title)
             , ("amount", tshow amount)
             ]
+    HealLegend lkey amount -> do
+      g <- get
+      whenJust (findLegend lkey g) \l -> do
+          let Damage existing = l.damage
+              healed = max 0 (existing - max 0 amount)
+              l' = (l {damage = Damage healed}) :: LegendDetails
+          modify \gx -> gx {legends = replaceLegend l' gx.legends}
+          logIt LogSystem
+            "log.legend.healed"
+            [ ("card", T.pack l.cardDef.title)
+            , ("amount", tshow amount)
+            ]
     DestroyUnit ukey -> do
       munit <- gets (findUnit ukey)
       whenJust munit \u -> do
@@ -1137,8 +1149,17 @@ instance Run Game where
             _ -> pure ()
     PlayAttachment pk cardKey targetKey -> do
       g <- get
-      mhost <- gets (findUnit targetKey)
-      whenJust mhost \host -> do
+      -- The host may be a unit or a legend (legends are valid
+      -- attachment hosts for Descendant of Gods and the "Hero or
+      -- legend" artefacts). The payment / window logic is identical;
+      -- only the placement target and the zone/title differ.
+      let mUnitHost = findUnit targetKey g
+          mLegendHost = findLegend targetKey g
+          mHostZone = ((.zone) <$> mUnitHost) <|> ((.zone) <$> mLegendHost)
+          mHostTitle =
+            (T.pack . (.cardDef.title) <$> mUnitHost)
+              <|> (T.pack . (.cardDef.title) <$> mLegendHost)
+      whenJust ((,) <$> mHostZone <*> mHostTitle) \(hostZone, hostTitle) -> do
         let player = lookupPlayer pk g
         whenJust (takeSupportFromHand cardKey player) \(cardDef, playerWithoutCard) -> do
           let windowOk =
@@ -1178,13 +1199,30 @@ instance Run Game where
                       when (t > 0) $ send (AdjustQuestTokens q.key (negate t))
                       drain qs (k - t)
                 drain tokenQuests fromTokens
-                let attachment = freshSupport cardKey pk host.zone (Just targetKey) cardDef
-                    host' = (host {attachments = attachment : host.attachments}) :: UnitDetails
-                modify \gx -> (setPlayer pk paidPlayer gx) {units = replaceUnit host' gx.units}
+                let attachment = freshSupport cardKey pk hostZone (Just targetKey) cardDef
+                modify \gx ->
+                  let gx' = setPlayer pk paidPlayer gx
+                   in case mUnitHost of
+                        Just host ->
+                          gx'
+                            { units =
+                                replaceUnit
+                                  (host {attachments = attachment : host.attachments} :: UnitDetails)
+                                  gx'.units
+                            }
+                        Nothing -> case mLegendHost of
+                          Just leg ->
+                            gx'
+                              { legends =
+                                  replaceLegend
+                                    (leg {attachments = attachment : leg.attachments} :: LegendDetails)
+                                    gx'.legends
+                              }
+                          Nothing -> gx'
                 logIt LogPlayerAction "log.attachment.played"
                   [ ("player", playerParam pk)
                   , ("card", T.pack cardDef.title)
-                  , ("target", T.pack host.cardDef.title)
+                  , ("target", hostTitle)
                   , ("cost", tshow n)
                   ]
                 send $ SupportEnteredPlay pk cardKey
@@ -2704,6 +2742,8 @@ instance Run Game where
                   , zone = BattlefieldZone
                   , cardDef
                   , damage = Damage 0
+                  , corrupted = False
+                  , attachments = []
                   }
             modify \gx -> (setPlayer pk paidPlayer gx) {legends = legendDetails : gx.legends}
             logIt LogPlayerAction
@@ -2729,12 +2769,13 @@ instance Run Game where
             , ("amount", tshow inflated)
             ]
           let Damage total = newDmg
-              hp = legendPrintedHPFromDef l.cardDef
+              hp = legendEffectiveHP l
           when (total >= hp) $
             send $ DestroyLegend lkey
     DestroyLegend lkey -> do
       mlegend <- gets (findLegend lkey)
       whenJust mlegend \l -> do
+        for_ l.attachments discardAttachment
         discardToController l.controller $ mkCard l.key (LegendCardDef l.cardDef)
         modify \gx -> gx {legends = removeById lkey gx.legends}
         logIt LogSystem "log.legend.destroyed"
@@ -3713,7 +3754,12 @@ combatDamageOf g side u =
 -- gets the last word.
 eligibleAttacker :: Game -> PlayerKey -> ZoneKind -> UnitKey -> Bool
 eligibleAttacker g defender zone ukey = case findUnit ukey g of
-  Nothing -> False
+  -- A legend attacks "as though it were a unit in the battlefield":
+  -- always from the battlefield, regardless of the targeted zone, so
+  -- long as it isn't corrupt.
+  Nothing -> case findLegend ukey g of
+    Just l -> not l.corrupted
+    Nothing -> False
   Just u ->
     (u.zone `elem` (unitExtrasOf u).attackEligibleZones || rovingAttacker u ukey)
       && not u.corrupted
@@ -3942,6 +3988,18 @@ eligibleDefenderCandidates g defender zone =
   , not (unitExtrasOf u).cannotDefend
   , not (any (\s -> s.cardDef.extras.imposesCannotDefendOn g s u) (allInPlaySupports g))
   ]
+    -- A legend can defend its controller's zones only when an
+    -- attachment grants it (Descendant of Gods) and it isn't corrupt.
+    -- Excluded while it is itself the directly-targeted legend of the
+    -- current combat: there it already defends via the targetLegend
+    -- path, and listing it here too would double-count its power/HP.
+    <> [ l.key
+       | l <- g.legends
+       , l.controller == defender
+       , not l.corrupted
+       , legendCanDefendZones l
+       , (g.combat >>= (.targetLegend)) /= Just l.key
+       ]
   where
     rovingDefender k =
       any
@@ -3985,15 +4043,50 @@ promptAssignmentOrder pk desc = \case
     allUnique xs = length xs == length (nubKeys xs)
     nubKeys = foldr (\x acc -> if x `elem` acc then acc else x : acc) []
 
+-- | A combat damage recipient — a unit or a (zone-defending /
+-- attacking) legend. Carries everything 'allocateDamage' needs so the
+-- allocator doesn't have to care which kind it is: the remaining HP
+-- slack, the Toughness shield (0 for legends), and whether to emit a
+-- 'PDLegend' or 'PDUnit' assignment.
+data CombatRecipient = CombatRecipient
+  { crKey :: UnitKey
+  , crSlack :: Int
+  , crToughness :: Int
+  , crIsLegend :: Bool
+  }
+
 -- | Reorder 'reference' keys by a player-supplied order, dropping any
 -- key in the order that doesn't appear in the reference list (defensive
 -- against stale client input) and appending any reference keys the
 -- player didn't include (so the allocator still sees every recipient).
-orderedRecipients :: Game -> [UnitKey] -> [UnitKey] -> [UnitDetails]
+-- Each key resolves to a unit or a legend; the player's ordering then
+-- decides which recipients (including a defending legend) soak damage
+-- before any overflow reaches the capital section.
+orderedRecipients :: Game -> [UnitKey] -> [UnitKey] -> [CombatRecipient]
 orderedRecipients g order reference =
   let refSet = filter (`elem` reference) order
       tail' = filter (`notElem` refSet) reference
-   in mapMaybe (`findUnit` g) (refSet <> tail')
+   in mapMaybe toRecipient (refSet <> tail')
+  where
+    toRecipient k = case findUnit k g of
+      Just u ->
+        let Damage existing = u.damage
+         in Just CombatRecipient
+              { crKey = k
+              , crSlack = max 0 (u.effectiveMaxHP - existing)
+              , crToughness = totalToughness g u
+              , crIsLegend = False
+              }
+      Nothing -> case findLegend k g of
+        Just l ->
+          let Damage existing = l.damage
+           in Just CombatRecipient
+                { crKey = k
+                , crSlack = max 0 (legendEffectiveHP l - existing)
+                , crToughness = 0
+                , crIsLegend = True
+                }
+        Nothing -> Nothing
 
 -- | True iff the named unit currently carries the given atomic
 -- modifier in 'Game.modifiers'.
@@ -4399,6 +4492,15 @@ validateTarget pk schema tgt g = case (schema, tgt) of
 -- base power printed on the capital board, plus the power icons on
 -- every unit/support/legend currently in the zone, plus any
 -- zone-targeting aura bonuses (e.g. Lighthouse of Lothern).
+-- | The power a legend contributes to a given zone. Legends print
+-- their power split across kingdom / quest / battlefield; this selects
+-- the value for one zone (see 'LegendExtras').
+legendZonePower :: CardDef 'Legend -> ZoneKind -> Int
+legendZonePower cd = \case
+  KingdomZone -> cd.extras.kingdomPower
+  QuestZone -> cd.extras.questPower
+  BattlefieldZone -> cd.extras.battlefieldPower
+
 zonePower :: Game -> PlayerKey -> ZoneKind -> Int
 zonePower g pk zone =
   let Power base = basePower zone
@@ -4413,7 +4515,15 @@ zonePower g pk zone =
       -- nothing more — they still produce resources and draw.
       unitPow = sum $ map (.effectivePower) $ mine g.units
       supportPow = sum $ map (.cardDef.power) $ mine g.supports
-      legendPow = sum $ map (.cardDef.power) $ mine g.legends
+      -- Legends live on the capital board (not in a single zone): each
+      -- contributes the power printed *for the queried zone* to its
+      -- controller, in all three zones simultaneously.
+      legendPow =
+        sum
+          [ legendZonePower l.cardDef zone
+          | l <- g.legends
+          , l.controller == pk
+          ]
    in base + unitPow + supportPow + legendPow + zoneAuraBonus g pk zone
 
 -- | Extra power a player's zone gets from in-play cards that grant a
@@ -4465,9 +4575,32 @@ assignCombatDamage g cs defenderOrder attackerOrder = do
       defendingLegend = case cs.targetLegend of
         Just _ -> legendOf cs.defendingPlayer g
         Nothing -> Nothing
-      defendingLegendPow = maybe 0 (.cardDef.power) defendingLegend
-      (attackerCanc, attackerUncanc) =
+      -- A defending legend deals combat damage equal to its power
+      -- printed in the *attacked* zone (not its weakest-zone value).
+      -- A corrupt legend contributes nothing — it cannot defend.
+      defendingLegendPow = case defendingLegend of
+        Just l | not l.corrupted -> legendZonePower l.cardDef cs.targetZone
+        _ -> 0
+      -- A legend declared as a zone defender (Descendant of Gods grant)
+      -- defends the attacked zone alongside units: it contributes its
+      -- attacked-zone power and can itself take attacker damage.
+      zoneDefendingLegend =
+        listToMaybe [l | k <- cs.defenders, l <- maybe [] pure (findLegend k g)]
+      zoneDefendingLegendPow = case zoneDefendingLegend of
+        Just l | not l.corrupted -> legendZonePower l.cardDef cs.targetZone
+        _ -> 0
+      -- An attacking legend fights from the battlefield using its
+      -- battlefield-zone power, added to the attacker's damage budget.
+      -- (Combat already filtered out a corrupt legend at BeginCombat.)
+      attackingLegendPow =
+        sum
+          [ l.cardDef.extras.battlefieldPower
+          | k <- cs.attackers
+          , l <- maybe [] pure (findLegend k g)
+          ]
+      (attackerUnitCanc, attackerUncanc) =
         splitDamage g cs.attackingPlayer attackerUnits
+      attackerCanc = attackerUnitCanc + attackingLegendPow
       (defenderUnitCanc, defenderUncanc) =
         splitDamage g cs.defendingPlayer pooledDefenders
       broadsideEntries =
@@ -4490,20 +4623,23 @@ assignCombatDamage g cs defenderOrder attackerOrder = do
       -- explicit about this). Treat it as cancellable defender
       -- damage; no Toughness applies to it (legends don't have
       -- Toughness).
-      defenderCanc = defenderUnitCanc + defendingLegendPow
+      defenderCanc = defenderUnitCanc + defendingLegendPow + zoneDefendingLegendPow
       defenderAssignments =
-        allocateDamage g attackerCanc attackerUncanc defenderRecipients
+        allocateDamage attackerCanc attackerUncanc defenderRecipients
       attackerAssignments =
-        allocateDamage g defenderCanc defenderUncanc attackerRecipients
+        allocateDamage defenderCanc defenderUncanc attackerRecipients
       (defenderUnitAssignments, defenderSpillover) = defenderAssignments
       (attackerUnitAssignments, _attackerSpillover) = attackerAssignments
-      -- Spillover routing: legend-targeted attacks land overflow on
-      -- the legend (capped at remaining HP, any excess discarded);
-      -- zone-targeted attacks spill into the capital section.
+      -- Spillover routing: the attacker's chosen damage-assignment order
+      -- already placed each defender (including a zone-defending legend)
+      -- as a 'CombatRecipient', so overflow here is whatever was left
+      -- after every defender they chose to cover. A legend-targeted
+      -- attack lands that overflow on the legend (capped at HP); a
+      -- zone-targeted attack spills it into the capital section.
       spilloverEntry = case (cs.targetLegend, defendingLegend) of
         (Just _, Just leg) ->
           let Damage existing = leg.damage
-              hp = legendPrintedHPFromDef leg.cardDef
+              hp = legendEffectiveHP leg
               slack = max 0 (hp - existing)
               landing = min defenderSpillover slack
            in if landing > 0
@@ -4535,8 +4671,12 @@ assignCombatDamage g cs defenderOrder attackerOrder = do
           <> map toPending defenderUnitAssignments
           <> map toPending attackerUnitAssignments
           <> broadsideEntries
-      toPending (ukey, canc, uncanc) =
-        PendingDamage {target = PDUnit ukey, cancellable = canc, uncancellable = uncanc}
+      toPending (key, canc, uncanc, isLegend) =
+        PendingDamage
+          { target = if isLegend then PDLegend key else PDUnit key
+          , cancellable = canc
+          , uncancellable = uncanc
+          }
       cs' = (cs {pendingAssignments = pendings}) :: CombatState
   modify \gx -> gx {combat = Just cs'}
   logIt LogSystem
@@ -4586,26 +4726,24 @@ commitPendingCombatDamage = do
 -- the leftover cancellable+uncancellable that would have spilled
 -- past the last recipient.
 allocateDamage
-  :: Game
-  -> Int
+  :: Int
   -- ^ cancellable budget
   -> Int
   -- ^ uncancellable budget
-  -> [UnitDetails]
-  -> ([(UnitKey, Int, Int)], Int)
-allocateDamage g = go []
+  -> [CombatRecipient]
+  -> ([(UnitKey, Int, Int, Bool)], Int)
+allocateDamage = go []
   where
     go acc 0 0 _ = (reverse acc, 0)
     go acc cAvail uAvail [] = (reverse acc, cAvail + uAvail)
-    go acc cAvail uAvail (u : rest) =
-      let Damage existing = u.damage
-          slack = max 0 (u.effectiveMaxHP - existing)
-          tough = totalToughness g u
+    go acc cAvail uAvail (r : rest) =
+      let slack = r.crSlack
+          tough = r.crToughness
           cancellableUsed = min cAvail (slack + tough)
           landingFromCancellable = max 0 (cancellableUsed - tough)
           slackAfterCancellable = slack - landingFromCancellable
           uncancellableUsed = min uAvail slackAfterCancellable
-          entry = (u.key, cancellableUsed, uncancellableUsed)
+          entry = (r.crKey, cancellableUsed, uncancellableUsed, r.crIsLegend)
        in go
             (entry : acc)
             (cAvail - cancellableUsed)
@@ -5255,6 +5393,20 @@ legendPrintedHPFromDef cd = case cd.hitPoints of
   Just (Fixed n) -> n
   Just Variable -> 1
   Nothing -> 1
+
+-- | A legend's effective hit points: printed HP plus any HP granted by
+-- its attachments (Descendant of Gods, …). This is the destruction
+-- threshold used by combat and direct damage.
+legendEffectiveHP :: LegendDetails -> Int
+legendEffectiveHP l =
+  legendPrintedHPFromDef l.cardDef
+    + sum (map (.cardDef.extras.attachmentHPBonus) l.attachments)
+
+-- | Whether this legend may be declared as a defender of its
+-- controller's zones. False by default (legends can't defend zone
+-- sections); an attachment grant flips it on (Descendant of Gods).
+legendCanDefendZones :: LegendDetails -> Bool
+legendCanDefendZones l = any (.cardDef.extras.grantsLegendDefendAnyZone) l.attachments
 
 -- | Replace the keyed element whose 'key' matches @x@\'s 'key'. No-op
 -- if no such element exists (e.g. concurrent destroy). Works for any

@@ -173,6 +173,13 @@ data LegendDetails = LegendDetails
   , zone :: ZoneKind
   , cardDef :: CardDef Legend
   , damage :: Damage
+  , corrupted :: Bool
+    -- ^ A corrupted legend cannot attack or defend (it still sits on
+    -- the board and can be targeted / take damage).
+  , attachments :: [SupportDetails]
+    -- ^ Attachment supports attached to this legend (Descendant of
+    -- Gods, the "Hero or legend" artefacts). Mirrors
+    -- 'UnitDetails.attachments'.
   }
   deriving stock Show
 
@@ -254,6 +261,11 @@ instance ToJSON LegendDetails where
       , "zone" .= d.zone
       , "cardDef" .= d.cardDef
       , "damage" .= d.damage
+      , "corrupted" .= d.corrupted
+      , "attachments" .= d.attachments
+      , "kingdomPower" .= d.cardDef.extras.kingdomPower
+      , "questPower" .= d.cardDef.extras.questPower
+      , "battlefieldPower" .= d.cardDef.extras.battlefieldPower
       ]
 
 getModifiers :: (HasGame m, Reference a) => a -> m [Modifier]

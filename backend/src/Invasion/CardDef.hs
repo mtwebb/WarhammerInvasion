@@ -594,6 +594,10 @@ data SupportExtras = SupportExtras
     -- (Dawnstar Sword, Eye of Sheerian, …) return a constant
     -- @Just False@; Helm of Fortune gates it on the host questing.
     -- Consulted by 'targetableBy' alongside the modifier map.
+  , grantsLegendDefendAnyZone :: Bool
+    -- ^ "Attached legend ... can defend any of your zones."
+    -- (Descendant of Gods.) When attached to a legend, the legend
+    -- becomes an eligible defender of any of its controller's zones.
   }
 
 -- | Static metadata about a card that's currently being played, used
@@ -644,8 +648,19 @@ data QuestExtras = QuestExtras
 -- | Tactic-specific tunables. Empty for now.
 data TacticExtras = TacticExtras
 
--- | Legend-specific tunables. Empty for now.
+-- | Legend-specific tunables. A legend's power is printed split across
+-- the three zones (kingdom / quest / battlefield) and it contributes
+-- each value to that zone simultaneously. The single 'CardDef.power'
+-- field carries the legend's power "for card-effect purposes" — by rule
+-- the value of its *weakest* zone (set by the 'legendPower' builder).
 data LegendExtras = LegendExtras
+  { kingdomPower :: Int
+    -- ^ Power contributed to the kingdom zone (resources).
+  , questPower :: Int
+    -- ^ Power contributed to the quest zone (card draw).
+  , battlefieldPower :: Int
+    -- ^ Power contributed to the battlefield zone (combat).
+  }
 
 type instance Extras Unit = UnitExtras
 type instance Extras Support = SupportExtras
@@ -710,6 +725,7 @@ instance HasDefaultExtras Support where
     , imposesCannotDefendOn = \_ _ _ -> False
     , imposesBlankOn = \_ _ _ -> False
     , selfUntargetable = \_ _ -> Nothing
+    , grantsLegendDefendAnyZone = False
     }
 
 instance HasDefaultExtras Quest where
@@ -727,6 +743,10 @@ instance HasDefaultExtras Tactic where
 
 instance HasDefaultExtras Legend where
   defaultExtras = LegendExtras
+    { kingdomPower = 0
+    , questPower = 0
+    , battlefieldPower = 0
+    }
 
 -- | A card's reaction to engine events. Wrapped in a newtype because
 -- record fields can't directly hold a polymorphic function. The

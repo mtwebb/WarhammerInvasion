@@ -633,10 +633,12 @@ allCards =
       ("rising-dawn-015", SupportCardDef towerOfOblivion),
       -- Bloodquest cycle — Fragments of Power (pack 2)
       ("fragments-of-power-021", SupportCardDef starCrownFragments),
+      ("fragments-of-power-026", TacticCardDef daGreatLeader),
       ("fragments-of-power-027", UnitCardDef averheimSoldiers),
       ("fragments-of-power-029", UnitCardDef ellyrianPatron),
       ("fragments-of-power-031", UnitCardDef swornOfKhorne),
       ("fragments-of-power-032", SupportCardDef stolenSkin),
+      ("fragments-of-power-036", SupportCardDef descendantOfGods),
       -- Bloodquest cycle — The Accursed Dead (pack 3)
       ("the-accursed-dead-043", UnitCardDef recklessEngineer),
       ("the-accursed-dead-057", TacticCardDef arcanePower),
@@ -742,6 +744,7 @@ allCards =
       ("glory-of-days-past-075", SupportCardDef painfulMutation),
       ("glory-of-days-past-076", UnitCardDef outlawSorcerer),
       ("glory-of-days-past-079", UnitCardDef rogueWarrior),
+      ("glory-of-days-past-080", TacticCardDef strengthOfEmperors),
       ("glory-of-days-past-078", SupportCardDef markedForDeath),
       -- The Ruinous Hordes (Eternal War cycle, pack 5)
       ("the-ruinous-hordes-082", QuestCardDef dominionOfChaos),

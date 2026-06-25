@@ -16,7 +16,7 @@ import Invasion.Card.Effects
 import Invasion.Card.Triggers
 import Invasion.Card.Types
 import Invasion.CardDef
-import Invasion.Entity (QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
+import Invasion.Entity (LegendDetails (..), QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
 import Invasion.Game hiding (battlefield)
 import Invasion.Message
 import Invasion.Modifier
@@ -1654,6 +1654,23 @@ rogueWarrior = unitCard "glory-of-days-past-079" "Rogue Warrior" do
     g <- getGame
     when (isJust (findUnit self.key g)) $ turnUnitIntoDevelopment self.key
 
+strengthOfEmperors :: CardDef Tactic
+strengthOfEmperors = tacticCard "glory-of-days-past-080" "Strength of Emperors" do
+  cost 1
+  loyalty 0
+  body
+    "Action: Heal all damage on target legend, then draw X cards. X is the \
+    \number of damage healed."
+  playableWhen $ hasTarget AnyLegend
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk AnyLegend \k -> do
+      g <- getGame
+      whenJust (findLegend k g) \l -> do
+        let Damage d = l.damage
+        healLegend k d
+        drawCards pk d
+
 stealthySkink :: CardDef Unit
 stealthySkink = unitCard "oaths-of-vengeance-038" "Stealthy Skink" do
   cost 2
@@ -1828,6 +1845,17 @@ starCrownFragments = supportCard "fragments-of-power-021" "Star Crown Fragments"
     let top5 =
           take 5 [c | c <- me.discard, Artefact `notElem` someCardTraits c.def]
     returnFromDiscardToHand pk (map (.key) top5)
+
+descendantOfGods :: CardDef Support
+descendantOfGods = supportCard "fragments-of-power-036" "Descendant of Gods" do
+  cost 3
+  loyalty 0
+  traits [Attachment, Condition]
+  body
+    "Attach to a target legend. Attached legend gets +4 hit points and can \
+    \defend any of your zones."
+  attachmentHp 4
+  legendDefendsAnyZone
 
 arcanePower :: CardDef Tactic
 arcanePower = tacticCard "the-accursed-dead-057" "Arcane Power" do

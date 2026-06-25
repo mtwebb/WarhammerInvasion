@@ -191,6 +191,10 @@ data TargetOption
   | TargetPlayerOption PlayerKey
     -- ^ A player. Used by "target player"/"any player's deck" effects
     -- (Caradryan, Learned Mage, Eye of Sheerian).
+  | TargetLegendOption UnitKey
+    -- ^ An in-play legend, identified by its legend key. Used by
+    -- "target legend" / "a unit or legend" effects (Strength of
+    -- Emperors, Shield Bearer).
   deriving stock (Show, Eq)
 
 -- | Predicate describing which units a 'ChooseUnits' prompt accepts.

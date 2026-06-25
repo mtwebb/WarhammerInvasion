@@ -50,11 +50,32 @@ const eligibleAttackers = computed<EngineUnit[]>(() => {
   )
 })
 
+// Attack candidates the player can pick: battlefield units plus their
+// legend (which fights from the battlefield using its battlefield-zone
+// power) when it isn't corrupt. Legend keys share the unit key space, so
+// the engine accepts them in the same attackerKeys list.
+interface AttackerOption {
+  key: number
+  title: string
+}
+const attackerOptions = computed<AttackerOption[]>(() => {
+  const s = props.seat
+  const opts: AttackerOption[] = eligibleAttackers.value.map((u) => ({
+    key: u.key,
+    title: u.cardDef.title,
+  }))
+  const leg = s ? props.engine.legends.find((l) => l.controller === s) : undefined
+  if (leg && !leg.corrupted) {
+    opts.push({ key: leg.key, title: leg.cardDef.title })
+  }
+  return opts
+})
+
 const canDeclare = computed(
   () =>
     isMyBattlefieldWindow.value
     && noBlockingPrompt.value
-    && eligibleAttackers.value.length > 0,
+    && attackerOptions.value.length > 0,
 )
 
 // Component visibility: render only when the seated player could
@@ -174,16 +195,16 @@ function zoneLabel(z: ZoneKind): string {
       </p>
       <div class="picks">
         <button
-          v-for="u in eligibleAttackers"
-          :key="u.key"
+          v-for="o in attackerOptions"
+          :key="o.key"
           type="button"
           class="pick"
-          :class="{ selected: pickedAttackers.includes(u.key) }"
-          @click="toggleAttacker(u.key)"
+          :class="{ selected: pickedAttackers.includes(o.key) }"
+          @click="toggleAttacker(o.key)"
         >
-          {{ u.cardDef.title }}
+          {{ o.title }}
         </button>
-        <p v-if="eligibleAttackers.length === 0" class="empty">
+        <p v-if="attackerOptions.length === 0" class="empty">
           {{ t('game.play.combat.no_attackers') }}
         </p>
       </div>

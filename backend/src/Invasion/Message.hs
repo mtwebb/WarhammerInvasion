@@ -125,6 +125,8 @@ data Message where
     -- at damage time.
   HealUnit :: UnitKey -> Int -> Message
     -- ^ Remove up to N damage from a target unit (clamped to 0).
+  HealLegend :: UnitKey -> Int -> Message
+    -- ^ Remove up to N damage from a target legend (clamped to 0).
   DestroyUnit :: UnitKey -> Message
     -- ^ Remove a unit from play and put its card into the controller's
     -- discard. Triggers 'UnitLeftPlay'.

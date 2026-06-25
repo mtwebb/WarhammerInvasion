@@ -83,6 +83,17 @@ loyalty l = modify \cardDef -> cardDef {loyalty = l}
 power :: Int -> CardBuilder k ()
 power p = modify \cardDef -> cardDef {power = p}
 
+-- | A legend's per-zone power, printed split across kingdom / quest /
+-- battlefield. Records all three on 'LegendExtras' and sets the single
+-- 'power' field to the weakest zone — the value used "for card-effect
+-- purposes" by the rules (see 'LegendExtras').
+legendPower :: Int -> Int -> Int -> CardBuilder Legend ()
+legendPower k q b = modify \cardDef ->
+  cardDef
+    { power = minimum [k, q, b]
+    , extras = cardDef.extras {kingdomPower = k, questPower = q, battlefieldPower = b}
+    }
+
 -- | Cards that carry hit points: units and legends. Other kinds reject
 -- 'hitPoints' at the type level so a tactic builder can't silently set
 -- an HP value that the engine would never read.
@@ -403,6 +414,10 @@ attachmentPower n = modifySupportExtras \e -> e {attachmentPowerBonus = n}
 -- | Static HP contribution while attached (Daemonsword).
 attachmentHp :: Int -> CardBuilder Support ()
 attachmentHp n = modifySupportExtras \e -> e {attachmentHPBonus = n}
+
+-- | "Attached legend can defend any of your zones." (Descendant of Gods.)
+legendDefendsAnyZone :: CardBuilder Support ()
+legendDefendsAnyZone = modifySupportExtras \e -> e {grantsLegendDefendAnyZone = True}
 
 -- | Grant Savage X to the host while attached (Cloak of Feathers).
 attachmentSavage :: Int -> CardBuilder Support ()
