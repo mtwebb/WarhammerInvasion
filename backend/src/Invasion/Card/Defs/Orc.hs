@@ -1428,6 +1428,32 @@ daGreatLeader = tacticCard "fragments-of-power-026" "Da Great Leader" do
       [u | u <- g.units, u.controller == self.controller, Orc `elem` u.cardDef.races]
       \u -> until EndOfTurn $ buffPower u.key 2
 
+-- Bloodquest cycle — Vessel of the Winds -------------------------------
+
+morglorTheMangler :: CardDef Support
+morglorTheMangler = supportCard "vessel-of-the-winds-067" "Morglor the Mangler" do
+  race Orc
+  cost 1
+  loyalty 1
+  traits [Weapon, Attachment]
+  body
+    "Attach to a target [Orc] unit or legend. Attached unit or legend deals \
+    \+2 damage in combat. Attached legend deals an additional +4 damage in \
+    \combat while opposed."
+  -- Unit host: +2 combat damage.
+  supportCombat \_g s u -> if s.attachedTo == Just u.key then 2 else 0
+  -- Legend host: +2 combat power, plus +4 more while opposed.
+  legendCombatBonusWith \g s ->
+    let opposed = case g.combat of
+          Just cs -> case s.attachedTo of
+            Just hk
+              | hk `elem` cs.attackers -> not (null cs.defenders)
+              | hk `elem` cs.defenders -> not (null cs.attackers)
+              | cs.targetLegend == Just hk -> not (null cs.attackers)
+            _ -> False
+          Nothing -> False
+     in 2 + (if opposed then 4 else 0)
+
 -- Legends (deluxe expansion) -------------------------------------------
 
 blindRiverGoblin :: CardDef Unit

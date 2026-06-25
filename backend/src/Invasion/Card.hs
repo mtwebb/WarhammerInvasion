@@ -648,6 +648,7 @@ allCards =
       ("the-accursed-dead-053", UnitCardDef treasureThieves),
       -- Bloodquest cycle — Vessel of the Winds (pack 4)
       ("vessel-of-the-winds-061", SupportCardDef windcatcherPrism),
+      ("vessel-of-the-winds-067", SupportCardDef morglorTheMangler),
       ("vessel-of-the-winds-070", UnitCardDef learnedMage),
       ("vessel-of-the-winds-075", SupportCardDef templeOfSpite),
       ("vessel-of-the-winds-076", UnitCardDef magePriestOfItza),

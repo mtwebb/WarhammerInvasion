@@ -1496,6 +1496,23 @@ main = do
     (let gArmed = gLeg0 {legends = [legendArmed]}
       in zonePower gArmed legPk BattlefieldZone == zonePower gLegIn legPk BattlefieldZone)
 
+  -- Morglor the Mangler on a legend host: +2 combat, +4 more while
+  -- opposed (a state-dependent legend combat bonus).
+  case Map.lookup "vessel-of-the-winds-067" allCards of
+    Just (SupportCardDef morglorDef) -> do
+      let morglor = freshSupport (UnitKey 9004) legPk BattlefieldZone (Just legKey) morglorDef
+          legendMorg = legendOnly {attachments = [morglor]} :: LegendDetails
+          baseBP = legendZonePower legendMorg.cardDef BattlefieldZone
+          attacking ds = Just ((mkTestCombat legPk Nothing)
+            {attackers = [legKey], defenders = ds} :: CombatState)
+          gUnopposed = gLeg0 {legends = [legendMorg], combat = attacking []}
+          gOpposed = gLeg0 {legends = [legendMorg], combat = attacking [UnitKey 1]}
+      check "morglor: legend +2 while unopposed"
+        (legendCombatPower gUnopposed legendMorg BattlefieldZone == baseBP + 2)
+      check "morglor: legend +6 while opposed"
+        (legendCombatPower gOpposed legendMorg BattlefieldZone == baseBP + 6)
+    _ -> putStrLn "  skip morglor (not registered)"
+
   -- Damage threshold: destroyed at >= effective HP, survives below.
   gLegDmg <- applyMessage gLegIn (DealDamageToLegend legKey 3)
   check "legend damage: survives below HP"
