@@ -801,6 +801,35 @@ tribalTattoos = supportCard "the-twin-tailed-comet-046" "Tribal Tattoos" do
   -- modelled; the +1 power grant is the card's main effect.
   attachmentPower 1
 
+babySquig :: CardDef Unit
+babySquig = unitCard "the-imperial-throne-102" "Baby Squig" do
+  race Orc
+  cost 0
+  loyalty 2
+  power 0
+  hitPoints 0
+  trait Creature
+  body "Forced: At the beginning of your turn, deal 1 damage to another target unit you control in this zone."
+  onMyTurnBegin \_owner self ->
+    withTarget
+      self.controller
+      (UnitMatching \pk _ u -> u.controller == pk && u.key /= self.key && u.zone == self.zone)
+      \k -> dealDamage k 1
+
+fungusbrewGoblin :: CardDef Unit
+fungusbrewGoblin = unitCard "the-silent-forge-050" "Fungusbrew Goblin" do
+  race Orc
+  cost 1
+  loyalty 1
+  power 1
+  hitPoints 1
+  trait Goblin
+  body "Forced: When this unit enters play, target opponent may move it into any of your zones."
+  onEnterPlay \_owner self -> do
+    let opp = self.controller.next
+    may opp "Move Fungusbrew Goblin into one of its controller's zones?" $
+      withTarget opp MyAnyZone \zone -> moveUnit self.key zone
+
 goblinRaiders :: CardDef Unit
 goblinRaiders = unitCard "oaths-of-vengeance-031" "Goblin Raiders" do
   race Orc

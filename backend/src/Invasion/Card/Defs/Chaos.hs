@@ -1365,6 +1365,38 @@ ungorRaiders = unitCard "omens-of-ruin-012" "Ungor Raiders" do
   onSelfDestroyed \_owner self ->
     withTarget self.controller AnyDevelopmentZone \(o, z) -> destroyDevelopment o z
 
+centigor :: CardDef Unit
+centigor = unitCard "the-twin-tailed-comet-052" "Centigor" do
+  race Chaos
+  cost 4
+  loyalty 2
+  power 3
+  hitPoints 3
+  trait Warrior
+  body "Forced: At the beginning of your turn, sacrifice a development or this unit deals 1 damage to each section of your capital."
+  onMyTurnBegin \_owner self -> do
+    g <- getGame
+    let pk = self.controller
+        p = playerOf pk g
+        devZones =
+          [ zk
+          | (zk, Developments n) <-
+              [ (KingdomZone, p.capital.kingdom.developments)
+              , (QuestZone, p.capital.quest.developments)
+              , (BattlefieldZone, p.capital.battlefield.developments)
+              ]
+          , n > 0
+          ]
+        dealAll = for_ [KingdomZone, QuestZone, BattlefieldZone] \zk -> dealZoneDamage pk zk 1
+    case devZones of
+      [] -> dealAll
+      _ -> do
+        sac <- askYesNo pk "Sacrifice a development instead of dealing 1 damage to each capital section?"
+        if sac
+          then withTarget pk (CapitalMatching \_ (owner, zk) -> owner == pk && zk `elem` devZones) \(owner, zk) ->
+            destroyDevelopment owner zk
+          else dealAll
+
 sorcererOfTzeentch :: CardDef Unit
 sorcererOfTzeentch = unitCard "the-twin-tailed-comet-053" "Sorcerer of Tzeentch" do
   race Chaos

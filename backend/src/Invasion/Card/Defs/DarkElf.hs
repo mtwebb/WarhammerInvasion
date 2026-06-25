@@ -559,6 +559,29 @@ murderlust = tacticCard "portent-of-doom-093" "Murderlust" do
       corrupted <- unitsMatching self.controller (unitWhere (.corrupted))
       chooseUpTo self.controller 2 (map (.key) corrupted) (traverse_ (push . CleanseUnit))
 
+-- Bloodquest: Shield of the Gods ----------------------------------------
+
+naggarondForge :: CardDef Support
+naggarondForge = supportCard "shield-of-the-gods-114" "Naggarond Forge" do
+  race DarkElf
+  cost 1
+  loyalty 1
+  power 1
+  trait Location
+  body "Forced: At the end of your turn, discard a card from your hand or sacrifice this card."
+  onMyTurnEnd \_owner self -> do
+    let pk = self.controller
+    me <- playerOf pk <$> getGame
+    case me.hand of
+      [] -> destroySupport self.key
+      _ -> do
+        discard <- askYesNo pk "Discard a card from your hand? (otherwise sacrifice Naggarond Forge)"
+        if discard
+          then chooseFromCards pk 1 1 me.hand "Discard a card." \case
+            (c : _) -> push (DiscardCardsFromHand pk [c.key])
+            [] -> destroySupport self.key
+          else destroySupport self.key
+
 -- The Capital Cycle ----------------------------------------------------
 
 harpyAerie :: CardDef Support
