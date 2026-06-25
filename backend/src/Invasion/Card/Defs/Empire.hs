@@ -1116,6 +1116,15 @@ veteranGreatsword = unitCard "fiery-dawn-107" "Veteran Greatsword" do
     let n = length [u | u <- g.units, u.zone == self.zone]
     until EndOfTurn $ buffPower self.key n
 
+duelistTraining :: CardDef Support
+duelistTraining = supportCard "fiery-dawn-109" "Duelist Training" do
+  race Empire
+  cost 3
+  loyalty 2
+  trait Attachment
+  body "Attach to a target unit you control. Attached unit gains Counterstrike 4 (this unit deals 4 combat damage immediately when defending)."
+  attachmentCounterstrike 4
+
 -- The Enemy cycle -------------------------------------------------------
 
 brightWizardAcolyte :: CardDef Unit
@@ -1381,6 +1390,28 @@ battleWizard = unitCard "legends-018" "Battle Wizard" do
     g <- getGame
     when (isJust (findUnit self.key g)) $
       for_ cs.attackers returnUnitToHand
+
+blessedHammer :: CardDef Support
+blessedHammer = supportCard "legends-020" "Blessed Hammer" do
+  race Empire
+  cost 2
+  loyalty 2
+  trait Attachment
+  body "Attach to a target unit you control. Attached unit gains Counterstrike 2. If attached unit leaves play, you may spend 2 resources to return Blessed Hammer to its owner's hand."
+  -- The optional "return to hand when the host leaves play" rider is not
+  -- modelled; the Counterstrike grant is the card's main effect.
+  attachmentCounterstrike 2
+
+clockworkHorse :: CardDef Support
+clockworkHorse = supportCard "realm-of-the-phoenix-king-023" "Clockwork Horse" do
+  race Empire
+  cost 0
+  loyalty 2
+  trait Attachment
+  body "Attach to a target [Empire] unit. Attached unit gains Toughness 1. Action: Spend 1 resource to attach this card to target [Empire] unit."
+  -- The movable re-attach action is not modelled; the Toughness grant is
+  -- the card's main effect.
+  attachmentToughness 1
 
 callForReserves :: CardDef Tactic
 callForReserves = tacticCard "legends-021" "Call for Reserves" do

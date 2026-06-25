@@ -539,6 +539,7 @@ allCards =
       -- The Morrslieb cycle — The Twin-Tailed Comet (041-060)
       ("the-twin-tailed-comet-041", UnitCardDef daemonslayer),
       ("the-twin-tailed-comet-043", TacticCardDef theSlayerOath),
+      ("the-twin-tailed-comet-046", SupportCardDef tribalTattoos),
       ("the-twin-tailed-comet-048", SupportCardDef rallyPoint),
       ("the-twin-tailed-comet-050", UnitCardDef whiteLionVanguard),
       ("the-twin-tailed-comet-051", UnitCardDef trueMage),
@@ -568,6 +569,7 @@ allCards =
       ("fiery-dawn-105", TacticCardDef deyzBigga),
       ("fiery-dawn-106", TacticCardDef smashEm),
       ("fiery-dawn-107", UnitCardDef veteranGreatsword),
+      ("fiery-dawn-109", SupportCardDef duelistTraining),
       ("fiery-dawn-112", TacticCardDef furyOfAenarion),
       ("fiery-dawn-114", TacticCardDef callTheBrayherd),
       -- The Capital Cycle — The Inevitable City (001-020)
@@ -581,6 +583,7 @@ allCards =
       ("the-inevitable-city-019", TacticCardDef willpower),
       ("the-inevitable-city-020", QuestCardDef raidingCamps),
       -- The Capital Cycle — Realm of the Phoenix King (021-040)
+      ("realm-of-the-phoenix-king-023", SupportCardDef clockworkHorse),
       ("realm-of-the-phoenix-king-027", UnitCardDef heraldOfMoraiHeg),
       ("realm-of-the-phoenix-king-030", SupportCardDef straitsOfLothern),
       ("realm-of-the-phoenix-king-033", TacticCardDef inflame),
@@ -667,6 +670,7 @@ allCards =
       ("legends-011", UnitCardDef redEadBoyz),
       ("legends-012", UnitCardDef frenziedBigUn),
       ("legends-018", UnitCardDef battleWizard),
+      ("legends-020", SupportCardDef blessedHammer),
       ("legends-021", TacticCardDef callForReserves),
       ("legends-027", SupportCardDef elvenSteed),
       ("legends-028", TacticCardDef masterOfTheEarth),
@@ -754,6 +758,7 @@ allCards =
       ("faith-and-steel-106", UnitCardDef doomSeeker),
       ("faith-and-steel-107", TacticCardDef fearlessInBattle),
       ("faith-and-steel-111", UnitCardDef gobboBigBoss),
+      ("faith-and-steel-119", SupportCardDef plunderer),
       -- Hidden Kingdoms (deluxe expansion)
       ("hidden-kingdoms-003", UnitCardDef chameleonStalker),
       ("hidden-kingdoms-005", UnitCardDef saurusOldblood),

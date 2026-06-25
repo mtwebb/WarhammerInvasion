@@ -1631,6 +1631,14 @@ blooddrinker = supportCard "hidden-kingdoms-034" "Blooddrinker" do
       then length (playerOf self.controller.next g).hand
       else 0
 
+plunderer :: CardDef Support
+plunderer = supportCard "faith-and-steel-119" "Plunderer" do
+  cost 0
+  loyalty 0
+  trait Attachment
+  body "Attach to target unit you control. Attached unit gains Raider 2."
+  attachmentRaider 2
+
 -- Ambush riders (Eternal War cycle) ------------------------------------
 
 rogueWarrior :: CardDef Unit

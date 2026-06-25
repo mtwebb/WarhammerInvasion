@@ -473,6 +473,16 @@ data SupportExtras = SupportExtras
   , attachmentSavageBonus :: Int
     -- ^ Static Savage X granted to the host while attached (Cloak of
     -- Feathers). Summed into the host's 'totalSavage'.
+  , attachmentCounterstrikeBonus :: Int
+    -- ^ Static Counterstrike X granted to the host while attached
+    -- (Duelist Training, Blessed Hammer). Summed into the host's
+    -- 'totalCounterstrike'.
+  , attachmentToughnessBonus :: Int
+    -- ^ Static Toughness X granted to the host while attached
+    -- (Clockwork Horse). Summed into the host's 'totalToughness'.
+  , attachmentRaiderBonus :: Int
+    -- ^ Static Raider X granted to the host while attached (Plunderer).
+    -- Summed into the attacker's Raider total at 'FireRaiderResources'.
   , grantsUncancellableDamage :: Bool
     -- ^ While attached, the host unit's combat damage is
     -- uncancellable (Hammer of Sigmar).
@@ -674,6 +684,9 @@ instance HasDefaultExtras Support where
     { attachmentPowerBonus = 0
     , attachmentHPBonus = 0
     , attachmentSavageBonus = 0
+    , attachmentCounterstrikeBonus = 0
+    , attachmentToughnessBonus = 0
+    , attachmentRaiderBonus = 0
     , grantsUncancellableDamage = False
     , supportAuraPower = \_ _ _ -> 0
     , supportCombatBonus = \_ _ _ -> 0
