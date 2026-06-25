@@ -419,6 +419,19 @@ attachmentHp n = modifySupportExtras \e -> e {attachmentHPBonus = n}
 legendDefendsAnyZone :: CardBuilder Support ()
 legendDefendsAnyZone = modifySupportExtras \e -> e {grantsLegendDefendAnyZone = True}
 
+-- | Combat power this attachment grants its legend host (read only while
+-- the legend is in combat). Mirrors the unit-side 'supportCombatBonus'
+-- for legend hosts (Dawnstar Sword +5; Morglor's +2/+4 via the function
+-- form). Constant convenience wrapper; use 'legendCombatBonusWith' for
+-- state-dependent values.
+legendCombatBonus :: Int -> CardBuilder Support ()
+legendCombatBonus n = legendCombatBonusWith \_ _ -> n
+
+legendCombatBonusWith
+  :: (Game -> SupportDetails -> Int) -> CardBuilder Support ()
+legendCombatBonusWith f =
+  modifySupportExtras \e -> e {attachmentLegendCombatBonus = f}
+
 -- | Grant Savage X to the host while attached (Cloak of Feathers).
 attachmentSavage :: Int -> CardBuilder Support ()
 attachmentSavage n = modifySupportExtras \e -> e {attachmentSavageBonus = n}

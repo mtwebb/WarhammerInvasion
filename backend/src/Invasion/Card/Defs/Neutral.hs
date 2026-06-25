@@ -1770,6 +1770,10 @@ dawnstarSword = supportCard "rising-dawn-001" "Dawnstar Sword" do
     if s.attachedTo == Just u.key && (unitIsAttacking g u || unitIsDefending g u)
       then 5
       else 0
+  -- Legend hosts don't go through the unit aura above, so grant the +5
+  -- combat power via the legend-combat slice (read only while the
+  -- legend is the combatant).
+  legendCombatBonus 5
   onReceive $ Receive \msg _owner self -> case msg of
     ResolveCombat ->
       for_ self.attachedTo \hostKey -> do
@@ -1777,7 +1781,12 @@ dawnstarSword = supportCard "rising-dawn-001" "Dawnstar Sword" do
         case g.combat of
           Just cs
             | hostKey `elem` (cs.attackers <> cs.defenders) ->
-                whenJust (findUnit hostKey g) \_ -> dealDamage hostKey 2
+                -- "takes 2 damage if it survives combat" — applies to a
+                -- unit or a legend host.
+                if isJust (findUnit hostKey g)
+                  then dealDamage hostKey 2
+                  else whenJust (findLegend hostKey g) \_ ->
+                    push (DealDamageToLegend hostKey 2)
           _ -> pure ()
     _ -> pure ()
 

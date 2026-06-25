@@ -4501,6 +4501,17 @@ legendZonePower cd = \case
   QuestZone -> cd.extras.questPower
   BattlefieldZone -> cd.extras.battlefieldPower
 
+-- | A legend's power as a combatant in the given zone: its printed
+-- zone power plus any combat-power bonus from its attachments
+-- (Dawnstar Sword, Morglor the Mangler). Used only while the legend is
+-- actually attacking or defending, so the attachment bonus is
+-- implicitly "while in combat". Resource/draw contribution
+-- ('zonePower') deliberately uses 'legendZonePower' and excludes this.
+legendCombatPower :: Game -> LegendDetails -> ZoneKind -> Int
+legendCombatPower g l zone =
+  legendZonePower l.cardDef zone
+    + sum [s.cardDef.extras.attachmentLegendCombatBonus g s | s <- l.attachments]
+
 zonePower :: Game -> PlayerKey -> ZoneKind -> Int
 zonePower g pk zone =
   let Power base = basePower zone
@@ -4579,7 +4590,7 @@ assignCombatDamage g cs defenderOrder attackerOrder = do
       -- printed in the *attacked* zone (not its weakest-zone value).
       -- A corrupt legend contributes nothing — it cannot defend.
       defendingLegendPow = case defendingLegend of
-        Just l | not l.corrupted -> legendZonePower l.cardDef cs.targetZone
+        Just l | not l.corrupted -> legendCombatPower g l cs.targetZone
         _ -> 0
       -- A legend declared as a zone defender (Descendant of Gods grant)
       -- defends the attacked zone alongside units: it contributes its
@@ -4587,14 +4598,15 @@ assignCombatDamage g cs defenderOrder attackerOrder = do
       zoneDefendingLegend =
         listToMaybe [l | k <- cs.defenders, l <- maybe [] pure (findLegend k g)]
       zoneDefendingLegendPow = case zoneDefendingLegend of
-        Just l | not l.corrupted -> legendZonePower l.cardDef cs.targetZone
+        Just l | not l.corrupted -> legendCombatPower g l cs.targetZone
         _ -> 0
       -- An attacking legend fights from the battlefield using its
-      -- battlefield-zone power, added to the attacker's damage budget.
-      -- (Combat already filtered out a corrupt legend at BeginCombat.)
+      -- battlefield-zone power (plus attachment combat bonuses), added
+      -- to the attacker's damage budget. (Combat already filtered out a
+      -- corrupt legend at BeginCombat.)
       attackingLegendPow =
         sum
-          [ l.cardDef.extras.battlefieldPower
+          [ legendCombatPower g l BattlefieldZone
           | k <- cs.attackers
           , l <- maybe [] pure (findLegend k g)
           ]

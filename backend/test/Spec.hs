@@ -13,7 +13,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Map.Strict qualified as Map
 import Invasion.Capital (Capital (..), Damage (..), Developments (..), Zone (..))
 import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUnit, TargetPlayer), allCards, enumerateOptionsPure, someCardCost)
-import Invasion.Card.Builder (attachmentHp, hitPoints, legendCard, legendDefendsAnyZone, legendPower, supportCard)
+import Invasion.Card.Builder (attachmentHp, hitPoints, legendCard, legendCombatBonus, legendDefendsAnyZone, legendPower, supportCard)
 import Invasion.CardDef (ActionTarget (..), CardDef (..), Keyword (..))
 import Invasion.Modifier
 import Invasion.Engine
@@ -1486,6 +1486,16 @@ main = do
   check "legend HP: printed only = 4" (legendEffectiveHP legendOnly == 4)
   check "legend HP: +4 attachment = 8" (legendEffectiveHP legendWithAtt == 8)
 
+  -- A combat-power attachment (Dawnstar Sword shape) boosts the legend's
+  -- combat power but NOT its resource/draw contribution.
+  let legendArmed = legendOnly {attachments = [mkLegendWeapon legPk]} :: LegendDetails
+  check "legend combat aura: battlefield combat power +5"
+    (legendCombatPower gLegIn legendArmed BattlefieldZone
+       == legendZonePower legendArmed.cardDef BattlefieldZone + 5)
+  check "legend combat aura: does not leak into resource power"
+    (let gArmed = gLeg0 {legends = [legendArmed]}
+      in zonePower gArmed legPk BattlefieldZone == zonePower gLegIn legPk BattlefieldZone)
+
   -- Damage threshold: destroyed at >= effective HP, survives below.
   gLegDmg <- applyMessage gLegIn (DealDamageToLegend legKey 3)
   check "legend damage: survives below HP"
@@ -1671,6 +1681,16 @@ mkLegend pk atts = LegendDetails
 mkLegendAttachment :: PlayerKey -> SupportDetails
 mkLegendAttachment pk =
   freshSupport (UnitKey 9002) pk BattlefieldZone (Just (UnitKey 9001)) testLegendAttachmentDef
+
+-- | A test-only weapon attachment: +5 combat power to its legend host
+-- (Dawnstar Sword shape).
+testLegendWeaponDef :: CardDef Support
+testLegendWeaponDef = supportCard "test-legend-weapon" "Test Blade" do
+  legendCombatBonus 5
+
+mkLegendWeapon :: PlayerKey -> SupportDetails
+mkLegendWeapon pk =
+  freshSupport (UnitKey 9003) pk BattlefieldZone (Just (UnitKey 9001)) testLegendWeaponDef
 
 mkTestCombat :: PlayerKey -> Maybe UnitKey -> CombatState
 mkTestCombat defender tl = CombatState

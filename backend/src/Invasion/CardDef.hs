@@ -598,6 +598,13 @@ data SupportExtras = SupportExtras
     -- ^ "Attached legend ... can defend any of your zones."
     -- (Descendant of Gods.) When attached to a legend, the legend
     -- becomes an eligible defender of any of its controller's zones.
+  , attachmentLegendCombatBonus :: Game -> InPlay Support -> Int
+    -- ^ Extra combat power this attachment grants its *legend* host.
+    -- The unit-host equivalent goes through 'supportAuraPower' /
+    -- 'supportCombatBonus' (which only see units), so legend hosts
+    -- need this parallel slice (Dawnstar Sword +5, Morglor +2/+4).
+    -- Read only while the legend is the attacking/defending combatant,
+    -- so a plain constant already means "while in combat".
   }
 
 -- | Static metadata about a card that's currently being played, used
@@ -726,6 +733,7 @@ instance HasDefaultExtras Support where
     , imposesBlankOn = \_ _ _ -> False
     , selfUntargetable = \_ _ -> Nothing
     , grantsLegendDefendAnyZone = False
+    , attachmentLegendCombatBonus = \_ _ -> 0
     }
 
 instance HasDefaultExtras Quest where
