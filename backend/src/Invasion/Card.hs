@@ -403,6 +403,7 @@ allCards =
       ("the-silent-forge-041", UnitCardDef sonOfGrungi),
       ("the-silent-forge-043", UnitCardDef blackKnightsOfMorr),
       ("the-silent-forge-046", UnitCardDef descendantOfIndraugnir),
+      ("the-silent-forge-050", UnitCardDef fungusbrewGoblin),
       ("the-silent-forge-052", UnitCardDef eslian),
       ("the-silent-forge-053", TacticCardDef embersToInferno),
       ("the-silent-forge-054", UnitCardDef dwarfSlaves),
@@ -543,6 +544,7 @@ allCards =
       ("the-twin-tailed-comet-048", SupportCardDef rallyPoint),
       ("the-twin-tailed-comet-050", UnitCardDef whiteLionVanguard),
       ("the-twin-tailed-comet-051", UnitCardDef trueMage),
+      ("the-twin-tailed-comet-052", UnitCardDef centigor),
       ("the-twin-tailed-comet-053", UnitCardDef sorcererOfTzeentch),
       ("the-twin-tailed-comet-055", UnitCardDef bloodcallSorceress),
       ("the-twin-tailed-comet-057", SupportCardDef anointedCauldron),
@@ -612,6 +614,7 @@ allCards =
       ("city-of-winter-095", TacticCardDef callOfTheKraken),
       ("city-of-winter-100", QuestCardDef raidingShips),
       -- The Capital Cycle — The Imperial Throne (101-120)
+      ("the-imperial-throne-102", UnitCardDef babySquig),
       ("the-imperial-throne-103", UnitCardDef imperialDrummer),
       ("the-imperial-throne-106", UnitCardDef priestsOfSigmar),
       ("the-imperial-throne-107", UnitCardDef stirlandDeathjacks),
@@ -660,6 +663,7 @@ allCards =
       ("shield-of-the-gods-107", UnitCardDef steelStandard),
       ("shield-of-the-gods-109", UnitCardDef ellyrianElite),
       ("shield-of-the-gods-112", TacticCardDef necrodomosProphecy),
+      ("shield-of-the-gods-114", SupportCardDef naggarondForge),
       ("shield-of-the-gods-120", QuestCardDef guardiansOfTheGods),
       -- Legends (deluxe expansion)
       ("legends-003", UnitCardDef veteranSlayer),
