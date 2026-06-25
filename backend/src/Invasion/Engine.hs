@@ -2336,7 +2336,9 @@ instance Run Game where
       -- Reading 'g.units' here — not at enqueue time — is what makes
       -- "survived combat" correct, as with the Scout sweep above.
       g <- get
-      let raiderOf u = sum [n | Raider n <- unitKeywords u]
+      let raiderOf u =
+            sum [n | Raider n <- unitKeywords u]
+              + sum [s.cardDef.extras.attachmentRaiderBonus | s <- u.attachments]
           total = sum $ map raiderOf $ mapMaybe (`findUnit` g) attackerKeys
       when (total > 0) $ send $ GainResources attacker total
     PutUnitIntoPlay pk cardKey zone -> do
@@ -4936,6 +4938,7 @@ totalCounterstrike :: Game -> UnitDetails -> Int
 totalCounterstrike g u =
   sum [n | Counterstrike n <- unitKeywords u]
     + (unitExtrasOf u).selfCounterstrikeBonus g u
+    + sum [s.cardDef.extras.attachmentCounterstrikeBonus | s <- u.attachments]
     + sum [n | Modifier (GainCounterstrike n) _ <- mods]
   where
     mods = fromMaybe [] (Map.lookup (UnitRef u.key) g.modifiers)
@@ -4968,10 +4971,11 @@ savageDamageMultiplier g =
 totalToughness :: Game -> UnitDetails -> Int
 totalToughness g u
   | hasModifier g.modifiers u.key LoseAllToughness = 0
-  | otherwise = printed + selfBonus + modifierBonus + aura + supportAura
+  | otherwise = printed + selfBonus + attachmentBonus + modifierBonus + aura + supportAura
   where
     printed = sum (map asInt (unitKeywords u))
     selfBonus = (unitExtrasOf u).selfToughnessBonus g u
+    attachmentBonus = sum [s.cardDef.extras.attachmentToughnessBonus | s <- u.attachments]
     modifierBonus =
       let mods = fromMaybe [] (Map.lookup (UnitRef u.key) g.modifiers)
        in sum [n | Modifier (GainToughness n) _ <- mods]

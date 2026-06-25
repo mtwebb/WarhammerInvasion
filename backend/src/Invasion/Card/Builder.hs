@@ -408,6 +408,21 @@ attachmentHp n = modifySupportExtras \e -> e {attachmentHPBonus = n}
 attachmentSavage :: Int -> CardBuilder Support ()
 attachmentSavage n = modifySupportExtras \e -> e {attachmentSavageBonus = n}
 
+-- | "Attached unit gains Counterstrike X." (Duelist Training, Blessed
+-- Hammer.) Summed into the host's 'totalCounterstrike'.
+attachmentCounterstrike :: Int -> CardBuilder Support ()
+attachmentCounterstrike n = modifySupportExtras \e -> e {attachmentCounterstrikeBonus = n}
+
+-- | "Attached unit gains Toughness X." (Clockwork Horse.) Summed into
+-- the host's 'totalToughness'.
+attachmentToughness :: Int -> CardBuilder Support ()
+attachmentToughness n = modifySupportExtras \e -> e {attachmentToughnessBonus = n}
+
+-- | "Attached unit gains Raider X." (Plunderer.) Summed into the
+-- attacker's Raider total when combat damage resolves.
+attachmentRaider :: Int -> CardBuilder Support ()
+attachmentRaider n = modifySupportExtras \e -> e {attachmentRaiderBonus = n}
+
 -- | While attached, the host unit's combat damage is uncancellable
 -- (Hammer of Sigmar).
 grantsUncancellable :: CardBuilder Support ()

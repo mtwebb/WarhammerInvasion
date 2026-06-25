@@ -1089,6 +1089,34 @@ main = do
         (effectiveTotalCost gST2 pkST saurusDef == 3)
     _ -> putStrLn "  FAIL sun-temple: defs missing" >> exitFailure
 
+  -- Attachment keyword grants: Duelist Training (Counterstrike 4) and
+  -- Clockwork Horse (Toughness 1) fold into the host's totals.
+  gAK1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkAK = gAK1.currentPlayer
+  case
+    ( firstHandKeys 3 gAK1
+    , Map.lookup "fiery-dawn-109" allCards
+    , Map.lookup "realm-of-the-phoenix-king-023" allCards
+    ) of
+    ([hkAK, csK, tgK], Just (SupportCardDef duelDef), Just (SupportCardDef horseDef)) -> do
+      gAK2 <- applyMessage gAK1 (PutUnitIntoPlay pkAK hkAK BattlefieldZone)
+      let withAtts u
+            | u.key == hkAK =
+                u
+                  { attachments =
+                      freshSupport csK pkAK u.zone (Just hkAK) duelDef
+                        : freshSupport tgK pkAK u.zone (Just hkAK) horseDef
+                        : u.attachments
+                  }
+            | otherwise = u
+          gAK3 = gAK2 {units = map withAtts gAK2.units}
+          host g = listToMaybe [u | u <- g.units, u.key == hkAK]
+      check "attachment grants: Counterstrike 4 from Duelist Training"
+        (maybe False (\u -> totalCounterstrike gAK3 u == 4) (host gAK3))
+      check "attachment grants: Toughness 1 from Clockwork Horse"
+        (maybe False (\u -> totalToughness gAK3 u == 1) (host gAK3))
+    _ -> putStrLn "  FAIL attachment-grants: defs/hand missing" >> exitFailure
+
   -- Cannot be targeted: a CannotBeTargeted (opponent-only) modifier
   -- removes a unit from the opponent's target enumeration but not the
   -- controller's.

@@ -790,6 +790,17 @@ gobboBigBoss = unitCard "faith-and-steel-111" "Gobbo Big Boss" do
         ]
     Nothing -> 0
 
+tribalTattoos :: CardDef Support
+tribalTattoos = supportCard "the-twin-tailed-comet-046" "Tribal Tattoos" do
+  race Orc
+  cost 0
+  loyalty 2
+  trait Attachment
+  body "Attach to a target unit you control. Attached unit gains {power}. If attached unit leaves play, you may spend 1 resource to attach this card to another target unit you control."
+  -- The optional "re-attach when the host leaves play" rider is not
+  -- modelled; the +1 power grant is the card's main effect.
+  attachmentPower 1
+
 goblinRaiders :: CardDef Unit
 goblinRaiders = unitCard "oaths-of-vengeance-031" "Goblin Raiders" do
   race Orc
