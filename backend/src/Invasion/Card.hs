@@ -566,6 +566,7 @@ allCards =
       ("omens-of-ruin-019", UnitCardDef nimbleSpearman),
       -- The Morrslieb cycle — Portent of Doom (081-100)
       ("portent-of-doom-081", SupportCardDef eyeOfSheerian),
+      ("portent-of-doom-082", LegendCardDef skarbrand),
       ("portent-of-doom-088", TacticCardDef theSealedVaults),
       -- The Morrslieb cycle — Fiery Dawn (101-120)
       ("fiery-dawn-105", TacticCardDef deyzBigga),
@@ -668,6 +669,7 @@ allCards =
       ("shield-of-the-gods-106", SupportCardDef creaturePen),
       ("shield-of-the-gods-107", UnitCardDef steelStandard),
       ("shield-of-the-gods-109", UnitCardDef ellyrianElite),
+      ("shield-of-the-gods-102", LegendCardDef anethraHelbane),
       ("shield-of-the-gods-112", TacticCardDef necrodomosProphecy),
       ("shield-of-the-gods-113", UnitCardDef blackGuards),
       ("shield-of-the-gods-114", SupportCardDef naggarondForge),
@@ -757,6 +759,7 @@ allCards =
       ("glory-of-days-past-080", TacticCardDef strengthOfEmperors),
       ("glory-of-days-past-078", SupportCardDef markedForDeath),
       -- The Ruinous Hordes (Eternal War cycle, pack 5)
+      ("the-ruinous-hordes-081", LegendCardDef sigvaldTheMagnificent),
       ("the-ruinous-hordes-082", QuestCardDef dominionOfChaos),
       ("the-ruinous-hordes-083", SupportCardDef northernWastes),
       ("the-ruinous-hordes-085", UnitCardDef steelBehemoth),

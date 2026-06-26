@@ -541,6 +541,10 @@ data Message where
     -- ^ Bar the named player from declaring another attack for the rest
     -- of this turn (Fulminating Cage). Recorded in
     -- 'Game.attackBlockedThisTurn' and checked by 'BeginCombat'.
+  RequireBurnThreeToWin :: PlayerKey -> Message
+    -- ^ The named player must burn three of the opponent's zones (not
+    -- two) to win, for the rest of the game. Latches
+    -- 'Game.burnThreeToWin' (idempotent).
   ResolveAmbushStep :: Message
     -- ^ Step 2.5 (Ambush): after Declare Attackers, before Declare
     -- Defenders, offer the defender each affordable facedown

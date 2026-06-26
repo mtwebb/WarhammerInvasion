@@ -1129,6 +1129,7 @@ log:
     damaged: "{card} takes {amount} damage."
     healed: "{card} heals {amount} damage."
     destroyed: "{player}'s legend {card} is destroyed."
+    burn_three: "{player} must now burn 3 zones to win for the rest of the game."
   effect:
     deferred_damage: "Scheduled {amount} damage at {trigger}."
     scheduled: "Scheduled '{what}' at {trigger}."

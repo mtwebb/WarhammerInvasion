@@ -1323,6 +1323,32 @@ aSlaveForEveryOccasion = tacticCard "march-of-the-damned-030" "A Slave for Every
 
 -- Legends (deluxe expansion) -------------------------------------------
 
+anethraHelbane :: CardDef Legend
+anethraHelbane = legendCard "shield-of-the-gods-102" "Anethra Helbane" do
+  race DarkElf
+  cost 6
+  loyalty 4
+  legendPower 2 2 2
+  hitPoints 3
+  body
+    "Whenever you have more than 5 cards in your hand, immediately discard \
+    \down to 5 cards in your hand. Action: If you have fewer than 5 cards in \
+    \your hand, draw until you have 5 cards in your hand. (Limit once per turn.)"
+  -- The engine lacks continuous state-based checks, so the forced
+  -- discard-to-5 is enforced at the start of the controller's turn.
+  onMyTurnBegin \_owner self -> do
+    me <- playerOf self.controller <$> getGame
+    let excess = length me.hand - 5
+    when (excess > 0) $
+      chooseFromCards self.controller excess excess me.hand
+        "Anethra: discard down to 5 cards." \chosen ->
+          push (DiscardCardsFromHand self.controller (map (.key) chosen))
+  -- "Draw until you have 5" is idempotent once you reach 5, so the
+  -- once-per-turn limit is moot (re-use draws nothing).
+  actionWith "Replenish" 0 [] \usage -> do
+    me <- playerOf usage.user <$> getGame
+    when (length me.hand < 5) $ drawCards usage.user (5 - length me.hand)
+
 malekith :: CardDef Legend
 malekith = legendCard "legends-036" "Malekith" do
   race DarkElf

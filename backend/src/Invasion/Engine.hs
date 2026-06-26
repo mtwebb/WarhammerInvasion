@@ -524,6 +524,7 @@ instance Run Game where
           , pendingActionCancel = mempty
           , developmentPlayedThisTurn = False
           , attackBlockedThisTurn = []
+          , burnThreeToWin = []
           , lastRevealed = []
           }
       t <- gets (.turn)
@@ -1647,9 +1648,13 @@ instance Run Game where
                 [ ("player", playerParam targetPlayer)
                 , ("zone", zoneParam zoneKind)
                 ]
-              -- Check for elimination (two burned zones = lose).
+              -- Check for elimination. Normally two burned zones = lose,
+              -- but if the opponent (the would-be winner) controls a
+              -- "burn 3 to win" legend, they need a third.
+              g2 <- get
               let burnedNow = burnedZoneCount target'.capital
-              when (burnedNow >= 2) $
+                  needed = if targetPlayer.next `elem` g2.burnThreeToWin then 3 else 2
+              when (burnedNow >= needed) $
                 send $ Eliminate targetPlayer CapitalBurned
     HealCapital pk raw -> do
       -- Heal up to N total damage tokens off the capital, spending the
@@ -2367,6 +2372,15 @@ instance Run Game where
                 then gx.attackBlockedThisTurn
                 else pk : gx.attackBlockedThisTurn
           }
+    RequireBurnThreeToWin pk -> do
+      modify \gx ->
+        gx
+          { burnThreeToWin =
+              if pk `elem` gx.burnThreeToWin
+                then gx.burnThreeToWin
+                else pk : gx.burnThreeToWin
+          }
+      logIt LogSystem "log.legend.burn_three" [("player", playerParam pk)]
     FireScoutDiscards attacker defender attackerKeys defenderKeys -> do
       -- Post-damage: count surviving Scouts on each side and queue a
       -- single 'DiscardRandomFromHand' against the opposing player
@@ -3320,6 +3334,7 @@ newGame deck1 deck2 opts = do
       , pendingActionCancel = mempty
       , developmentPlayedThisTurn = False
       , attackBlockedThisTurn = []
+      , burnThreeToWin = []
       , lastRevealed = []
       , drawCaps = mempty
       , capitalShields = mempty
@@ -4551,6 +4566,10 @@ legendCombatPower :: Game -> LegendDetails -> ZoneKind -> Int
 legendCombatPower g l zone =
   legendZonePower l.cardDef zone
     + sum [s.cardDef.extras.attachmentLegendCombatBonus g s | s <- l.attachments]
+    -- Turn-scoped GainPower modifiers on the legend (Sigvald's
+    -- discard-for-X buff). Combat-only: resource/draw 'zonePower' does
+    -- not read these.
+    + sum [n | Modifier (GainPower n) _ <- Map.findWithDefault [] (UnitRef l.key) g.modifiers]
 
 zonePower :: Game -> PlayerKey -> ZoneKind -> Int
 zonePower g pk zone =
