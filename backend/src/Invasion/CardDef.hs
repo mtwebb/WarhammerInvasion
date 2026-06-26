@@ -674,6 +674,11 @@ data LegendExtras = LegendExtras
     -- ^ Power contributed to the quest zone (card draw).
   , battlefieldPower :: Int
     -- ^ Power contributed to the battlefield zone (combat).
+  , legendUnitAuraPower :: Game -> InPlay Legend -> InPlay Unit -> Int
+    -- ^ Continuous power this legend grants units (Grombrindal →
+    -- every unit you control while a zone is burning; Gorbad Ironclaw
+    -- → your attacking units). Folded into each unit's effective
+    -- power by 'recomputeUnitStats', like the unit/support/quest auras.
   }
 
 type instance Extras Unit = UnitExtras
@@ -762,6 +767,7 @@ instance HasDefaultExtras Legend where
     { kingdomPower = 0
     , questPower = 0
     , battlefieldPower = 0
+    , legendUnitAuraPower = \_ _ _ -> 0
     }
 
 -- | A card's reaction to engine events. Wrapped in a newtype because

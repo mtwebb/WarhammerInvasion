@@ -5336,6 +5336,7 @@ recomputeUnitStats g = g {units = map update g.units}
             + sum [(extrasOf v).unitAuraPower g v u | v <- g.units]
             + sum [s.cardDef.extras.supportAuraPower g s u | s <- inPlaySupports]
             + sum [q.cardDef.extras.questUnitAuraPower g q u | q <- g.quests]
+            + sum [l.cardDef.extras.legendUnitAuraPower g l u | l <- g.legends]
             + (extrasOf u).selfPowerBonus g u
             + activeBonusPower ((extrasOf u).runtimeEffects g u)
     computeMaxHP u =
@@ -5391,6 +5392,7 @@ auraPowerBonus g u =
   sum [v.cardDef.extras.unitAuraPower g v u | v <- g.units]
     + sum [s.cardDef.extras.supportAuraPower g s u | s <- allInPlaySupports g]
     + sum [q.cardDef.extras.questUnitAuraPower g q u | q <- g.quests]
+    + sum [l.cardDef.extras.legendUnitAuraPower g l u | l <- g.legends]
 
 -- | Self-scaling power based on game state. Reads the per-card
 -- 'selfPowerBonus' slice on 'UnitExtras' (which subsumes the old

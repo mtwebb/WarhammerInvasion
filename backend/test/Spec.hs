@@ -1573,6 +1573,37 @@ main = do
          cs.pendingAssignments
        Nothing -> False)
 
+  -- Grombrindal: each unit you control gains +1 power while a zone is
+  -- burning. Gorbad Ironclaw: each of your attacking units gains +1.
+  let powOfKey k g =
+        case [u.effectivePower | u <- (recomputeUnitStats g).units, u.key == k] of
+          (p : _) -> p
+          _ -> -1
+  gAura0 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-004" Dwarf
+  case take 1 (map (.key) (activePlayer gAura0).hand) of
+    [uk] -> do
+      let apk = gAura0.currentPlayer
+      gAura1 <- applyMessage gAura0 (PutUnitIntoPlay apk uk BattlefieldZone)
+      let base = powOfKey uk gAura1
+      case Map.lookup "legends-001" allCards of
+        Just (LegendCardDef gromDef) -> do
+          let gGrom = gAura1 {legends = [mkLegendOf apk gromDef]}
+          check "grombrindal: no bonus while nothing is burning"
+            (powOfKey uk gGrom == base)
+          gBurn <- applyMessage gGrom (DealDamageToZone apk.next KingdomZone 8)
+          check "grombrindal: +1 to your units while a zone burns"
+            (powOfKey uk gBurn == base + 1)
+        _ -> putStrLn "  skip grombrindal (not registered)"
+      case Map.lookup "vessel-of-the-winds-062" allCards of
+        Just (LegendCardDef gorbDef) -> do
+          let gGorb = gAura1 {legends = [mkLegendOf apk gorbDef]}
+              gAttacking = gGorb
+                {combat = Just ((mkTestCombat apk.next Nothing) {attackers = [uk]} :: CombatState)}
+          check "gorbad: no bonus while not attacking" (powOfKey uk gGorb == base)
+          check "gorbad: +1 to your attacking units" (powOfKey uk gAttacking == base + 1)
+        _ -> putStrLn "  skip gorbad (not registered)"
+    _ -> putStrLn "  skip legend auras (no hand)"
+
   putStrLn "Phase / turn smoke test: OK"
 
 -- Identity helper so the redaction block reads naturally.
@@ -1733,6 +1764,9 @@ mkLegend pk atts = LegendDetails
   , corrupted = False
   , attachments = atts
   }
+
+mkLegendOf :: PlayerKey -> CardDef Legend -> LegendDetails
+mkLegendOf pk def = (mkLegend pk []) {cardDef = def} :: LegendDetails
 
 mkLegendAttachment :: PlayerKey -> SupportDetails
 mkLegendAttachment pk =

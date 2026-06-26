@@ -648,6 +648,7 @@ allCards =
       ("the-accursed-dead-053", UnitCardDef treasureThieves),
       -- Bloodquest cycle — Vessel of the Winds (pack 4)
       ("vessel-of-the-winds-061", SupportCardDef windcatcherPrism),
+      ("vessel-of-the-winds-062", LegendCardDef gorbadIronclaw),
       ("vessel-of-the-winds-066", UnitCardDef daImmortulz),
       ("vessel-of-the-winds-067", SupportCardDef morglorTheMangler),
       ("vessel-of-the-winds-070", UnitCardDef learnedMage),
@@ -672,6 +673,7 @@ allCards =
       ("shield-of-the-gods-114", SupportCardDef naggarondForge),
       ("shield-of-the-gods-120", QuestCardDef guardiansOfTheGods),
       -- Legends (deluxe expansion)
+      ("legends-001", LegendCardDef grombrindal),
       ("legends-003", UnitCardDef veteranSlayer),
       ("legends-005", UnitCardDef dwarfThunderer),
       ("legends-006", SupportCardDef runeOfCleaving),

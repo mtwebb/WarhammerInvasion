@@ -8,7 +8,7 @@ import Control.Monad.State.Strict
 import Invasion.Card.Effects
 import Invasion.CardDef
 import Invasion.CardDef qualified as CardDef
-import Invasion.Entity (QuestDetails (..), SupportDetails (..), UnitDetails (..))
+import Invasion.Entity (LegendDetails (..), QuestDetails (..), SupportDetails (..), UnitDetails (..))
 import Invasion.Game hiding (battlefield)
 import Invasion.Player
 import Invasion.Prelude
@@ -264,6 +264,17 @@ modifySupportExtras f =
 modifyQuestExtras :: (QuestExtras -> QuestExtras) -> CardBuilder Quest ()
 modifyQuestExtras f =
   modify \cd -> cd {extras = f cd.extras}
+
+modifyLegendExtras :: (LegendExtras -> LegendExtras) -> CardBuilder Legend ()
+modifyLegendExtras f =
+  modify \cd -> cd {extras = f cd.extras}
+
+-- | Continuous power a legend grants units (Grombrindal, Gorbad
+-- Ironclaw). Folded into each unit's effective power like the other
+-- auras. Args: game, the legend, the candidate unit.
+legendUnitAura
+  :: (Game -> LegendDetails -> UnitDetails -> Int) -> CardBuilder Legend ()
+legendUnitAura f = modifyLegendExtras \e -> e {legendUnitAuraPower = f}
 
 -- | "Cancel 1 damage to your capital each turn" (Contested Fortress).
 -- Evaluated live by the engine's 'DealDamageToZone' pipeline, once per

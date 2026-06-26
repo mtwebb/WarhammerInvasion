@@ -17,7 +17,7 @@ import Invasion.Card.Effects
 import Invasion.Card.Triggers
 import Invasion.Card.Types
 import Invasion.CardDef
-import Invasion.Entity (QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
+import Invasion.Entity (LegendDetails (..), QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
 import Invasion.Game hiding (battlefield)
 import Invasion.Message
 import Invasion.Modifier
@@ -1453,6 +1453,17 @@ morglorTheMangler = supportCard "vessel-of-the-winds-067" "Morglor the Mangler" 
             _ -> False
           Nothing -> False
      in 2 + (if opposed then 4 else 0)
+
+gorbadIronclaw :: CardDef Legend
+gorbadIronclaw = legendCard "vessel-of-the-winds-062" "Gorbad Ironclaw" do
+  race Orc
+  cost 5
+  loyalty 3
+  legendPower 2 2 2
+  hitPoints 3
+  body "Each of your attacking units gains {power}."
+  legendUnitAura \g leg u ->
+    if u.controller == leg.controller && unitIsAttacking g u then 1 else 0
 
 daImmortulz :: CardDef Unit
 daImmortulz = unitCard "vessel-of-the-winds-066" "Da Immortulz" do
