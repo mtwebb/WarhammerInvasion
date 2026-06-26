@@ -1855,7 +1855,14 @@ instance Run Game where
           let pa' =
                 map
                   ( \pd -> case pd.target of
+                      -- The key uniquely names a unit or a legend, so a
+                      -- "cancel damage on a unit or legend" effect
+                      -- (Shield Bearer) reduces whichever pending entry
+                      -- carries it.
                       PDUnit k
+                        | k == ukey ->
+                            pd {cancellable = max 0 (pd.cancellable - cap)}
+                      PDLegend k
                         | k == ukey ->
                             pd {cancellable = max 0 (pd.cancellable - cap)}
                       _ -> pd

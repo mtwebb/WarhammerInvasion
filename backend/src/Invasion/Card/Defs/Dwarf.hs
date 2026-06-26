@@ -1436,7 +1436,10 @@ shieldBearer = unitCard "hidden-kingdoms-038" "Shield Bearer" do
   trait Warrior
   body "Action: Sacrifice 1 development to cancel 1 damage assigned to a unit or legend."
   actionWith "Shield" 0 [SacrificeDevelopment] \usage ->
-    withTarget usage.user AnyUnit \k -> cancelDamageOnUnit k 1
+    withTarget usage.user (AnyUnit `Or` AnyLegend) \case
+      TargetUnitOption k -> cancelDamageOnUnit k 1
+      TargetLegendOption k -> cancelDamageOnUnit k 1
+      _ -> pure ()
 
 dwarfEmbassy :: CardDef Support
 dwarfEmbassy = supportCard "hidden-kingdoms-040" "Dwarf Embassy" do

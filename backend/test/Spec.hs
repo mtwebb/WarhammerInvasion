@@ -1556,6 +1556,23 @@ main = do
           (gBgLeg {combat = Just (mkTestCombat bgPk Nothing)}) bgPk BattlefieldZone)
     _ -> putStrLn "  skip bodyguard (no hand)"
 
+  -- Shield Bearer shape: "cancel 1 damage assigned to a unit or legend"
+  -- reduces a pending PDLegend assignment.
+  let csPend = (mkTestCombat legPk Nothing)
+        { pendingAssignments =
+            [PendingDamage {target = PDLegend legKey, cancellable = 1, uncancellable = 0}]
+        } :: CombatState
+      gPend = gLeg0 {legends = [legendOnly], combat = Just csPend}
+  gPendAfter <- applyMessage gPend (CancelAssignedDamageOnUnit legKey 1)
+  check "cancel assigned damage: pending legend damage reduced to 0"
+    (case gPendAfter.combat of
+       Just cs -> all
+         (\pd -> case pd.target of
+            PDLegend k | k == legKey -> pd.cancellable == 0
+            _ -> True)
+         cs.pendingAssignments
+       Nothing -> False)
+
   putStrLn "Phase / turn smoke test: OK"
 
 -- Identity helper so the redaction block reads naturally.
