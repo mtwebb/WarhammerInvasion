@@ -1479,6 +1479,19 @@ daImmortulz = unitCard "vessel-of-the-winds-066" "Da Immortulz" do
 
 -- Legends (deluxe expansion) -------------------------------------------
 
+gromThePaunch :: CardDef Legend
+gromThePaunch = legendCard "legends-008" "Grom the Paunch" do
+  race Orc
+  cost 5
+  loyalty 4
+  legendPower 2 2 2
+  hitPoints 4
+  body
+    "Action: Sacrifice a development to lower the cost of the next unit \
+    \you play this turn by 1 (to a minimum of 1)."
+  actionWith "Da Big Boss" 0 [SacrificeDevelopment] \usage ->
+    push (ScheduleNextUnitDiscount usage.user 1)
+
 blindRiverGoblin :: CardDef Unit
 blindRiverGoblin = unitCard "legends-010" "Blind River Goblin" do
   race Orc
