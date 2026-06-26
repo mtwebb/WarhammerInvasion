@@ -14,7 +14,7 @@ import Invasion.Card.Effects
 import Invasion.Card.Triggers
 import Invasion.Card.Types
 import Invasion.CardDef
-import Invasion.Entity (QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
+import Invasion.Entity (LegendDetails (..), QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
 import Invasion.Game hiding (battlefield)
 import Invasion.Message
 import Invasion.Modifier
@@ -1322,6 +1322,17 @@ aSlaveForEveryOccasion = tacticCard "march-of-the-damned-030" "A Slave for Every
           push (StealUnitFromDiscard pk opp c.key zk False)
 
 -- Legends (deluxe expansion) -------------------------------------------
+
+malekith :: CardDef Legend
+malekith = legendCard "legends-036" "Malekith" do
+  race DarkElf
+  cost 6
+  loyalty 5
+  legendPower 2 2 2
+  hitPoints 4
+  body "Action: At the beginning of your turn, each opponent must sacrifice a unit."
+  onMyTurnBegin \_owner self ->
+    sacrificeOwnUnit self.controller.next "Malekith: sacrifice a unit." \_ -> pure ()
 
 thiefOfEssence :: CardDef Unit
 thiefOfEssence = unitCard "legends-038" "Thief of Essence" do

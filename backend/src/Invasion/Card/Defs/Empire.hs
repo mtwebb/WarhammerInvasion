@@ -1377,6 +1377,20 @@ zoneDevsFor g pk z =
 
 -- Legends (deluxe expansion) -------------------------------------------
 
+karlFranz :: CardDef Legend
+karlFranz = legendCard "legends-015" "Karl Franz" do
+  race Empire
+  cost 6
+  loyalty 5
+  legendPower 2 2 2
+  hitPoints 4
+  body
+    "Action: Sacrifice a development to move target unit you control from \
+    \its current zone to another of your zones."
+  actionWith "Reikland Command" 0 [SacrificeDevelopment] \usage ->
+    withTarget usage.user ownUnit \k ->
+      withTarget usage.user MyAnyZone \z -> moveUnit k z
+
 battleWizard :: CardDef Unit
 battleWizard = unitCard "legends-018" "Battle Wizard" do
   race Empire

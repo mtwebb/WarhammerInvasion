@@ -1304,6 +1304,23 @@ grombrindal = legendCard "legends-001" "Grombrindal" do
           any (.burned) (g.player1.capital.zones <> g.player2.capital.zones)
      in if u.controller == leg.controller && anyBurned then 1 else 0
 
+thorgrimGrudgebearer :: CardDef Legend
+thorgrimGrudgebearer = legendCard "legends-002" "Thorgrim Grudgebearer" do
+  race Dwarf
+  cost 7
+  loyalty 5
+  legendPower 3 3 3
+  hitPoints 4
+  body
+    "Action: When one or more [Dwarf] units you control leaves play, deal \
+    \3 damage to target unit."
+  onReceive $ Receive \msg _owner self -> case msg of
+    UnitLeftPlay departed
+      | departed.controller == self.controller
+      , Dwarf `elem` departed.cardDef.races ->
+          withTarget self.controller AnyUnit \k -> dealDamage k 3
+    _ -> pure ()
+
 veteranSlayer :: CardDef Unit
 veteranSlayer = unitCard "legends-003" "Veteran Slayer" do
   race Dwarf
