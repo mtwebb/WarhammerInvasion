@@ -2319,6 +2319,10 @@ instance Run Game where
       -- response window. Cancellation effects had their chance to
       -- mutate the pending list during the AfterAssign window.
       commitPendingCombatDamage
+      -- Enqueued after the commit's DealDamage messages and before the
+      -- response window, so "when combat resolves" triggers see the
+      -- post-damage board while 'combat' is still set.
+      send CombatResolved
       openAutoCombatWindow AfterApplyCombatDamage
     ResolveCombat -> do
       -- Legacy entry-point: the staged 5-step flow does this work
@@ -2332,7 +2336,9 @@ instance Run Game where
         Just cs -> do
           assignCombatDamage g cs cs.defenders cs.attackers
           commitPendingCombatDamage
+          send CombatResolved
           send EndCombat
+    CombatResolved -> pure ()
     EndCombat -> do
       g <- get
       -- Fire post-damage "when this unit damages an enemy" effects
@@ -5536,7 +5542,12 @@ dispatchToInPlayQuests :: Message -> [QuestDetails] -> Game -> GameT ()
 dispatchToInPlayQuests msg snapshot g = traverse_ (fireReceive g msg) snapshot
 
 dispatchToInPlayLegends :: Message -> [LegendDetails] -> Game -> GameT ()
-dispatchToInPlayLegends msg snapshot g = traverse_ (fireReceive g msg) snapshot
+dispatchToInPlayLegends msg snapshot g = for_ snapshot \l -> do
+  fireReceive g msg l
+  -- Deliver to each attached support too, so attachment receives
+  -- (Dawnstar Sword's survive-damage, …) fire on a legend host — the
+  -- mirror of 'dispatchToInPlayUnits' walking a unit's attachments.
+  traverse_ (fireReceive g msg) l.attachments
 
 -- | Append a single transcript line to the running 'Game.log'. Each
 -- entry carries an i18n key and a map of interpolation params; the

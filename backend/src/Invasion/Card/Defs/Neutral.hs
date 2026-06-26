@@ -1775,7 +1775,7 @@ dawnstarSword = supportCard "rising-dawn-001" "Dawnstar Sword" do
   -- legend is the combatant).
   legendCombatBonus 5
   onReceive $ Receive \msg _owner self -> case msg of
-    ResolveCombat ->
+    CombatResolved ->
       for_ self.attachedTo \hostKey -> do
         g <- getGame
         case g.combat of

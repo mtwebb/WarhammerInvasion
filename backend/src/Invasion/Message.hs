@@ -572,6 +572,14 @@ data Message where
     -- ^ Legacy entry-point preserved for tests / debug. Equivalent
     -- to firing AdvanceCombatToAssign + AdvanceCombatToApply
     -- back-to-back, skipping the intermediate action windows.
+  CombatResolved :: Message
+    -- ^ Fired (in BOTH the staged and legacy paths) after combat
+    -- damage has been applied, while 'combat' is still set. Carries no
+    -- engine logic of its own — it's the signal the "when this card
+    -- resolves combat" triggers ('onCombatResolveAsAttacker' /
+    -- 'onCombatResolveAsDefender', Dawnstar Sword's survive-damage)
+    -- listen for. Distinct from 'ResolveCombat', which is the legacy
+    -- *driver* that runs assignment + commit.
   FireScoutDiscards :: PlayerKey -> PlayerKey -> [UnitKey] -> [UnitKey] -> Message
     -- ^ Post-damage Scout sweep, deferred so that 'surviving Scout'
     -- is evaluated against the post-apply game state. Args:

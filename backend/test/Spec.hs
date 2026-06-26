@@ -1604,6 +1604,79 @@ main = do
         _ -> putStrLn "  skip gorbad (not registered)"
     _ -> putStrLn "  skip legend auras (no hand)"
 
+  -- Repro: Grombrindal + Defender of the Hold attack; Black Orc Squad
+  -- (power 1) defends. The attacking legend should take at most the
+  -- defender's 1 combat damage, not 2.
+  gRepro0 <- case newGame
+    (Deck {cards = replicate 40 "core-001", race = Dwarf})
+    (Deck {cards = replicate 40 "core-060", race = Orc})
+    defaultGameOptions of
+    Left e -> putStrLn ("  FAIL repro newGame: " <> e) >> exitFailure
+    Right g -> applyMessage g Setup >>= (`applyMessage` BeginGame)
+  let atk = gRepro0.currentPlayer
+      def = atk.next
+  case ( take 1 (map (.key) (activePlayer gRepro0).hand)
+       , take 1 (map (.key) (inactivePlayer gRepro0).hand)
+       , Map.lookup "legends-001" allCards
+       ) of
+    ([defKey], [blackKey], Just (LegendCardDef gromDef)) -> do
+      gUnits <- applyMessages gRepro0
+        [ PutUnitIntoPlay atk defKey BattlefieldZone
+        , PutUnitIntoPlay def blackKey BattlefieldZone
+        ]
+      let gromKey = UnitKey 9001
+          combat = CombatState
+            { attackingPlayer = atk
+            , defendingPlayer = def
+            , targetZone = BattlefieldZone
+            , targetLegend = Nothing
+            , attackers = [gromKey, defKey]
+            , defenders = [blackKey]
+            , attackerPowerPenalty = 0
+            , pendingAssignments = []
+            }
+          gCombat = (gUnits {legends = [mkLegendOf atk gromDef]}) {combat = Just combat}
+      gResolved <- applyMessage gCombat ResolveCombat
+      let gromDmg = case [d | l <- gResolved.legends, l.key == gromKey, let Damage d = l.damage] of
+            (d : _) -> d
+            _ -> 0
+      check "combat: attacking legend takes at most the defender's power (1)"
+        (gromDmg <= 1)
+      -- Same board, but driven through the staged prompt path (windows +
+      -- assignment-order prompts), as a real game does.
+      gStaged <- applyMessagesWithAnswers (gUnits {legends = [mkLegendOf atk gromDef]})
+        [ PickUnits [blackKey]            -- defender selection
+        , PickUnits [gromKey, defKey]     -- defender orders attackers
+        ]
+        ( BeginCombat atk BattlefieldZone [gromKey, defKey]
+            : concat (replicate 5 [PassPriority atk, PassPriority def])
+        )
+      let gromDmg2 = case [d | l <- gStaged.legends, l.key == gromKey, let Damage d = l.damage] of
+            (d : _) -> d
+            _ -> 0
+      check "combat (staged): attacking legend takes at most the defender's power (1)"
+        (gromDmg2 <= 1)
+      -- Now with Dawnstar Sword attached to Grombrindal: does its
+      -- "+5 combat / takes 2 if it survives" reach a legend host?
+      case Map.lookup "rising-dawn-001" allCards of
+        Just (SupportCardDef dawnDef) -> do
+          let dawn = freshSupport (UnitKey 9100) atk BattlefieldZone (Just gromKey) dawnDef
+              legArmed = (mkLegendOf atk gromDef) {attachments = [dawn]} :: LegendDetails
+          gDawn <- applyMessagesWithAnswers (gUnits {legends = [legArmed]})
+            [PickUnits [blackKey], PickUnits [defKey, gromKey]]
+            ( BeginCombat atk BattlefieldZone [gromKey, defKey]
+                : concat (replicate 5 [PassPriority atk, PassPriority def])
+            )
+          let dmgD = case [d | l <- gDawn.legends, l.key == gromKey, let Damage d = l.damage] of
+                (d : _) -> d
+                _ -> -99  -- legend destroyed / missing
+          -- Defender's 1 combat damage went to Defender of the Hold, so
+          -- the legend's 2 comes entirely from Dawnstar Sword's
+          -- survive-combat clause now reaching the legend host.
+          check "dawnstar on legend: deals its 2 survive-combat damage" (dmgD == 2)
+        _ -> putStrLn "  skip dawnstar-on-legend repro"
+    _ -> putStrLn "  skip combat-bug repro"
+
   putStrLn "Phase / turn smoke test: OK"
 
 -- Identity helper so the redaction block reads naturally.
