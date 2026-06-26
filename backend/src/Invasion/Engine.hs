@@ -1954,7 +1954,7 @@ instance Run Game where
       let defender = attacker.next
           -- Filter attackers by per-card eligibility (Sworn of Khorne,
           -- corruption gating, etc.) before committing the combat.
-          eligible = filter (eligibleAttacker g defender zone) attackerKeys
+          eligible = filter (eligibleAttacker g defender zone attackerKeys) attackerKeys
           attackBlocked = attacker `elem` g.attackBlockedThisTurn
       if null eligible || attackBlocked
         then do
@@ -3752,8 +3752,8 @@ combatDamageOf g side u =
 --   * Units modifier-tagged 'CannotAttack' cannot attack.
 -- Then the per-card 'canAttackZone' slice ('Sworn of Khorne', etc.)
 -- gets the last word.
-eligibleAttacker :: Game -> PlayerKey -> ZoneKind -> UnitKey -> Bool
-eligibleAttacker g defender zone ukey = case findUnit ukey g of
+eligibleAttacker :: Game -> PlayerKey -> ZoneKind -> [UnitKey] -> UnitKey -> Bool
+eligibleAttacker g defender zone declaredKeys ukey = case findUnit ukey g of
   -- A legend attacks "as though it were a unit in the battlefield":
   -- always from the battlefield, regardless of the targeted zone, so
   -- long as it isn't corrupt.
@@ -3761,12 +3761,22 @@ eligibleAttacker g defender zone ukey = case findUnit ukey g of
     Just l -> not l.corrupted
     Nothing -> False
   Just u ->
-    (u.zone `elem` (unitExtrasOf u).attackEligibleZones || rovingAttacker u ukey)
+    -- A bodyguard may attack from any zone while a matching-race legend
+    -- it controls is co-declared in this same attack.
+    (u.zone `elem` (unitExtrasOf u).attackEligibleZones
+       || rovingAttacker u ukey
+       || bodyguardActive u)
       && not u.corrupted
       && not (hasModifier g.modifiers ukey CannotAttack)
       && not (any (.cardDef.extras.hostCannotAttack) u.attachments)
       && (unitExtrasOf u).canAttackZone g defender zone u
   where
+    bodyguardActive u = case (unitExtrasOf u).bodyguardLegendRace of
+      Just r -> any (legendCoCombatant u.controller r) declaredKeys
+      Nothing -> False
+    legendCoCombatant ctrl r k = case findLegend k g of
+      Just l -> l.controller == ctrl && r `elem` l.cardDef.races && not l.corrupted
+      Nothing -> False
     -- A unit questing on a Sack Tor Aendris-style quest may attack as
     -- though it were in its controller's battlefield.
     rovingAttacker u k =
@@ -3983,6 +3993,7 @@ eligibleDefenderCandidates g defender zone =
   , u.zone == zone
       || rovingDefender u.key
       || hasModifier g.modifiers u.key CanDefendAnyZone
+      || bodyguardActiveDefend u
   , not u.corrupted
   , not (hasModifier g.modifiers u.key CannotDefend)
   , not (unitExtrasOf u).cannotDefend
@@ -4009,6 +4020,22 @@ eligibleDefenderCandidates g defender zone =
               && q.questingUnit == Just k
         )
         g.quests
+    -- A bodyguard may defend from any zone while a matching-race legend
+    -- it controls is "defending" this combat: either the directly-
+    -- targeted legend, or a granted zone-defender.
+    bodyguardActiveDefend u = case (unitExtrasOf u).bodyguardLegendRace of
+      Just r ->
+        any
+          ( \l ->
+              l.controller == defender
+                && r `elem` l.cardDef.races
+                && not l.corrupted
+                && ( (g.combat >>= (.targetLegend)) == Just l.key
+                       || legendCanDefendZones l
+                   )
+          )
+          g.legends
+      Nothing -> False
 
 -- | Prompt the named player for a damage-assignment order over the
 -- supplied keys. Returns the chosen permutation, falling back to the

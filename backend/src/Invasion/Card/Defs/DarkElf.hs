@@ -582,6 +582,18 @@ naggarondForge = supportCard "shield-of-the-gods-114" "Naggarond Forge" do
             [] -> destroySupport self.key
           else destroySupport self.key
 
+blackGuards :: CardDef Unit
+blackGuards = unitCard "shield-of-the-gods-113" "Black Guards" do
+  race DarkElf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 5
+  body
+    "Bodyguard. This unit can attack or defend (from any zone) whenever a \
+    \[Dark Elf] legend you control attacks or defends."
+  bodyguardForLegend DarkElf
+
 -- The Capital Cycle ----------------------------------------------------
 
 harpyAerie :: CardDef Support

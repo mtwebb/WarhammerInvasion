@@ -328,6 +328,12 @@ canAttack f = modifyUnitExtras \e -> e {canAttackZone = f}
 perTurnDamageCap :: Int -> CardBuilder Unit ()
 perTurnDamageCap n = modifyUnitExtras \e -> e {damageCap = Just n}
 
+-- | "This unit can attack or defend (from any zone) whenever a [Race]
+-- legend you control attacks or defends." (Da Immortulz, Swords of
+-- Chaos, Black Guards.)
+bodyguardForLegend :: Race -> CardBuilder Unit ()
+bodyguardForLegend r = modifyUnitExtras \e -> e {bodyguardLegendRace = Just r}
+
 -- | Mark the unit as corrupting any enemy it deals non-zero combat
 -- damage to (Plaguebearers of Nurgle, Beasts of Nurgle).
 corruptsOnDamage :: CardBuilder Unit ()

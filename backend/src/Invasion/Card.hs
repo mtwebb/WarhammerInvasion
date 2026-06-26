@@ -648,6 +648,7 @@ allCards =
       ("the-accursed-dead-053", UnitCardDef treasureThieves),
       -- Bloodquest cycle — Vessel of the Winds (pack 4)
       ("vessel-of-the-winds-061", SupportCardDef windcatcherPrism),
+      ("vessel-of-the-winds-066", UnitCardDef daImmortulz),
       ("vessel-of-the-winds-067", SupportCardDef morglorTheMangler),
       ("vessel-of-the-winds-070", UnitCardDef learnedMage),
       ("vessel-of-the-winds-075", SupportCardDef templeOfSpite),
@@ -655,6 +656,7 @@ allCards =
       -- Bloodquest cycle — Portent of Doom (pack 5)
       ("portent-of-doom-089", UnitCardDef princeAlthran),
       ("portent-of-doom-093", TacticCardDef murderlust),
+      ("portent-of-doom-094", UnitCardDef swordsOfChaos),
       ("portent-of-doom-097", TacticCardDef ghostlyApparition),
       ("portent-of-doom-098", TacticCardDef shieldOfTheGods),
       -- Bloodquest cycle — Shield of the Gods (pack 6)
@@ -666,6 +668,7 @@ allCards =
       ("shield-of-the-gods-107", UnitCardDef steelStandard),
       ("shield-of-the-gods-109", UnitCardDef ellyrianElite),
       ("shield-of-the-gods-112", TacticCardDef necrodomosProphecy),
+      ("shield-of-the-gods-113", UnitCardDef blackGuards),
       ("shield-of-the-gods-114", SupportCardDef naggarondForge),
       ("shield-of-the-gods-120", QuestCardDef guardiansOfTheGods),
       -- Legends (deluxe expansion)

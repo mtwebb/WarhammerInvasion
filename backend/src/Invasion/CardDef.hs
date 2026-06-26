@@ -419,6 +419,13 @@ data UnitExtras = UnitExtras
     -- ^ Zones this unit may attack from. Default battlefield only;
     -- Greyseer Thanquol attacks from anywhere, Dragonslayer also from
     -- the quest zone.
+  , bodyguardLegendRace :: Maybe Race
+    -- ^ "This unit can attack or defend (from any zone) whenever a
+    -- [Race] legend you control attacks or defends." (Da Immortulz,
+    -- Swords of Chaos, Black Guards.) When @Just r@, the unit is an
+    -- eligible attacker/defender from any zone while a non-corrupt
+    -- legend of race @r@ it controls is being co-declared in (or
+    -- targeted by) the same combat.
   , destroyedToZone :: Game -> InPlay Unit -> Maybe ZoneKind
     -- ^ Destruction replacement: instead of going to the discard
     -- pile, re-enter play in the named zone (Vigilant Pistoliers:
@@ -697,6 +704,7 @@ instance HasDefaultExtras Unit where
     , perHitDamageCap = Nothing
     , cannotDefend = False
     , attackEligibleZones = [BattlefieldZone]
+    , bodyguardLegendRace = Nothing
     , destroyedToZone = \_ _ -> Nothing
     , defenderDamageToAllAttackers = False
     }

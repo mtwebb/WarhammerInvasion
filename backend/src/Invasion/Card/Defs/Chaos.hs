@@ -1240,6 +1240,21 @@ necrodomosProphecy = tacticCard "shield-of-the-gods-112" "Necrodomo's Prophecy" 
             shuffleDeck pk
             arrangeDeckCards pk (map (.key) chosen) []
 
+swordsOfChaos :: CardDef Unit
+swordsOfChaos = unitCard "portent-of-doom-094" "Swords of Chaos" do
+  race Chaos
+  cost 4
+  loyalty 3
+  power 2
+  hitPoints 3
+  battlefieldOnly
+  toughness 2
+  body
+    "Battlefield only. Toughness 2. Bodyguard. This unit can attack or \
+    \defend (from any zone) whenever a [Chaos] legend you control attacks \
+    \or defends."
+  bodyguardForLegend Chaos
+
 -- The Capital Cycle ----------------------------------------------------
 
 savageForsaken :: CardDef Unit

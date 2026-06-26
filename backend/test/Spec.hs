@@ -13,7 +13,7 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Map.Strict qualified as Map
 import Invasion.Capital (Capital (..), Damage (..), Developments (..), Zone (..))
 import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUnit, TargetPlayer), allCards, enumerateOptionsPure, someCardCost)
-import Invasion.Card.Builder (attachmentHp, hitPoints, legendCard, legendCombatBonus, legendDefendsAnyZone, legendPower, supportCard)
+import Invasion.Card.Builder (attachmentHp, hitPoints, legendCard, legendCombatBonus, legendDefendsAnyZone, legendPower, race, supportCard)
 import Invasion.CardDef (ActionTarget (..), CardDef (..), Keyword (..))
 import Invasion.Modifier
 import Invasion.Engine
@@ -1270,14 +1270,14 @@ main = do
     ([hkWO, akWO], Just (SupportCardDef wopDef)) -> do
       gWO2 <- applyMessage gWO1 (PutUnitIntoPlay pkWO hkWO BattlefieldZone)
       check "word of pain: host can attack before the attachment"
-        (eligibleAttacker gWO2 pkWO.next BattlefieldZone hkWO)
+        (eligibleAttacker gWO2 pkWO.next BattlefieldZone [hkWO] hkWO)
       let withWop u
             | u.key == hkWO =
                 (u {attachments = freshSupport akWO pkWO u.zone (Just hkWO) wopDef : u.attachments} :: UnitDetails)
             | otherwise = u
           gWO3 = gWO2 {units = map withWop gWO2.units}
       check "word of pain: host cannot attack while Word of Pain is attached"
-        (not (eligibleAttacker gWO3 pkWO.next BattlefieldZone hkWO))
+        (not (eligibleAttacker gWO3 pkWO.next BattlefieldZone [hkWO] hkWO))
     _ -> putStrLn "  FAIL word-of-pain setup (hand too small or def missing)" >> exitFailure
 
   -- Hidden Grove (Omens of Ruin "empty zone" cycle): a unit in a zone
@@ -1535,6 +1535,27 @@ main = do
   check "legend defend: excluded while it is the targeted legend"
     (legKey `notElem` eligibleDefenderCandidates (withCombat (Just legKey)) legPk BattlefieldZone)
 
+  -- Bodyguard (Da Immortulz): attacks/defends from any zone only while a
+  -- matching-race legend it controls is co-declared / targeted.
+  gBg0 <- (`applyMessage` BeginGame) =<< mkMonoGame "vessel-of-the-winds-066" Orc
+  case take 1 (map (.key) (activePlayer gBg0).hand) of
+    [bgk] -> do
+      let bgPk = gBg0.currentPlayer
+      gBgIn <- applyMessage gBg0 (PutUnitIntoPlay bgPk bgk KingdomZone)
+      let gBgLeg = gBgIn {legends = [mkLegend bgPk []]}
+          opp = bgPk.next
+      check "bodyguard attack: ineligible without legend co-declared"
+        (not (eligibleAttacker gBgLeg opp BattlefieldZone [bgk] bgk))
+      check "bodyguard attack: eligible from kingdom when Orc legend co-declared"
+        (eligibleAttacker gBgLeg opp BattlefieldZone [bgk, UnitKey 9001] bgk)
+      check "bodyguard defend: eligible from kingdom while legend is targeted"
+        (bgk `elem` eligibleDefenderCandidates
+          (gBgLeg {combat = Just (mkTestCombat bgPk (Just (UnitKey 9001)))}) bgPk BattlefieldZone)
+      check "bodyguard defend: ineligible when no legend is defending"
+        (bgk `notElem` eligibleDefenderCandidates
+          (gBgLeg {combat = Just (mkTestCombat bgPk Nothing)}) bgPk BattlefieldZone)
+    _ -> putStrLn "  skip bodyguard (no hand)"
+
   putStrLn "Phase / turn smoke test: OK"
 
 -- Identity helper so the redaction block reads naturally.
@@ -1674,6 +1695,7 @@ defenderInHand p = go p.hand
 -- cards (per-zone stats pending) are registered.
 testLegendDef :: CardDef Legend
 testLegendDef = legendCard "test-legend-001" "Test Legend" do
+  race Orc
   legendPower 2 1 3
   hitPoints 4
 

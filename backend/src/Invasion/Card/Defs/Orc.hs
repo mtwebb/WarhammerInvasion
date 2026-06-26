@@ -1454,6 +1454,18 @@ morglorTheMangler = supportCard "vessel-of-the-winds-067" "Morglor the Mangler" 
           Nothing -> False
      in 2 + (if opposed then 4 else 0)
 
+daImmortulz :: CardDef Unit
+daImmortulz = unitCard "vessel-of-the-winds-066" "Da Immortulz" do
+  race Orc
+  cost 4
+  loyalty 1
+  power 2
+  hitPoints 4
+  body
+    "Bodyguard. This unit can attack or defend (from any zone) whenever an \
+    \[Orc] legend you control attacks or defends."
+  bodyguardForLegend Orc
+
 -- Legends (deluxe expansion) -------------------------------------------
 
 blindRiverGoblin :: CardDef Unit
