@@ -454,7 +454,7 @@ onCombatResolveAsAttacker
   => (forall m. TriggerM m => Player -> InPlay k -> CombatState -> m ())
   -> CardBuilder k ()
 onCombatResolveAsAttacker handler = onReceive $ Receive \msg owner self -> case msg of
-  ResolveCombat -> withCombat \cs ->
+  CombatResolved -> withCombat \cs ->
     when (self.key `elem` cs.attackers) $ handler owner self cs
   _ -> pure ()
 
@@ -469,7 +469,7 @@ onCombatResolveAsDefender
   => (forall m. TriggerM m => Player -> InPlay k -> CombatState -> m ())
   -> CardBuilder k ()
 onCombatResolveAsDefender handler = onReceive $ Receive \msg owner self -> case msg of
-  ResolveCombat -> withCombat \cs ->
+  CombatResolved -> withCombat \cs ->
     when (self.key `elem` cs.defenders) $ handler owner self cs
   _ -> pure ()
 

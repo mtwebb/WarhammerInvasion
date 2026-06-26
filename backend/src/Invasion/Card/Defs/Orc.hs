@@ -17,7 +17,7 @@ import Invasion.Card.Effects
 import Invasion.Card.Triggers
 import Invasion.Card.Types
 import Invasion.CardDef
-import Invasion.Entity (QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
+import Invasion.Entity (LegendDetails (..), QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
 import Invasion.Game hiding (battlefield)
 import Invasion.Message
 import Invasion.Modifier
@@ -1405,6 +1405,77 @@ yousBigga = tacticCard "march-of-the-damned-020" "You's Bigga!" do
     -- of 1" wording is approximated here.
     sacrificeOwnUnit self.controller "Sacrifice a unit." \_ ->
       push (ScheduleNextUnitDiscount self.controller 2)
+
+-- Bloodquest cycle — Fragments of Power -------------------------------
+
+daGreatLeader :: CardDef Tactic
+daGreatLeader = tacticCard "fragments-of-power-026" "Da Great Leader" do
+  race Orc
+  cost 3
+  loyalty 2
+  body
+    "Play only if you control a legend or Artefact support card. Action: \
+    \Each [Orc] unit you control gains {power}{power} until the end of the \
+    \turn."
+  playableWhen \g pk ->
+    isJust (legendOf pk g)
+      || any
+        (\s -> s.controller == pk && Artefact `elem` s.cardDef.traits)
+        (allInPlaySupports g)
+  whenResolved \self -> do
+    g <- getGame
+    for_
+      [u | u <- g.units, u.controller == self.controller, Orc `elem` u.cardDef.races]
+      \u -> until EndOfTurn $ buffPower u.key 2
+
+-- Bloodquest cycle — Vessel of the Winds -------------------------------
+
+morglorTheMangler :: CardDef Support
+morglorTheMangler = supportCard "vessel-of-the-winds-067" "Morglor the Mangler" do
+  race Orc
+  cost 1
+  loyalty 1
+  traits [Weapon, Attachment]
+  body
+    "Attach to a target [Orc] unit or legend. Attached unit or legend deals \
+    \+2 damage in combat. Attached legend deals an additional +4 damage in \
+    \combat while opposed."
+  -- Unit host: +2 combat damage.
+  supportCombat \_g s u -> if s.attachedTo == Just u.key then 2 else 0
+  -- Legend host: +2 combat power, plus +4 more while opposed.
+  legendCombatBonusWith \g s ->
+    let opposed = case g.combat of
+          Just cs -> case s.attachedTo of
+            Just hk
+              | hk `elem` cs.attackers -> not (null cs.defenders)
+              | hk `elem` cs.defenders -> not (null cs.attackers)
+              | cs.targetLegend == Just hk -> not (null cs.attackers)
+            _ -> False
+          Nothing -> False
+     in 2 + (if opposed then 4 else 0)
+
+gorbadIronclaw :: CardDef Legend
+gorbadIronclaw = legendCard "vessel-of-the-winds-062" "Gorbad Ironclaw" do
+  race Orc
+  cost 5
+  loyalty 3
+  legendPower 2 2 2
+  hitPoints 3
+  body "Each of your attacking units gains {power}."
+  legendUnitAura \g leg u ->
+    if u.controller == leg.controller && unitIsAttacking g u then 1 else 0
+
+daImmortulz :: CardDef Unit
+daImmortulz = unitCard "vessel-of-the-winds-066" "Da Immortulz" do
+  race Orc
+  cost 4
+  loyalty 1
+  power 2
+  hitPoints 4
+  body
+    "Bodyguard. This unit can attack or defend (from any zone) whenever an \
+    \[Orc] legend you control attacks or defends."
+  bodyguardForLegend Orc
 
 -- Legends (deluxe expansion) -------------------------------------------
 

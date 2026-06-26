@@ -1127,6 +1127,7 @@ log:
     played: "{player} plays the legend {card} ({cost} resources)."
     entered_play: "{player}'s legend enters play."
     damaged: "{card} takes {amount} damage."
+    healed: "{card} heals {amount} damage."
     destroyed: "{player}'s legend {card} is destroyed."
   effect:
     deferred_damage: "Scheduled {amount} damage at {trigger}."

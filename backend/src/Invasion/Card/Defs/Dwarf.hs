@@ -15,7 +15,7 @@ import Invasion.Card.Triggers
 import Invasion.Card.Types
 import Invasion.CardDef
 import Invasion.Capital
-import Invasion.Entity (QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
+import Invasion.Entity (LegendDetails (..), QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
 import Invasion.Game hiding (battlefield)
 import Invasion.Message
 import Invasion.Modifier
@@ -1291,6 +1291,19 @@ mercilessAssault = tacticCard "march-of-the-damned-005" "Merciless Assault" do
 
 -- Legends (deluxe expansion) -------------------------------------------
 
+grombrindal :: CardDef Legend
+grombrindal = legendCard "legends-001" "Grombrindal" do
+  race Dwarf
+  cost 6
+  loyalty 4
+  legendPower 2 2 2
+  hitPoints 4
+  body "Each unit you control gains {power} if a zone is burning."
+  legendUnitAura \g leg u ->
+    let anyBurned =
+          any (.burned) (g.player1.capital.zones <> g.player2.capital.zones)
+     in if u.controller == leg.controller && anyBurned then 1 else 0
+
 veteranSlayer :: CardDef Unit
 veteranSlayer = unitCard "legends-003" "Veteran Slayer" do
   race Dwarf
@@ -1436,7 +1449,10 @@ shieldBearer = unitCard "hidden-kingdoms-038" "Shield Bearer" do
   trait Warrior
   body "Action: Sacrifice 1 development to cancel 1 damage assigned to a unit or legend."
   actionWith "Shield" 0 [SacrificeDevelopment] \usage ->
-    withTarget usage.user AnyUnit \k -> cancelDamageOnUnit k 1
+    withTarget usage.user (AnyUnit `Or` AnyLegend) \case
+      TargetUnitOption k -> cancelDamageOnUnit k 1
+      TargetLegendOption k -> cancelDamageOnUnit k 1
+      _ -> pure ()
 
 dwarfEmbassy :: CardDef Support
 dwarfEmbassy = supportCard "hidden-kingdoms-040" "Dwarf Embassy" do

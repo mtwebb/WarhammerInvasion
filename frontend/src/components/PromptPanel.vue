@@ -82,9 +82,15 @@ const options = computed<PickOption[]>(() => {
       return props.engine.units.map((u) => ({ key: u.key, label: u.cardDef.title }))
     case 'UnitsFromList': {
       const allowed = new Set(filter.contents)
-      return props.engine.units
+      // Candidate keys may name a legend (e.g. a legend declared as a
+      // zone defender via Descendant of Gods), so check legends too.
+      const unitOpts = props.engine.units
         .filter((u) => allowed.has(u.key))
         .map((u) => ({ key: u.key, label: u.cardDef.title }))
+      const legendOpts = props.engine.legends
+        .filter((l) => allowed.has(l.key))
+        .map((l) => ({ key: l.key, label: l.cardDef.title }))
+      return [...unitOpts, ...legendOpts]
     }
     case 'OwnUnitsFromHandByRace':
       return fromCardList(myHand(), filter.contents)
@@ -185,6 +191,12 @@ const supportTitleByKey = computed<Map<number, string>>(() => {
   return m
 })
 
+const legendTitleByKey = computed<Map<number, string>>(() => {
+  const m = new Map<number, string>()
+  for (const l of props.engine.legends) m.set(l.key, l.cardDef.title)
+  return m
+})
+
 function zoneLabel(z: ZoneKind): string {
   switch (z) {
     case 'KingdomZone':
@@ -213,6 +225,8 @@ function targetOptionLabel(o: TargetOption): string {
     }
     case 'TargetPlayerOption':
       return playerLabel(o.contents)
+    case 'TargetLegendOption':
+      return legendTitleByKey.value.get(o.contents) ?? `Legend #${o.contents}`
   }
 }
 
@@ -228,6 +242,8 @@ function targetOptionKey(o: TargetOption): string {
     }
     case 'TargetPlayerOption':
       return `p:${o.contents}`
+    case 'TargetLegendOption':
+      return `l:${o.contents}`
   }
 }
 

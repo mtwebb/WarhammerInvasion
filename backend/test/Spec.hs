@@ -13,10 +13,11 @@ import Data.Aeson.KeyMap qualified as KM
 import Data.Map.Strict qualified as Map
 import Invasion.Capital (Capital (..), Damage (..), Developments (..), Zone (..))
 import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUnit, TargetPlayer), allCards, enumerateOptionsPure, someCardCost)
+import Invasion.Card.Builder (attachmentHp, hitPoints, legendCard, legendCombatBonus, legendDefendsAnyZone, legendPower, race, supportCard)
 import Invasion.CardDef (ActionTarget (..), CardDef (..), Keyword (..))
 import Invasion.Modifier
 import Invasion.Engine
-import Invasion.Entity (QuestDetails (..), SupportDetails (..), UnitDetails (..))
+import Invasion.Entity (LegendDetails (..), QuestDetails (..), SupportDetails (..), UnitDetails (..))
 import Invasion.Game
 import Invasion.Player
 import Invasion.Prelude
@@ -1102,12 +1103,13 @@ main = do
       gAK2 <- applyMessage gAK1 (PutUnitIntoPlay pkAK hkAK BattlefieldZone)
       let withAtts u
             | u.key == hkAK =
-                u
-                  { attachments =
-                      freshSupport csK pkAK u.zone (Just hkAK) duelDef
-                        : freshSupport tgK pkAK u.zone (Just hkAK) horseDef
-                        : u.attachments
-                  }
+                ( u
+                    { attachments =
+                        freshSupport csK pkAK u.zone (Just hkAK) duelDef
+                          : freshSupport tgK pkAK u.zone (Just hkAK) horseDef
+                          : u.attachments
+                    }
+                ) :: UnitDetails
             | otherwise = u
           gAK3 = gAK2 {units = map withAtts gAK2.units}
           host g = listToMaybe [u | u <- g.units, u.key == hkAK]
@@ -1148,7 +1150,7 @@ main = do
         Just (SupportCardDef ddef) -> do
           let withAtt u
                 | u.key == hk =
-                    u {attachments = freshSupport ak pkDS u.zone (Just hk) ddef : u.attachments}
+                    (u {attachments = freshSupport ak pkDS u.zone (Just hk) ddef : u.attachments} :: UnitDetails)
                 | otherwise = u
               gDS3 = gDS2 {units = map withAtt gDS2.units}
               canTargetAtt picker =
@@ -1207,7 +1209,7 @@ main = do
             ]
           let withShield u
                 | u.key == dkSH =
-                    u {attachments = freshSupport skSH defSH u.zone (Just dkSH) shieldDef : u.attachments}
+                    (u {attachments = freshSupport skSH defSH u.zone (Just dkSH) shieldDef : u.attachments} :: UnitDetails)
                 | otherwise = u
               gShA = gShF {units = map withShield gShF.units}
           gShG <- applyMessagesWithAnswers gShA
@@ -1237,7 +1239,7 @@ main = do
       gSC2 <- applyMessage gSC1 (PutUnitIntoPlay pkSC hk BattlefieldZone)
       let withAtt u
             | u.key == hk =
-                u {attachments = freshSupport sk pkSC u.zone (Just hk) scDef : u.attachments}
+                (u {attachments = freshSupport sk pkSC u.zone (Just hk) scDef : u.attachments} :: UnitDetails)
             | otherwise = u
           p0 = getPl pkSC gSC2
           seeded = [c | c <- p0.hand, c.key `elem` [d1, d2]]
@@ -1268,14 +1270,14 @@ main = do
     ([hkWO, akWO], Just (SupportCardDef wopDef)) -> do
       gWO2 <- applyMessage gWO1 (PutUnitIntoPlay pkWO hkWO BattlefieldZone)
       check "word of pain: host can attack before the attachment"
-        (eligibleAttacker gWO2 pkWO.next BattlefieldZone hkWO)
+        (eligibleAttacker gWO2 pkWO.next BattlefieldZone [hkWO] hkWO)
       let withWop u
             | u.key == hkWO =
-                u {attachments = freshSupport akWO pkWO u.zone (Just hkWO) wopDef : u.attachments}
+                (u {attachments = freshSupport akWO pkWO u.zone (Just hkWO) wopDef : u.attachments} :: UnitDetails)
             | otherwise = u
           gWO3 = gWO2 {units = map withWop gWO2.units}
       check "word of pain: host cannot attack while Word of Pain is attached"
-        (not (eligibleAttacker gWO3 pkWO.next BattlefieldZone hkWO))
+        (not (eligibleAttacker gWO3 pkWO.next BattlefieldZone [hkWO] hkWO))
     _ -> putStrLn "  FAIL word-of-pain setup (hand too small or def missing)" >> exitFailure
 
   -- Hidden Grove (Omens of Ruin "empty zone" cycle): a unit in a zone
@@ -1363,7 +1365,7 @@ main = do
       gEC2 <- applyMessage gEC1 (PutUnitIntoPlay pkEC hkE BattlefieldZone)
       let withAtt u
             | u.key == hkE =
-                u {attachments = freshSupport skE pkEC u.zone (Just hkE) eyeDef : u.attachments}
+                (u {attachments = freshSupport skE pkEC u.zone (Just hkE) eyeDef : u.attachments} :: UnitDetails)
             | otherwise = u
           gEC3 = gEC2 {units = map withAtt gEC2.units}
           isCorrupt g =
@@ -1456,6 +1458,224 @@ main = do
       (cardFields (deckOf p1) == [] && cardFields (deckOf p2) == [])
     check "redact: deck count preserved"
       (arrayLen (deckOf p1) == length gCor1.player1.deck)
+
+  -- ------------------------------------------------------------------
+  -- Legend engine. No legend card is registered yet (per-zone stats
+  -- pending), so we inject a fixture legend directly and exercise the
+  -- engine functions: per-zone power, HP + attachment threshold, heal,
+  -- and the zone-defender eligibility guard (incl. the targetLegend
+  -- double-count exclusion).
+  -- ------------------------------------------------------------------
+  gLeg0 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-004" Dwarf
+  let legPk = gLeg0.currentPlayer
+      legKey = UnitKey 9001
+      legendOnly = mkLegend legPk []
+      gLegIn = gLeg0 {legends = [legendOnly]}
+
+  -- Per-zone power: the legend adds its kingdom/quest/battlefield value
+  -- to that zone, simultaneously, for its controller.
+  check "legend power: +2 kingdom"
+    (zonePower gLegIn legPk KingdomZone - zonePower gLeg0 legPk KingdomZone == 2)
+  check "legend power: +1 quest"
+    (zonePower gLegIn legPk QuestZone - zonePower gLeg0 legPk QuestZone == 1)
+  check "legend power: +3 battlefield"
+    (zonePower gLegIn legPk BattlefieldZone - zonePower gLeg0 legPk BattlefieldZone == 3)
+
+  -- Effective HP folds in attachment HP bonus.
+  let legendWithAtt = legendOnly {attachments = [mkLegendAttachment legPk]} :: LegendDetails
+  check "legend HP: printed only = 4" (legendEffectiveHP legendOnly == 4)
+  check "legend HP: +4 attachment = 8" (legendEffectiveHP legendWithAtt == 8)
+
+  -- A combat-power attachment (Dawnstar Sword shape) boosts the legend's
+  -- combat power but NOT its resource/draw contribution.
+  let legendArmed = legendOnly {attachments = [mkLegendWeapon legPk]} :: LegendDetails
+  check "legend combat aura: battlefield combat power +5"
+    (legendCombatPower gLegIn legendArmed BattlefieldZone
+       == legendZonePower legendArmed.cardDef BattlefieldZone + 5)
+  check "legend combat aura: does not leak into resource power"
+    (let gArmed = gLeg0 {legends = [legendArmed]}
+      in zonePower gArmed legPk BattlefieldZone == zonePower gLegIn legPk BattlefieldZone)
+
+  -- Morglor the Mangler on a legend host: +2 combat, +4 more while
+  -- opposed (a state-dependent legend combat bonus).
+  case Map.lookup "vessel-of-the-winds-067" allCards of
+    Just (SupportCardDef morglorDef) -> do
+      let morglor = freshSupport (UnitKey 9004) legPk BattlefieldZone (Just legKey) morglorDef
+          legendMorg = legendOnly {attachments = [morglor]} :: LegendDetails
+          baseBP = legendZonePower legendMorg.cardDef BattlefieldZone
+          attacking ds = Just ((mkTestCombat legPk Nothing)
+            {attackers = [legKey], defenders = ds} :: CombatState)
+          gUnopposed = gLeg0 {legends = [legendMorg], combat = attacking []}
+          gOpposed = gLeg0 {legends = [legendMorg], combat = attacking [UnitKey 1]}
+      check "morglor: legend +2 while unopposed"
+        (legendCombatPower gUnopposed legendMorg BattlefieldZone == baseBP + 2)
+      check "morglor: legend +6 while opposed"
+        (legendCombatPower gOpposed legendMorg BattlefieldZone == baseBP + 6)
+    _ -> putStrLn "  skip morglor (not registered)"
+
+  -- Damage threshold: destroyed at >= effective HP, survives below.
+  gLegDmg <- applyMessage gLegIn (DealDamageToLegend legKey 3)
+  check "legend damage: survives below HP"
+    (case gLegDmg.legends of [l] -> l.damage == Damage 3; _ -> False)
+  gLegKill <- applyMessage gLegIn (DealDamageToLegend legKey 4)
+  check "legend damage: destroyed at >= HP" (null gLegKill.legends)
+
+  -- Heal removes damage.
+  gLegHeal <- applyMessage gLegDmg (HealLegend legKey 3)
+  check "legend heal: damage cleared"
+    (case gLegHeal.legends of [l] -> l.damage == Damage 0; _ -> False)
+
+  -- Zone-defender eligibility: a legend with the defend-any-zone grant
+  -- is offered as a defender, but NOT while it is itself the
+  -- directly-targeted legend (which would double-count it).
+  let gGrant = gLeg0 {legends = [legendWithAtt]}
+      withCombat tl = gGrant {combat = Just (mkTestCombat legPk tl)}
+  check "legend defend: granted legend is an eligible zone defender"
+    (legKey `elem` eligibleDefenderCandidates (withCombat Nothing) legPk BattlefieldZone)
+  check "legend defend: excluded while it is the targeted legend"
+    (legKey `notElem` eligibleDefenderCandidates (withCombat (Just legKey)) legPk BattlefieldZone)
+
+  -- Bodyguard (Da Immortulz): attacks/defends from any zone only while a
+  -- matching-race legend it controls is co-declared / targeted.
+  gBg0 <- (`applyMessage` BeginGame) =<< mkMonoGame "vessel-of-the-winds-066" Orc
+  case take 1 (map (.key) (activePlayer gBg0).hand) of
+    [bgk] -> do
+      let bgPk = gBg0.currentPlayer
+      gBgIn <- applyMessage gBg0 (PutUnitIntoPlay bgPk bgk KingdomZone)
+      let gBgLeg = gBgIn {legends = [mkLegend bgPk []]}
+          opp = bgPk.next
+      check "bodyguard attack: ineligible without legend co-declared"
+        (not (eligibleAttacker gBgLeg opp BattlefieldZone [bgk] bgk))
+      check "bodyguard attack: eligible from kingdom when Orc legend co-declared"
+        (eligibleAttacker gBgLeg opp BattlefieldZone [bgk, UnitKey 9001] bgk)
+      check "bodyguard defend: eligible from kingdom while legend is targeted"
+        (bgk `elem` eligibleDefenderCandidates
+          (gBgLeg {combat = Just (mkTestCombat bgPk (Just (UnitKey 9001)))}) bgPk BattlefieldZone)
+      check "bodyguard defend: ineligible when no legend is defending"
+        (bgk `notElem` eligibleDefenderCandidates
+          (gBgLeg {combat = Just (mkTestCombat bgPk Nothing)}) bgPk BattlefieldZone)
+    _ -> putStrLn "  skip bodyguard (no hand)"
+
+  -- Shield Bearer shape: "cancel 1 damage assigned to a unit or legend"
+  -- reduces a pending PDLegend assignment.
+  let csPend = (mkTestCombat legPk Nothing)
+        { pendingAssignments =
+            [PendingDamage {target = PDLegend legKey, cancellable = 1, uncancellable = 0}]
+        } :: CombatState
+      gPend = gLeg0 {legends = [legendOnly], combat = Just csPend}
+  gPendAfter <- applyMessage gPend (CancelAssignedDamageOnUnit legKey 1)
+  check "cancel assigned damage: pending legend damage reduced to 0"
+    (case gPendAfter.combat of
+       Just cs -> all
+         (\pd -> case pd.target of
+            PDLegend k | k == legKey -> pd.cancellable == 0
+            _ -> True)
+         cs.pendingAssignments
+       Nothing -> False)
+
+  -- Grombrindal: each unit you control gains +1 power while a zone is
+  -- burning. Gorbad Ironclaw: each of your attacking units gains +1.
+  let powOfKey k g =
+        case [u.effectivePower | u <- (recomputeUnitStats g).units, u.key == k] of
+          (p : _) -> p
+          _ -> -1
+  gAura0 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-004" Dwarf
+  case take 1 (map (.key) (activePlayer gAura0).hand) of
+    [uk] -> do
+      let apk = gAura0.currentPlayer
+      gAura1 <- applyMessage gAura0 (PutUnitIntoPlay apk uk BattlefieldZone)
+      let base = powOfKey uk gAura1
+      case Map.lookup "legends-001" allCards of
+        Just (LegendCardDef gromDef) -> do
+          let gGrom = gAura1 {legends = [mkLegendOf apk gromDef]}
+          check "grombrindal: no bonus while nothing is burning"
+            (powOfKey uk gGrom == base)
+          gBurn <- applyMessage gGrom (DealDamageToZone apk.next KingdomZone 8)
+          check "grombrindal: +1 to your units while a zone burns"
+            (powOfKey uk gBurn == base + 1)
+        _ -> putStrLn "  skip grombrindal (not registered)"
+      case Map.lookup "vessel-of-the-winds-062" allCards of
+        Just (LegendCardDef gorbDef) -> do
+          let gGorb = gAura1 {legends = [mkLegendOf apk gorbDef]}
+              gAttacking = gGorb
+                {combat = Just ((mkTestCombat apk.next Nothing) {attackers = [uk]} :: CombatState)}
+          check "gorbad: no bonus while not attacking" (powOfKey uk gGorb == base)
+          check "gorbad: +1 to your attacking units" (powOfKey uk gAttacking == base + 1)
+        _ -> putStrLn "  skip gorbad (not registered)"
+    _ -> putStrLn "  skip legend auras (no hand)"
+
+  -- Repro: Grombrindal + Defender of the Hold attack; Black Orc Squad
+  -- (power 1) defends. The attacking legend should take at most the
+  -- defender's 1 combat damage, not 2.
+  gRepro0 <- case newGame
+    (Deck {cards = replicate 40 "core-001", race = Dwarf})
+    (Deck {cards = replicate 40 "core-060", race = Orc})
+    defaultGameOptions of
+    Left e -> putStrLn ("  FAIL repro newGame: " <> e) >> exitFailure
+    Right g -> applyMessage g Setup >>= (`applyMessage` BeginGame)
+  let atk = gRepro0.currentPlayer
+      def = atk.next
+  case ( take 1 (map (.key) (activePlayer gRepro0).hand)
+       , take 1 (map (.key) (inactivePlayer gRepro0).hand)
+       , Map.lookup "legends-001" allCards
+       ) of
+    ([defKey], [blackKey], Just (LegendCardDef gromDef)) -> do
+      gUnits <- applyMessages gRepro0
+        [ PutUnitIntoPlay atk defKey BattlefieldZone
+        , PutUnitIntoPlay def blackKey BattlefieldZone
+        ]
+      let gromKey = UnitKey 9001
+          combat = CombatState
+            { attackingPlayer = atk
+            , defendingPlayer = def
+            , targetZone = BattlefieldZone
+            , targetLegend = Nothing
+            , attackers = [gromKey, defKey]
+            , defenders = [blackKey]
+            , attackerPowerPenalty = 0
+            , pendingAssignments = []
+            }
+          gCombat = (gUnits {legends = [mkLegendOf atk gromDef]}) {combat = Just combat}
+      gResolved <- applyMessage gCombat ResolveCombat
+      let gromDmg = case [d | l <- gResolved.legends, l.key == gromKey, let Damage d = l.damage] of
+            (d : _) -> d
+            _ -> 0
+      check "combat: attacking legend takes at most the defender's power (1)"
+        (gromDmg <= 1)
+      -- Same board, but driven through the staged prompt path (windows +
+      -- assignment-order prompts), as a real game does.
+      gStaged <- applyMessagesWithAnswers (gUnits {legends = [mkLegendOf atk gromDef]})
+        [ PickUnits [blackKey]            -- defender selection
+        , PickUnits [gromKey, defKey]     -- defender orders attackers
+        ]
+        ( BeginCombat atk BattlefieldZone [gromKey, defKey]
+            : concat (replicate 5 [PassPriority atk, PassPriority def])
+        )
+      let gromDmg2 = case [d | l <- gStaged.legends, l.key == gromKey, let Damage d = l.damage] of
+            (d : _) -> d
+            _ -> 0
+      check "combat (staged): attacking legend takes at most the defender's power (1)"
+        (gromDmg2 <= 1)
+      -- Now with Dawnstar Sword attached to Grombrindal: does its
+      -- "+5 combat / takes 2 if it survives" reach a legend host?
+      case Map.lookup "rising-dawn-001" allCards of
+        Just (SupportCardDef dawnDef) -> do
+          let dawn = freshSupport (UnitKey 9100) atk BattlefieldZone (Just gromKey) dawnDef
+              legArmed = (mkLegendOf atk gromDef) {attachments = [dawn]} :: LegendDetails
+          gDawn <- applyMessagesWithAnswers (gUnits {legends = [legArmed]})
+            [PickUnits [blackKey], PickUnits [defKey, gromKey]]
+            ( BeginCombat atk BattlefieldZone [gromKey, defKey]
+                : concat (replicate 5 [PassPriority atk, PassPriority def])
+            )
+          let dmgD = case [d | l <- gDawn.legends, l.key == gromKey, let Damage d = l.damage] of
+                (d : _) -> d
+                _ -> -99  -- legend destroyed / missing
+          -- Defender's 1 combat damage went to Defender of the Hold, so
+          -- the legend's 2 comes entirely from Dawnstar Sword's
+          -- survive-combat clause now reaching the legend host.
+          check "dawnstar on legend: deals its 2 survive-combat damage" (dmgD == 2)
+        _ -> putStrLn "  skip dawnstar-on-legend repro"
+    _ -> putStrLn "  skip combat-bug repro"
 
   putStrLn "Phase / turn smoke test: OK"
 
@@ -1590,6 +1810,62 @@ defenderInHand p = go p.hand
     isToughness = \case
       Toughness _ -> True
       _ -> False
+
+-- | A test-only legend with distinct per-zone power (k=2, q=1, b=3) and
+-- 4 printed HP. Used to exercise the legend engine before real legend
+-- cards (per-zone stats pending) are registered.
+testLegendDef :: CardDef Legend
+testLegendDef = legendCard "test-legend-001" "Test Legend" do
+  race Orc
+  legendPower 2 1 3
+  hitPoints 4
+
+-- | A test-only attachment: +4 HP and the defend-any-zone grant
+-- (Descendant of Gods shape).
+testLegendAttachmentDef :: CardDef Support
+testLegendAttachmentDef = supportCard "test-legend-attach" "Test Aegis" do
+  attachmentHp 4
+  legendDefendsAnyZone
+
+mkLegend :: PlayerKey -> [SupportDetails] -> LegendDetails
+mkLegend pk atts = LegendDetails
+  { key = UnitKey 9001
+  , controller = pk
+  , zone = BattlefieldZone
+  , cardDef = testLegendDef
+  , damage = Damage 0
+  , corrupted = False
+  , attachments = atts
+  }
+
+mkLegendOf :: PlayerKey -> CardDef Legend -> LegendDetails
+mkLegendOf pk def = (mkLegend pk []) {cardDef = def} :: LegendDetails
+
+mkLegendAttachment :: PlayerKey -> SupportDetails
+mkLegendAttachment pk =
+  freshSupport (UnitKey 9002) pk BattlefieldZone (Just (UnitKey 9001)) testLegendAttachmentDef
+
+-- | A test-only weapon attachment: +5 combat power to its legend host
+-- (Dawnstar Sword shape).
+testLegendWeaponDef :: CardDef Support
+testLegendWeaponDef = supportCard "test-legend-weapon" "Test Blade" do
+  legendCombatBonus 5
+
+mkLegendWeapon :: PlayerKey -> SupportDetails
+mkLegendWeapon pk =
+  freshSupport (UnitKey 9003) pk BattlefieldZone (Just (UnitKey 9001)) testLegendWeaponDef
+
+mkTestCombat :: PlayerKey -> Maybe UnitKey -> CombatState
+mkTestCombat defender tl = CombatState
+  { attackingPlayer = defender.next
+  , defendingPlayer = defender
+  , targetZone = BattlefieldZone
+  , targetLegend = tl
+  , attackers = []
+  , defenders = []
+  , attackerPowerPenalty = 0
+  , pendingAssignments = []
+  }
 
 check :: String -> Bool -> IO ()
 check label ok =

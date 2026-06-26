@@ -8,7 +8,7 @@ import Control.Monad.State.Strict
 import Invasion.Card.Effects
 import Invasion.CardDef
 import Invasion.CardDef qualified as CardDef
-import Invasion.Entity (QuestDetails (..), SupportDetails (..), UnitDetails (..))
+import Invasion.Entity (LegendDetails (..), QuestDetails (..), SupportDetails (..), UnitDetails (..))
 import Invasion.Game hiding (battlefield)
 import Invasion.Player
 import Invasion.Prelude
@@ -82,6 +82,17 @@ loyalty l = modify \cardDef -> cardDef {loyalty = l}
 
 power :: Int -> CardBuilder k ()
 power p = modify \cardDef -> cardDef {power = p}
+
+-- | A legend's per-zone power, printed split across kingdom / quest /
+-- battlefield. Records all three on 'LegendExtras' and sets the single
+-- 'power' field to the weakest zone — the value used "for card-effect
+-- purposes" by the rules (see 'LegendExtras').
+legendPower :: Int -> Int -> Int -> CardBuilder Legend ()
+legendPower k q b = modify \cardDef ->
+  cardDef
+    { power = minimum [k, q, b]
+    , extras = cardDef.extras {kingdomPower = k, questPower = q, battlefieldPower = b}
+    }
 
 -- | Cards that carry hit points: units and legends. Other kinds reject
 -- 'hitPoints' at the type level so a tactic builder can't silently set
@@ -254,6 +265,17 @@ modifyQuestExtras :: (QuestExtras -> QuestExtras) -> CardBuilder Quest ()
 modifyQuestExtras f =
   modify \cd -> cd {extras = f cd.extras}
 
+modifyLegendExtras :: (LegendExtras -> LegendExtras) -> CardBuilder Legend ()
+modifyLegendExtras f =
+  modify \cd -> cd {extras = f cd.extras}
+
+-- | Continuous power a legend grants units (Grombrindal, Gorbad
+-- Ironclaw). Folded into each unit's effective power like the other
+-- auras. Args: game, the legend, the candidate unit.
+legendUnitAura
+  :: (Game -> LegendDetails -> UnitDetails -> Int) -> CardBuilder Legend ()
+legendUnitAura f = modifyLegendExtras \e -> e {legendUnitAuraPower = f}
+
 -- | "Cancel 1 damage to your capital each turn" (Contested Fortress).
 -- Evaluated live by the engine's 'DealDamageToZone' pipeline, once per
 -- turn per copy, on either player's turn.
@@ -316,6 +338,12 @@ canAttack f = modifyUnitExtras \e -> e {canAttackZone = f}
 -- | Per-turn damage cap (Daemonettes of Slaanesh).
 perTurnDamageCap :: Int -> CardBuilder Unit ()
 perTurnDamageCap n = modifyUnitExtras \e -> e {damageCap = Just n}
+
+-- | "This unit can attack or defend (from any zone) whenever a [Race]
+-- legend you control attacks or defends." (Da Immortulz, Swords of
+-- Chaos, Black Guards.)
+bodyguardForLegend :: Race -> CardBuilder Unit ()
+bodyguardForLegend r = modifyUnitExtras \e -> e {bodyguardLegendRace = Just r}
 
 -- | Mark the unit as corrupting any enemy it deals non-zero combat
 -- damage to (Plaguebearers of Nurgle, Beasts of Nurgle).
@@ -403,6 +431,23 @@ attachmentPower n = modifySupportExtras \e -> e {attachmentPowerBonus = n}
 -- | Static HP contribution while attached (Daemonsword).
 attachmentHp :: Int -> CardBuilder Support ()
 attachmentHp n = modifySupportExtras \e -> e {attachmentHPBonus = n}
+
+-- | "Attached legend can defend any of your zones." (Descendant of Gods.)
+legendDefendsAnyZone :: CardBuilder Support ()
+legendDefendsAnyZone = modifySupportExtras \e -> e {grantsLegendDefendAnyZone = True}
+
+-- | Combat power this attachment grants its legend host (read only while
+-- the legend is in combat). Mirrors the unit-side 'supportCombatBonus'
+-- for legend hosts (Dawnstar Sword +5; Morglor's +2/+4 via the function
+-- form). Constant convenience wrapper; use 'legendCombatBonusWith' for
+-- state-dependent values.
+legendCombatBonus :: Int -> CardBuilder Support ()
+legendCombatBonus n = legendCombatBonusWith \_ _ -> n
+
+legendCombatBonusWith
+  :: (Game -> SupportDetails -> Int) -> CardBuilder Support ()
+legendCombatBonusWith f =
+  modifySupportExtras \e -> e {attachmentLegendCombatBonus = f}
 
 -- | Grant Savage X to the host while attached (Cloak of Feathers).
 attachmentSavage :: Int -> CardBuilder Support ()

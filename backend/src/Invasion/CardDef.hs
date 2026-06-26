@@ -419,6 +419,13 @@ data UnitExtras = UnitExtras
     -- ^ Zones this unit may attack from. Default battlefield only;
     -- Greyseer Thanquol attacks from anywhere, Dragonslayer also from
     -- the quest zone.
+  , bodyguardLegendRace :: Maybe Race
+    -- ^ "This unit can attack or defend (from any zone) whenever a
+    -- [Race] legend you control attacks or defends." (Da Immortulz,
+    -- Swords of Chaos, Black Guards.) When @Just r@, the unit is an
+    -- eligible attacker/defender from any zone while a non-corrupt
+    -- legend of race @r@ it controls is being co-declared in (or
+    -- targeted by) the same combat.
   , destroyedToZone :: Game -> InPlay Unit -> Maybe ZoneKind
     -- ^ Destruction replacement: instead of going to the discard
     -- pile, re-enter play in the named zone (Vigilant Pistoliers:
@@ -594,6 +601,17 @@ data SupportExtras = SupportExtras
     -- (Dawnstar Sword, Eye of Sheerian, …) return a constant
     -- @Just False@; Helm of Fortune gates it on the host questing.
     -- Consulted by 'targetableBy' alongside the modifier map.
+  , grantsLegendDefendAnyZone :: Bool
+    -- ^ "Attached legend ... can defend any of your zones."
+    -- (Descendant of Gods.) When attached to a legend, the legend
+    -- becomes an eligible defender of any of its controller's zones.
+  , attachmentLegendCombatBonus :: Game -> InPlay Support -> Int
+    -- ^ Extra combat power this attachment grants its *legend* host.
+    -- The unit-host equivalent goes through 'supportAuraPower' /
+    -- 'supportCombatBonus' (which only see units), so legend hosts
+    -- need this parallel slice (Dawnstar Sword +5, Morglor +2/+4).
+    -- Read only while the legend is the attacking/defending combatant,
+    -- so a plain constant already means "while in combat".
   }
 
 -- | Static metadata about a card that's currently being played, used
@@ -644,8 +662,24 @@ data QuestExtras = QuestExtras
 -- | Tactic-specific tunables. Empty for now.
 data TacticExtras = TacticExtras
 
--- | Legend-specific tunables. Empty for now.
+-- | Legend-specific tunables. A legend's power is printed split across
+-- the three zones (kingdom / quest / battlefield) and it contributes
+-- each value to that zone simultaneously. The single 'CardDef.power'
+-- field carries the legend's power "for card-effect purposes" — by rule
+-- the value of its *weakest* zone (set by the 'legendPower' builder).
 data LegendExtras = LegendExtras
+  { kingdomPower :: Int
+    -- ^ Power contributed to the kingdom zone (resources).
+  , questPower :: Int
+    -- ^ Power contributed to the quest zone (card draw).
+  , battlefieldPower :: Int
+    -- ^ Power contributed to the battlefield zone (combat).
+  , legendUnitAuraPower :: Game -> InPlay Legend -> InPlay Unit -> Int
+    -- ^ Continuous power this legend grants units (Grombrindal →
+    -- every unit you control while a zone is burning; Gorbad Ironclaw
+    -- → your attacking units). Folded into each unit's effective
+    -- power by 'recomputeUnitStats', like the unit/support/quest auras.
+  }
 
 type instance Extras Unit = UnitExtras
 type instance Extras Support = SupportExtras
@@ -675,6 +709,7 @@ instance HasDefaultExtras Unit where
     , perHitDamageCap = Nothing
     , cannotDefend = False
     , attackEligibleZones = [BattlefieldZone]
+    , bodyguardLegendRace = Nothing
     , destroyedToZone = \_ _ -> Nothing
     , defenderDamageToAllAttackers = False
     }
@@ -710,6 +745,8 @@ instance HasDefaultExtras Support where
     , imposesCannotDefendOn = \_ _ _ -> False
     , imposesBlankOn = \_ _ _ -> False
     , selfUntargetable = \_ _ -> Nothing
+    , grantsLegendDefendAnyZone = False
+    , attachmentLegendCombatBonus = \_ _ -> 0
     }
 
 instance HasDefaultExtras Quest where
@@ -727,6 +764,11 @@ instance HasDefaultExtras Tactic where
 
 instance HasDefaultExtras Legend where
   defaultExtras = LegendExtras
+    { kingdomPower = 0
+    , questPower = 0
+    , battlefieldPower = 0
+    , legendUnitAuraPower = \_ _ _ -> 0
+    }
 
 -- | A card's reaction to engine events. Wrapped in a newtype because
 -- record fields can't directly hold a polymorphic function. The

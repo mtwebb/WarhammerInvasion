@@ -354,12 +354,22 @@ function onNecromancyClick(card: EngineCard, ev: MouseEvent) {
 // Khorne can attach to the opponent), grouped by side.
 const attachmentTargets = computed(() => {
   if (!openPlay.value || !isAttachment(openPlay.value.card)) return []
-  return props.engine.units.map((u) => ({
+  // Units plus legends — legends are valid attachment hosts (Descendant
+  // of Gods, the "Hero or legend" artefacts). The server trusts the
+  // chosen key, so we offer both and let the player match the card text.
+  const units = props.engine.units.map((u) => ({
     key: u.key,
     title: u.cardDef.title,
     code: u.cardDef.code,
     mine: u.controller === mySeatKey.value,
   }))
+  const legends = props.engine.legends.map((l) => ({
+    key: l.key,
+    title: l.cardDef.title,
+    code: l.cardDef.code,
+    mine: l.controller === mySeatKey.value,
+  }))
+  return [...units, ...legends]
 })
 
 // Popover position: above the card if there's room, else below. We

@@ -633,10 +633,12 @@ allCards =
       ("rising-dawn-015", SupportCardDef towerOfOblivion),
       -- Bloodquest cycle — Fragments of Power (pack 2)
       ("fragments-of-power-021", SupportCardDef starCrownFragments),
+      ("fragments-of-power-026", TacticCardDef daGreatLeader),
       ("fragments-of-power-027", UnitCardDef averheimSoldiers),
       ("fragments-of-power-029", UnitCardDef ellyrianPatron),
       ("fragments-of-power-031", UnitCardDef swornOfKhorne),
       ("fragments-of-power-032", SupportCardDef stolenSkin),
+      ("fragments-of-power-036", SupportCardDef descendantOfGods),
       -- Bloodquest cycle — The Accursed Dead (pack 3)
       ("the-accursed-dead-043", UnitCardDef recklessEngineer),
       ("the-accursed-dead-057", TacticCardDef arcanePower),
@@ -646,12 +648,16 @@ allCards =
       ("the-accursed-dead-053", UnitCardDef treasureThieves),
       -- Bloodquest cycle — Vessel of the Winds (pack 4)
       ("vessel-of-the-winds-061", SupportCardDef windcatcherPrism),
+      ("vessel-of-the-winds-062", LegendCardDef gorbadIronclaw),
+      ("vessel-of-the-winds-066", UnitCardDef daImmortulz),
+      ("vessel-of-the-winds-067", SupportCardDef morglorTheMangler),
       ("vessel-of-the-winds-070", UnitCardDef learnedMage),
       ("vessel-of-the-winds-075", SupportCardDef templeOfSpite),
       ("vessel-of-the-winds-076", UnitCardDef magePriestOfItza),
       -- Bloodquest cycle — Portent of Doom (pack 5)
       ("portent-of-doom-089", UnitCardDef princeAlthran),
       ("portent-of-doom-093", TacticCardDef murderlust),
+      ("portent-of-doom-094", UnitCardDef swordsOfChaos),
       ("portent-of-doom-097", TacticCardDef ghostlyApparition),
       ("portent-of-doom-098", TacticCardDef shieldOfTheGods),
       -- Bloodquest cycle — Shield of the Gods (pack 6)
@@ -663,9 +669,11 @@ allCards =
       ("shield-of-the-gods-107", UnitCardDef steelStandard),
       ("shield-of-the-gods-109", UnitCardDef ellyrianElite),
       ("shield-of-the-gods-112", TacticCardDef necrodomosProphecy),
+      ("shield-of-the-gods-113", UnitCardDef blackGuards),
       ("shield-of-the-gods-114", SupportCardDef naggarondForge),
       ("shield-of-the-gods-120", QuestCardDef guardiansOfTheGods),
       -- Legends (deluxe expansion)
+      ("legends-001", LegendCardDef grombrindal),
       ("legends-003", UnitCardDef veteranSlayer),
       ("legends-005", UnitCardDef dwarfThunderer),
       ("legends-006", SupportCardDef runeOfCleaving),
@@ -742,6 +750,7 @@ allCards =
       ("glory-of-days-past-075", SupportCardDef painfulMutation),
       ("glory-of-days-past-076", UnitCardDef outlawSorcerer),
       ("glory-of-days-past-079", UnitCardDef rogueWarrior),
+      ("glory-of-days-past-080", TacticCardDef strengthOfEmperors),
       ("glory-of-days-past-078", SupportCardDef markedForDeath),
       -- The Ruinous Hordes (Eternal War cycle, pack 5)
       ("the-ruinous-hordes-082", QuestCardDef dominionOfChaos),

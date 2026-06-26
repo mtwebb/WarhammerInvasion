@@ -206,6 +206,16 @@ export interface EngineLegend {
   zone: ZoneKind
   cardDef: EngineCardDef
   damage: number
+  // A corrupt legend cannot attack or defend.
+  corrupted: boolean
+  // Attachment supports attached to this legend.
+  attachments: EngineSupport[]
+  // A legend's power is split across the three zones; it contributes
+  // each value to that zone simultaneously. cardDef.power carries the
+  // weakest-zone value used "for card-effect purposes".
+  kingdomPower: number
+  questPower: number
+  battlefieldPower: number
 }
 
 export interface EngineZone {
@@ -459,6 +469,7 @@ export type TargetOption =
   | { tag: 'TargetZoneOption'; contents: [PlayerKey, ZoneKind] }
   | { tag: 'TargetSupportOption'; contents: number }
   | { tag: 'TargetPlayerOption'; contents: PlayerKey }
+  | { tag: 'TargetLegendOption'; contents: number }
 
 export type PromptFilter =
   | { tag: 'AnyOwnUnit' }

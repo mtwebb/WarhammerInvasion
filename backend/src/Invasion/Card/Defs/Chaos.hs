@@ -220,7 +220,7 @@ sadisticMutation = supportCard "core-095" "Sadistic Mutation" do
   -- side. We don't check "the host actually dealt damage" beyond
   -- being a non-corrupted attacker — covers the common case.
   onReceive $ Receive \msg _owner self -> case msg of
-    ResolveCombat -> case self.attachedTo of
+    CombatResolved -> case self.attachedTo of
       Just hostKey -> do
         g <- getGame
         case g.combat of
@@ -1186,7 +1186,7 @@ stolenSkin = supportCard "fragments-of-power-032" "Stolen Skin" do
     \survives combat, heal all damage on it."
   supportToughnessAura \_g self u -> if self.attachedTo == Just u.key then 1 else 0
   onReceive $ Receive \msg _owner self -> case msg of
-    ResolveCombat ->
+    CombatResolved ->
       for_ self.attachedTo \hostKey -> do
         g <- getGame
         case g.combat of
@@ -1239,6 +1239,21 @@ necrodomosProphecy = tacticCard "shield-of-the-gods-112" "Necrodomo's Prophecy" 
             push (RevealCards pk chosen)
             shuffleDeck pk
             arrangeDeckCards pk (map (.key) chosen) []
+
+swordsOfChaos :: CardDef Unit
+swordsOfChaos = unitCard "portent-of-doom-094" "Swords of Chaos" do
+  race Chaos
+  cost 4
+  loyalty 3
+  power 2
+  hitPoints 3
+  battlefieldOnly
+  toughness 2
+  body
+    "Battlefield only. Toughness 2. Bodyguard. This unit can attack or \
+    \defend (from any zone) whenever a [Chaos] legend you control attacks \
+    \or defends."
+  bodyguardForLegend Chaos
 
 -- The Capital Cycle ----------------------------------------------------
 
