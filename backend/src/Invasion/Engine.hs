@@ -2231,6 +2231,46 @@ instance Run Game where
               send (TacticResolved pk cardDef.code NoTarget 0)
               send ResolveAmbushStep
         _ -> send AdvanceCombatToDefenders
+    RevealDevelopmentForAttack pk cardKey -> do
+      g <- get
+      let player = lookupPlayer pk g
+          located =
+            listToMaybe
+              [ (zk, c)
+              | (zk, cs) <- Map.toList player.developmentCards
+              , c <- cs
+              , c.key == cardKey
+              ]
+      whenJust located \(zk, c) -> do
+        let rest = filter ((/= cardKey) . (.key)) (Map.findWithDefault [] zk player.developmentCards)
+            cap = player.capital
+            cap' = Capital
+              { kingdom = decrementDev zk cap.kingdom
+              , quest = decrementDev zk cap.quest
+              , battlefield = decrementDev zk cap.battlefield
+              }
+            popped = player {developmentCards = Map.insert zk rest player.developmentCards, capital = cap'}
+        case c.def of
+          UnitCardDef cardDef
+            | HighElf `elem` cardDef.races, isJust (someCardAmbushCost c.def) -> do
+                -- High Elf unit with Ambush: into play, ambush, and
+                -- declare as an attacker in the in-flight combat.
+                let unit = freshUnit cardKey pk zk cardDef
+                modify \gx -> (setPlayer pk popped gx) {units = unit : gx.units}
+                modify \gx -> case gx.combat of
+                  Just cs -> gx {combat = Just (cs {attackers = cardKey : cs.attackers} :: CombatState)}
+                  Nothing -> gx
+                logIt LogSystem
+                  "log.development.ambushed"
+                  [("player", playerParam pk), ("zone", zoneParam zk), ("card", T.pack cardDef.title)]
+                send (UnitEnteredPlay pk cardKey)
+                send (UnitAmbushed pk cardKey)
+          _ -> do
+            -- Anything else: sacrifice the revealed development.
+            modify (setPlayer pk (popped {discard = c : popped.discard}))
+            logIt LogSystem
+              "log.development.sacrificed"
+              [("player", playerParam pk), ("zone", zoneParam zk)]
     AdvanceCombatToDefenders -> do
       -- Step 3: defender chooses which of their units defend the
       -- attacked zone. Prompt the defending player to pick a subset of

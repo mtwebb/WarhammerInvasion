@@ -13,7 +13,7 @@ import Invasion.Card.Effects
 import Invasion.Card.Triggers
 import Invasion.Card.Types
 import Invasion.CardDef
-import Invasion.Entity (QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
+import Invasion.Entity (LegendDetails (..), QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
 import Invasion.Game hiding (battlefield)
 import Invasion.Message
 import Invasion.Modifier
@@ -1132,6 +1132,26 @@ fromBeneathTheWaves = tacticCard "march-of-the-damned-015" "From Beneath the Wav
     "Action: Deal 3 indirect damage to target opponent (players allocate their own indirect \
     \damage)."
   whenResolved \self -> indirectDamage self.controller.next 3
+
+alithAnar :: CardDef Legend
+alithAnar = legendCard "oaths-of-vengeance-021" "Alith Anar" do
+  race HighElf
+  cost 3
+  loyalty 2
+  legendPower 1 1 2
+  hitPoints 3
+  body
+    "Forced: When this legend enters play, you must burn 3 zones instead of \
+    \2 in order to win for the rest of the game. Action: When this legend \
+    \attacks, turn target development you control faceup. If it is a [High \
+    \Elf] unit with Ambush, trigger its ability as if it just ambushed and \
+    \declare it as an attacker. Otherwise, sacrifice it."
+  onEnterPlay \_owner self -> push (RequireBurnThreeToWin self.controller)
+  onMyAttackDeclared \owner self _zone _attackers -> do
+    let devs = concat (Map.elems owner.developmentCards)
+    chooseFromCards self.controller 0 1 devs
+      "Alith Anar: turn a development faceup." \chosen ->
+        for_ chosen \c -> push (RevealDevelopmentForAttack self.controller c.key)
 
 -- Legends (deluxe expansion) -------------------------------------------
 

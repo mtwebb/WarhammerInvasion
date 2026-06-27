@@ -1156,6 +1156,7 @@ log:
     returned: "{player} returns a development in their {zone} to hand."
     reclaimed: "{player} lays a fallen card down as a development in their {zone}."
     flipped_unit: "{player}'s development in the {zone} is revealed: {card} joins the fight until end of turn."
+    sacrificed: "{player} sacrifices their revealed development in {zone}."
   capital:
     healed: "{player}'s capital heals {amount} damage."
     warded: "{player}'s ward cancels {amount} capital damage."

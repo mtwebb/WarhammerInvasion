@@ -725,6 +725,7 @@ allCards =
       ("days-of-blood-018", TacticCardDef recklessAttack),
       ("days-of-blood-019", SupportCardDef bordertown),
       -- Oaths of Vengeance (Eternal War cycle, pack 2)
+      ("oaths-of-vengeance-021", LegendCardDef alithAnar),
       ("oaths-of-vengeance-023", SupportCardDef outlyingTower),
       ("oaths-of-vengeance-024", UnitCardDef nagarytheArcher),
       ("oaths-of-vengeance-026", TacticCardDef bandTogether),
