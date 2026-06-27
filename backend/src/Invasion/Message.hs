@@ -554,6 +554,11 @@ data Message where
     -- ^ The named player must burn three of the opponent's zones (not
     -- two) to win, for the rest of the game. Latches
     -- 'Game.burnThreeToWin' (idempotent).
+  RevealDevelopmentForAttack :: PlayerKey -> UnitKey -> Message
+    -- ^ Alith Anar: turn one of the player's facedown developments
+    -- faceup. If it's a [High Elf] unit with Ambush, put it into play,
+    -- fire its ambush, and add it to the in-flight combat as a declared
+    -- attacker; otherwise sacrifice it.
   ResolveAmbushStep :: Message
     -- ^ Step 2.5 (Ambush): after Declare Attackers, before Declare
     -- Defenders, offer the defender each affordable facedown
