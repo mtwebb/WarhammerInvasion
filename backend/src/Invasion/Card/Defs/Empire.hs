@@ -1377,6 +1377,25 @@ zoneDevsFor g pk z =
 
 -- Legends (deluxe expansion) -------------------------------------------
 
+kurtHelborg :: CardDef Legend
+kurtHelborg = legendCard "the-accursed-dead-042" "Kurt Helborg" do
+  race Empire
+  cost 5
+  loyalty 5
+  legendPower 2 2 2
+  hitPoints 4
+  body
+    "While this legend is participating in combat, lower the cost for you \
+    \to play tactics by 1."
+  legendCostAdjust \g self pk filt ->
+    let inCombat = case g.combat of
+          Just cs ->
+            self.key `elem` cs.attackers
+              || self.key `elem` cs.defenders
+              || cs.targetLegend == Just self.key
+          Nothing -> False
+     in if pk == self.controller && filt.cfKind == Tactic && inCombat then -1 else 0
+
 balthasarGelt :: CardDef Legend
 balthasarGelt = legendCard "faith-and-steel-101" "Balthasar Gelt" do
   race Empire

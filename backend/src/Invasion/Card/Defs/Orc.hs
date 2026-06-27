@@ -1479,6 +1479,19 @@ daImmortulz = unitCard "vessel-of-the-winds-066" "Da Immortulz" do
 
 -- Legends (deluxe expansion) -------------------------------------------
 
+azhagTheSlaughterer :: CardDef Legend
+azhagTheSlaughterer = legendCard "legends-009" "Azhag the Slaughterer" do
+  race Orc
+  cost 7
+  loyalty 5
+  legendPower 3 3 3
+  hitPoints 5
+  body
+    "Each damaged unit you control cannot be targeted by opponents' card \
+    \effects."
+  legendUntargetableAura \_g self u ->
+    u.controller == self.controller && let Damage d = u.damage in d > 0
+
 wurrzag :: CardDef Legend
 wurrzag = legendCard "battle-for-the-old-world-041" "Wurrzag" do
   race Orc

@@ -5440,6 +5440,7 @@ recomputeUnitStats g = g {units = map update g.units}
             :: UnitDetails
     computePower u
       | any (\s -> s.cardDef.extras.imposesNoPowerOn g s u) inPlaySupports = 0
+      | hasModifier g.modifiers u.key LoseAllPower = 0
       | otherwise =
           u.cardDef.power
             + sum (map (attachmentPowerBonus u) u.attachments)

@@ -685,6 +685,10 @@ data LegendExtras = LegendExtras
     -- turn costs 1 less per experience on it). The legend-side mirror
     -- of 'UnitExtras.unitCostAdjustment'; folded into
     -- 'printedCostAdjustment'.
+  , legendGrantsUntargetable :: Game -> InPlay Legend -> InPlay Unit -> Bool
+    -- ^ Whether this legend makes the given unit untargetable by the
+    -- unit's controller's *opponents* (Azhag → each damaged unit you
+    -- control). Consulted by 'targetableBy'.
   }
 
 type instance Extras Unit = UnitExtras
@@ -775,6 +779,7 @@ instance HasDefaultExtras Legend where
     , battlefieldPower = 0
     , legendUnitAuraPower = \_ _ _ -> 0
     , legendCostAdjustment = \_ _ _ _ -> 0
+    , legendGrantsUntargetable = \_ _ _ -> False
     }
 
 -- | A card's reaction to engine events. Wrapped in a newtype because

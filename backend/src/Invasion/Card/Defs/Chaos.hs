@@ -699,6 +699,24 @@ recklessAttack = tacticCard "days-of-blood-018" "Reckless Attack" do
 
 -- Legends --------------------------------------------------------------
 
+archaon :: CardDef Legend
+archaon = legendCard "legends-029" "Archaon" do
+  race Chaos
+  cost 7
+  loyalty 5
+  legendPower 3 3 3
+  hitPoints 5
+  body "Action: When Archaon attacks, spend X resources to deal X damage to target unit."
+  onMyAttackDeclared \owner self _zone _attackers -> do
+    let Resources avail = owner.resources
+    when (avail > 0) $
+      withTarget self.controller AnyUnit \tgt -> do
+        x <- chooseAmount self.controller 0 avail
+          "Archaon: spend X resources to deal X damage."
+        when (x > 0) $ do
+          payResources self.controller x
+          dealDamage tgt x
+
 sigvaldTheMagnificent :: CardDef Legend
 sigvaldTheMagnificent = legendCard "the-ruinous-hordes-081" "Sigvald the Magnificent" do
   race Chaos

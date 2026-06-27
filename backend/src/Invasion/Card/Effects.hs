@@ -826,6 +826,11 @@ mustDefend target = PendingBuff target MustDefend
 untargetable :: Bool -> UnitKey -> PendingBuff
 untargetable opponentOnly target = PendingBuff target (CannotBeTargeted opponentOnly)
 
+-- | "Target unit loses all power." (Morathi.) Pair with 'until
+-- EndOfTurn'.
+losesAllPower :: UnitKey -> PendingBuff
+losesAllPower target = PendingBuff target LoseAllPower
+
 -- | "Blank the text box of this unit (except Traits)." Feared X. Wrap
 -- with 'until EndOfTurn' for the while-attacking duration.
 blankUnit :: UnitKey -> PendingBuff
@@ -1440,7 +1445,15 @@ targetableBy :: Game -> PlayerKey -> UnitKey -> PlayerKey -> Bool
 targetableBy g picker key controller =
   not (any immune (Map.findWithDefault [] (UnitRef key) g.modifiers))
     && not staticImmune
+    && not legendImmune
   where
+    -- A legend can grant its controller's units untargetability by
+    -- opponents (Azhag → damaged units you control).
+    legendImmune =
+      picker /= controller
+        && case findUnit key g of
+             Just u -> any (\l -> l.cardDef.extras.legendGrantsUntargetable g l u) g.legends
+             Nothing -> False
     immune (Modifier (CannotBeTargeted opponentOnly) _) =
       not opponentOnly || controller /= picker
     immune _ = False

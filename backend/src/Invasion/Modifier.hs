@@ -52,6 +52,9 @@ data ModifierDetails
     -- ^ "This unit loses all Toughness." (Morathi's Pegasus's
     -- opponent-triggered ability.) 'totalToughness' returns 0 while
     -- present.
+  | LoseAllPower
+    -- ^ "This unit loses all power until the end of the turn."
+    -- (Morathi.) 'computePower' returns 0 while present.
   | TargetTaxBonus Int
     -- ^ "Cancel any other action that targets this unit unless the
     -- action's controller pays an additional N resources." (Iron
