@@ -1479,6 +1479,31 @@ daImmortulz = unitCard "vessel-of-the-winds-066" "Da Immortulz" do
 
 -- Legends (deluxe expansion) -------------------------------------------
 
+wurrzag :: CardDef Legend
+wurrzag = legendCard "battle-for-the-old-world-041" "Wurrzag" do
+  race Orc
+  cost 3
+  loyalty 2
+  legendPower 1 1 2
+  hitPoints 3
+  body
+    "Forced: When this legend enters play, you must burn 3 zones instead of \
+    \2 in order to win for the rest of the game. Action: When this legend \
+    \attacks, play a non-Epic Spell [Orc] tactic from your hand for free."
+  onEnterPlay \_owner self -> push (RequireBurnThreeToWin self.controller)
+  onMyAttackDeclared \owner self _zone _attackers -> do
+    let candidates =
+          [ c
+          | c <- owner.hand
+          , TacticCardDef cd <- [c.def]
+          , Orc `elem` cd.races
+          , Spell `elem` cd.traits
+          , Epic `notElem` cd.traits
+          ]
+    chooseFromCards self.controller 0 1 candidates
+      "Wurrzag: play a Spell [Orc] tactic for free." \chosen ->
+        for_ chosen \c -> push (PlayTacticFree self.controller c.key)
+
 gromThePaunch :: CardDef Legend
 gromThePaunch = legendCard "legends-008" "Grom the Paunch" do
   race Orc

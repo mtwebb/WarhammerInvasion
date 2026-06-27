@@ -737,6 +737,7 @@ allCards =
       ("oaths-of-vengeance-038", UnitCardDef stealthySkink),
       ("oaths-of-vengeance-039", UnitCardDef skavenPackmaster),
       -- Battle for the Old World (Eternal War cycle, pack 3)
+      ("battle-for-the-old-world-041", LegendCardDef wurrzag),
       ("battle-for-the-old-world-043", SupportCardDef mobOHutz),
       ("battle-for-the-old-world-044", UnitCardDef dedScaryBoy),
       ("battle-for-the-old-world-045", UnitCardDef ironDefenders),

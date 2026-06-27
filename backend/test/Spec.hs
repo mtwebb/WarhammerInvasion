@@ -1702,6 +1702,19 @@ main = do
         (effectiveTotalCost gBalth bpk someUnit == max 0 (base - 2))
     _ -> putStrLn "  skip balthasar cost test"
 
+  -- PlayTacticFree (Wurrzag): resolves a tactic from hand for free,
+  -- moving it to discard without paying.
+  gTf <- (`applyMessage` BeginGame) =<< mkMonoGame "core-080" Orc
+  case take 1 (map (.key) (activePlayer gTf).hand) of
+    [tk] -> do
+      let tpk = gTf.currentPlayer
+      gTf2 <- applyMessage gTf (PlayTacticFree tpk tk)
+      check "playtacticfree: tactic moved to discard"
+        (any (\c -> c.key == tk) (activePlayer gTf2).discard)
+      check "playtacticfree: tactic left hand"
+        (not (any (\c -> c.key == tk) (activePlayer gTf2).hand))
+    _ -> putStrLn "  skip playtacticfree test"
+
   putStrLn "Phase / turn smoke test: OK"
 
 -- Identity helper so the redaction block reads naturally.
