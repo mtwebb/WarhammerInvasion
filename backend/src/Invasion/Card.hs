@@ -789,6 +789,7 @@ allCards =
       ("faith-and-steel-111", UnitCardDef gobboBigBoss),
       ("faith-and-steel-119", SupportCardDef plunderer),
       -- Hidden Kingdoms (deluxe expansion)
+      ("hidden-kingdoms-001", LegendCardDef scarLeaderKroqGar),
       ("hidden-kingdoms-003", UnitCardDef chameleonStalker),
       ("hidden-kingdoms-005", UnitCardDef saurusOldblood),
       ("hidden-kingdoms-006", SupportCardDef greatTempleOfTlazcotl),
@@ -799,6 +800,7 @@ allCards =
       ("hidden-kingdoms-014", UnitCardDef slumberingTitan),
       ("hidden-kingdoms-015", UnitCardDef highbornChampion),
       ("hidden-kingdoms-018", TacticCardDef furyOfTheForest),
+      ("hidden-kingdoms-019", LegendCardDef queekHeadtaker),
       ("hidden-kingdoms-021", UnitCardDef ratSwarm),
       ("hidden-kingdoms-022", UnitCardDef masterMoulder),
       ("hidden-kingdoms-024", UnitCardDef giantRats),

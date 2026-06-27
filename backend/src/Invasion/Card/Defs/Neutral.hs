@@ -1654,6 +1654,43 @@ rogueWarrior = unitCard "glory-of-days-past-079" "Rogue Warrior" do
     g <- getGame
     when (isJust (findUnit self.key g)) $ turnUnitIntoDevelopment self.key
 
+scarLeaderKroqGar :: CardDef Legend
+scarLeaderKroqGar = legendCard "hidden-kingdoms-001" "Scar-Leader Kroq-Gar" do
+  cost 4
+  loyalty 0
+  trait Lizardmen
+  legendPower 1 1 1
+  hitPoints 4
+  body
+    "Action: When this legend attacks, reveal X Lizardmen units from your \
+    \hand. This legend deals X damage in combat until the end of the phase."
+  onMyAttackDeclared \owner self _zone _attackers -> do
+    let lizardmen = [c | c <- owner.hand, UnitCardDef cd <- [c.def], Lizardmen `elem` cd.traits]
+    unless (null lizardmen) $
+      chooseFromCards self.controller 0 (length lizardmen) lizardmen
+        "Kroq-Gar: reveal Lizardmen units to deal +X combat damage." \chosen ->
+          unless (null chosen) $ do
+            push (RevealCards self.controller chosen)
+            until EndOfTurn $ buffPower self.key (length chosen)
+
+queekHeadtaker :: CardDef Legend
+queekHeadtaker = legendCard "hidden-kingdoms-019" "Queek Headtaker" do
+  cost 5
+  loyalty 0
+  trait Skaven
+  legendPower 0 2 2
+  hitPoints 3
+  body
+    "Lower the cost to play a Skaven unit to 0 if you have another copy of \
+    \that unit in play."
+  legendCostAdjust \g self pk filt ->
+    if pk == self.controller
+      && filt.cfKind == Unit
+      && Skaven `elem` filt.cfTraits
+      && any (\u -> u.controller == pk && u.cardDef.code == filt.cfCode) g.units
+      then -100
+      else 0
+
 strengthOfEmperors :: CardDef Tactic
 strengthOfEmperors = tacticCard "glory-of-days-past-080" "Strength of Emperors" do
   cost 1
