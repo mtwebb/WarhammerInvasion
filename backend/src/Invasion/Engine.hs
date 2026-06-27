@@ -1397,13 +1397,22 @@ instance Run Game where
     QuestLeftPlay _pk _qkey _code -> pure ()
     AttachExperience hostKey expCode -> do
       g <- get
-      whenJust (findUnit hostKey g) \u -> do
+      case findUnit hostKey g of
+        Just u -> do
           let u' = (u {experiences = expCode : u.experiences}) :: UnitDetails
           modify \gx -> gx {units = replaceUnit u' gx.units}
           logIt LogSystem
             "log.unit.experience_attached"
             [ ("card", T.pack u.cardDef.title)
             , ("count", tshow (length u'.experiences))
+            ]
+        Nothing -> whenJust (findLegend hostKey g) \l -> do
+          let l' = (l {experiences = expCode : l.experiences}) :: LegendDetails
+          modify \gx -> gx {legends = replaceLegend l' gx.legends}
+          logIt LogSystem
+            "log.unit.experience_attached"
+            [ ("card", T.pack l.cardDef.title)
+            , ("count", tshow (length l'.experiences))
             ]
     PlayTactic pk cardKey target -> do
       g <- get
@@ -2781,6 +2790,7 @@ instance Run Game where
                   , damage = Damage 0
                   , corrupted = False
                   , attachments = []
+                  , experiences = []
                   }
             modify \gx -> (setPlayer pk paidPlayer gx) {legends = legendDetails : gx.legends}
             logIt LogPlayerAction
@@ -5269,7 +5279,7 @@ loyaltyWaived g pk cardDef =
 -- 'effectiveTotalCost'.
 printedCostAdjustment :: Game -> PlayerKey -> CardDef k -> Int
 printedCostAdjustment g pk cardDef =
-  cardDef.selfCostAdjustment g pk + supportAdjust + unitAdjust
+  cardDef.selfCostAdjustment g pk + supportAdjust + unitAdjust + legendAdjust
   where
     filt = cardCodeFilter cardDef
     supportAdjust =
@@ -5281,6 +5291,11 @@ printedCostAdjustment g pk cardDef =
       sum
         [ (unitExtrasOf u).unitCostAdjustment g u pk filt
         | u <- g.units
+        ]
+    legendAdjust =
+      sum
+        [ l.cardDef.extras.legendCostAdjustment g l pk filt
+        | l <- g.legends
         ]
 
 -- | Additional resource cost an effect must pay to target the unit

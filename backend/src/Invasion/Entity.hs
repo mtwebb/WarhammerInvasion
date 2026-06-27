@@ -180,6 +180,9 @@ data LegendDetails = LegendDetails
     -- ^ Attachment supports attached to this legend (Descendant of
     -- Gods, the "Hero or legend" artefacts). Mirrors
     -- 'UnitDetails.attachments'.
+  , experiences :: [CardCode]
+    -- ^ Experience tokens on this legend (Balthasar Gelt). Mirrors
+    -- 'UnitDetails.experiences'; only the count matters.
   }
   deriving stock Show
 
@@ -263,6 +266,7 @@ instance ToJSON LegendDetails where
       , "damage" .= d.damage
       , "corrupted" .= d.corrupted
       , "attachments" .= d.attachments
+      , "experiences" .= d.experiences
       , "kingdomPower" .= d.cardDef.extras.kingdomPower
       , "questPower" .= d.cardDef.extras.questPower
       , "battlefieldPower" .= d.cardDef.extras.battlefieldPower

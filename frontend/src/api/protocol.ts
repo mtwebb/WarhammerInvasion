@@ -210,6 +210,8 @@ export interface EngineLegend {
   corrupted: boolean
   // Attachment supports attached to this legend.
   attachments: EngineSupport[]
+  // Experience tokens on this legend (Balthasar Gelt); only count matters.
+  experiences: string[]
   // A legend's power is split across the three zones; it contributes
   // each value to that zone simultaneously. cardDef.power carries the
   // weakest-zone value used "for card-effect purposes".
