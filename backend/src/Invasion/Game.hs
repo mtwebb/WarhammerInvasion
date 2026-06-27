@@ -570,6 +570,11 @@ data Game = Game
     -- ^ Players who may not declare another attack for the rest of
     -- this turn (Fulminating Cage). Checked in 'BeginCombat'; reset
     -- at 'BeginTurn'.
+  , burnThreeToWin :: [PlayerKey]
+    -- ^ Players who must burn THREE of their opponent's zones (not two)
+    -- to win, for the rest of the game (Crone Hellebron, Alith Anar,
+    -- Wurrzag, Thorek Ironbrow, Sigvald, Balthasar Gelt — their
+    -- enter-play Forced). A permanent latch; never reset.
   , drawCaps :: Map PlayerKey Int
     -- ^ Per-player limit on standard draws for the rest of the turn
     -- (Infiltrate the tactic: 1). Checked against the ThisTurn

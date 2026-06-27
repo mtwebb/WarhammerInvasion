@@ -699,6 +699,51 @@ recklessAttack = tacticCard "days-of-blood-018" "Reckless Attack" do
 
 -- Legends --------------------------------------------------------------
 
+sigvaldTheMagnificent :: CardDef Legend
+sigvaldTheMagnificent = legendCard "the-ruinous-hordes-081" "Sigvald the Magnificent" do
+  race Chaos
+  cost 3
+  loyalty 2
+  legendPower 1 1 2
+  hitPoints 3
+  body
+    "Forced: When this legend enters play, you must burn 3 zones instead of \
+    \2 in order to win for the rest of the game. Action: When this legend \
+    \attacks, discard the top card of your deck. This legend deals +X damage \
+    \in combat until the end of the phase. X is the discarded card's cost."
+  onEnterPlay \_owner self -> push (RequireBurnThreeToWin self.controller)
+  onMyAttackDeclared \owner self _zone _attackers ->
+    case owner.deck of
+      [] -> pure ()
+      (top : _) -> do
+        millFromDeck self.controller 1
+        until EndOfTurn $ buffPower self.key (someCardCost top.def)
+
+skarbrand :: CardDef Legend
+skarbrand = legendCard "portent-of-doom-082" "Skarbrand" do
+  race Chaos
+  cost 5
+  loyalty 4
+  legendPower 2 2 2
+  hitPoints 5
+  body
+    "Forced: When a unit leaves play, each player must deal 1 damage to his \
+    \capital or 1 damage to a legend he controls."
+  onReceive $ Receive \msg _owner _self -> case msg of
+    UnitLeftPlay _ ->
+      for_ [Player1, Player2] \pk -> do
+        g <- getGame
+        case legendOf pk g of
+          Just leg -> do
+            hitLegend <- askYesNo pk
+              "Skarbrand: deal 1 damage to your legend? (otherwise to your capital)"
+            if hitLegend
+              then push (DealDamageToLegend leg.key 1)
+              else withTarget pk MyAnyZone \z -> push (DealDamageToZone pk z 1)
+          Nothing ->
+            withTarget pk MyAnyZone \z -> push (DealDamageToZone pk z 1)
+    _ -> pure ()
+
 bloodletter :: CardDef Unit
 bloodletter = unitCard "legends-031" "Bloodletter" do
   race Chaos

@@ -158,6 +158,9 @@ data Message where
   PlaySupport :: PlayerKey -> UnitKey -> ZoneKind -> Message
     -- ^ Play a non-attachment Support card from hand into one of your
     -- zones. Pays cost, removes the card, emits 'SupportEnteredPlay'.
+  PutSupportIntoPlayFromHand :: PlayerKey -> UnitKey -> ZoneKind -> Message
+    -- ^ Put a Support card from hand directly into play, paying no cost
+    -- (Thorek Ironbrow). Removes the card, emits 'SupportEnteredPlay'.
   PlaySupportFromDeck :: PlayerKey -> UnitKey -> ZoneKind -> Message
     -- ^ Bypass the cost / hand path: pull the named support card out
     -- of the player's deck and put it directly into the named zone.
@@ -541,6 +544,10 @@ data Message where
     -- ^ Bar the named player from declaring another attack for the rest
     -- of this turn (Fulminating Cage). Recorded in
     -- 'Game.attackBlockedThisTurn' and checked by 'BeginCombat'.
+  RequireBurnThreeToWin :: PlayerKey -> Message
+    -- ^ The named player must burn three of the opponent's zones (not
+    -- two) to win, for the rest of the game. Latches
+    -- 'Game.burnThreeToWin' (idempotent).
   ResolveAmbushStep :: Message
     -- ^ Step 2.5 (Ambush): after Declare Attackers, before Declare
     -- Defenders, offer the defender each affordable facedown

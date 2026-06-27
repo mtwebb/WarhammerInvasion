@@ -1677,6 +1677,18 @@ main = do
         _ -> putStrLn "  skip dawnstar-on-legend repro"
     _ -> putStrLn "  skip combat-bug repro"
 
+  -- Burn-3-to-win: a player whose opponent controls a "burn 3 to win"
+  -- legend is not eliminated at 2 burned zones, only at 3.
+  gBw0 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-004" Dwarf
+  let winner = gBw0.currentPlayer
+      loser = winner.next
+  gBwReq <- applyMessage gBw0 (RequireBurnThreeToWin winner)
+  gBw2 <- applyMessages gBwReq
+    [DealDamageToZone loser KingdomZone 8, DealDamageToZone loser QuestZone 8]
+  check "burn-3: not eliminated after 2 burned zones" (not gBw2.over)
+  gBw3 <- applyMessage gBw2 (DealDamageToZone loser BattlefieldZone 8)
+  check "burn-3: eliminated only after the 3rd burned zone" gBw3.over
+
   putStrLn "Phase / turn smoke test: OK"
 
 -- Identity helper so the redaction block reads naturally.

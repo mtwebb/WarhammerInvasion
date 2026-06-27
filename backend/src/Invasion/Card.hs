@@ -566,6 +566,7 @@ allCards =
       ("omens-of-ruin-019", UnitCardDef nimbleSpearman),
       -- The Morrslieb cycle — Portent of Doom (081-100)
       ("portent-of-doom-081", SupportCardDef eyeOfSheerian),
+      ("portent-of-doom-082", LegendCardDef skarbrand),
       ("portent-of-doom-088", TacticCardDef theSealedVaults),
       -- The Morrslieb cycle — Fiery Dawn (101-120)
       ("fiery-dawn-105", TacticCardDef deyzBigga),
@@ -668,6 +669,7 @@ allCards =
       ("shield-of-the-gods-106", SupportCardDef creaturePen),
       ("shield-of-the-gods-107", UnitCardDef steelStandard),
       ("shield-of-the-gods-109", UnitCardDef ellyrianElite),
+      ("shield-of-the-gods-102", LegendCardDef anethraHelbane),
       ("shield-of-the-gods-112", TacticCardDef necrodomosProphecy),
       ("shield-of-the-gods-113", UnitCardDef blackGuards),
       ("shield-of-the-gods-114", SupportCardDef naggarondForge),
@@ -709,6 +711,7 @@ allCards =
       ("legends-053", UnitCardDef bloodDragonKnight),
       ("legends-054", SupportCardDef curseOfYears),
       -- Days of Blood (Eternal War cycle, pack 1)
+      ("days-of-blood-001", LegendCardDef croneHellebron),
       ("days-of-blood-003", UnitCardDef brideOfKhaine),
       ("days-of-blood-004", SupportCardDef chillSeaWatchtower),
       ("days-of-blood-005", UnitCardDef veteranThunderers),
@@ -744,6 +747,7 @@ allCards =
       ("battle-for-the-old-world-053", UnitCardDef norseClansman),
       ("battle-for-the-old-world-056", UnitCardDef slaveHunter),
       -- Glory of Days Past (Eternal War cycle, pack 4)
+      ("glory-of-days-past-061", LegendCardDef thorekIronbrow),
       ("glory-of-days-past-063", UnitCardDef mineEngineers),
       ("glory-of-days-past-064", SupportCardDef karakHirnMine),
       ("glory-of-days-past-065", UnitCardDef ostlandGreatswords),
@@ -757,6 +761,7 @@ allCards =
       ("glory-of-days-past-080", TacticCardDef strengthOfEmperors),
       ("glory-of-days-past-078", SupportCardDef markedForDeath),
       -- The Ruinous Hordes (Eternal War cycle, pack 5)
+      ("the-ruinous-hordes-081", LegendCardDef sigvaldTheMagnificent),
       ("the-ruinous-hordes-082", QuestCardDef dominionOfChaos),
       ("the-ruinous-hordes-083", SupportCardDef northernWastes),
       ("the-ruinous-hordes-085", UnitCardDef steelBehemoth),
