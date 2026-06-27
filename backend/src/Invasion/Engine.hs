@@ -1248,6 +1248,16 @@ instance Run Game where
             , ("cost", tshow n)
             ]
           send $ SupportEnteredPlay pk cardKey
+    PutSupportIntoPlayFromHand pk cardKey zone -> do
+      g <- get
+      player <- getPlayerS pk
+      whenJust (takeSupportFromHand cardKey player) \(cardDef, playerWithoutCard) ->
+        when (canEnterZone g pk cardDef zone) do
+          let support = freshSupport cardKey pk zone Nothing cardDef
+          modify \gx -> (setPlayer pk playerWithoutCard gx) {supports = support : gx.supports}
+          logIt LogSystem "log.support.put_into_play"
+            [("player", playerParam pk), ("card", T.pack cardDef.title)]
+          send $ SupportEnteredPlay pk cardKey
     PlaySupportFromDeck pk cardKey zone -> do
       g <- get
       player <- getPlayerS pk

@@ -1321,6 +1321,34 @@ thorgrimGrudgebearer = legendCard "legends-002" "Thorgrim Grudgebearer" do
           withTarget self.controller AnyUnit \k -> dealDamage k 3
     _ -> pure ()
 
+thorekIronbrow :: CardDef Legend
+thorekIronbrow = legendCard "glory-of-days-past-061" "Thorek Ironbrow" do
+  race Dwarf
+  cost 3
+  loyalty 2
+  legendPower 1 1 2
+  hitPoints 3
+  body
+    "Forced: When this legend enters play, you must burn 3 zones instead of \
+    \2 in order to win for the rest of the game. Action: When this legend \
+    \attacks, put a [Dwarf] support card of cost X or less from your hand \
+    \into play. X is the number of resources in your pool."
+  onEnterPlay \_owner self -> push (RequireBurnThreeToWin self.controller)
+  onMyAttackDeclared \owner self _zone _attackers -> do
+    let Resources x = owner.resources
+        candidates =
+          [ c
+          | c <- owner.hand
+          , SupportCardDef cd <- [c.def]
+          , Dwarf `elem` cd.races
+          , someCardCost c.def <= x
+          ]
+    chooseFromCards self.controller 0 1 candidates
+      "Thorek: put a [Dwarf] support of cost X or less into play." \chosen ->
+        for_ chosen \c ->
+          withTarget self.controller MyAnyZone \z ->
+            push (PutSupportIntoPlayFromHand self.controller c.key z)
+
 veteranSlayer :: CardDef Unit
 veteranSlayer = unitCard "legends-003" "Veteran Slayer" do
   race Dwarf

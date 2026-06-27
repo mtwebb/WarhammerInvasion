@@ -711,6 +711,7 @@ allCards =
       ("legends-053", UnitCardDef bloodDragonKnight),
       ("legends-054", SupportCardDef curseOfYears),
       -- Days of Blood (Eternal War cycle, pack 1)
+      ("days-of-blood-001", LegendCardDef croneHellebron),
       ("days-of-blood-003", UnitCardDef brideOfKhaine),
       ("days-of-blood-004", SupportCardDef chillSeaWatchtower),
       ("days-of-blood-005", UnitCardDef veteranThunderers),
@@ -746,6 +747,7 @@ allCards =
       ("battle-for-the-old-world-053", UnitCardDef norseClansman),
       ("battle-for-the-old-world-056", UnitCardDef slaveHunter),
       -- Glory of Days Past (Eternal War cycle, pack 4)
+      ("glory-of-days-past-061", LegendCardDef thorekIronbrow),
       ("glory-of-days-past-063", UnitCardDef mineEngineers),
       ("glory-of-days-past-064", SupportCardDef karakHirnMine),
       ("glory-of-days-past-065", UnitCardDef ostlandGreatswords),

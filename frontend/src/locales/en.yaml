@@ -1109,6 +1109,7 @@ log:
   support:
     played: "{player} plays {card} ({cost} resources)."
     played_from_deck: "{player} puts {card} into play from their deck."
+    put_into_play: "{player} puts {card} into play from their hand."
     played_from_discard: "{player} returns {card} to play from their discard pile."
     moved: "{player} moves {card} to the {zone}."
     tokens: "{card} now has {count} tokens."

@@ -1323,6 +1323,31 @@ aSlaveForEveryOccasion = tacticCard "march-of-the-damned-030" "A Slave for Every
 
 -- Legends (deluxe expansion) -------------------------------------------
 
+croneHellebron :: CardDef Legend
+croneHellebron = legendCard "days-of-blood-001" "Crone Hellebron" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  legendPower 1 1 2
+  hitPoints 3
+  body
+    "Forced: When this legend enters play, you must burn 3 zones instead of \
+    \2 to win for the rest of the game. While this legend is participating \
+    \in an attack, defending opponent must discard a card from the top of \
+    \his deck for each combat damage dealt to his capital."
+  onEnterPlay \_owner self -> push (RequireBurnThreeToWin self.controller)
+  onReceive $ Receive \msg _owner self -> case msg of
+    DealDamageToZone owner _zone amount -> do
+      g <- getGame
+      case g.combat of
+        Just cs
+          | self.key `elem` cs.attackers
+          , owner == cs.defendingPlayer
+          , amount > 0 ->
+              millFromDeck owner amount
+        _ -> pure ()
+    _ -> pure ()
+
 anethraHelbane :: CardDef Legend
 anethraHelbane = legendCard "shield-of-the-gods-102" "Anethra Helbane" do
   race DarkElf
