@@ -201,6 +201,12 @@ data Message where
     -- tactic's 'receive' once with 'TacticResolved'. The
     -- 'ActionTarget' is the target the player chose at play time (or
     -- 'NoTarget' for non-targeting tactics).
+  PlayTacticFree :: PlayerKey -> UnitKey -> Message
+    -- ^ Play a Tactic from hand for free, as the resolution of another
+    -- card's effect (Wurrzag). Prompts for the tactic's normal target
+    -- via its schema, discards it, and resolves it at cost 0 — bypassing
+    -- the play-timing / payment gates of 'PlayTactic'. No-op if the card
+    -- isn't a tactic in hand or no legal target is chosen.
   TacticResolved :: PlayerKey -> CardCode -> ActionTarget -> Int -> Message
     -- ^ Dispatch hook fired exactly once when a tactic resolves. The
     -- tactic's CardDef.receive is invoked with this message; cards

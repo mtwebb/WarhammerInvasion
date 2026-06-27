@@ -1298,6 +1298,23 @@ enemyUnitWhere p = UnitMatching \pk _ u -> u.controller /= pk && p u
 enemyCapital :: Target (PlayerKey, ZoneKind)
 enemyCapital = CapitalMatching \pk (owner, _) -> owner /= pk
 
+-- | Prompt the named player for a target satisfying a tactic's
+-- 'TargetSchema', returning the chosen 'ActionTarget' (or 'Nothing' if
+-- there's no legal target / the player declines). Lets the engine fire
+-- a card's normal targeting flow when *another* effect plays it (the
+-- "play a tactic from hand for free" cards). 'NoTargetSchema' resolves
+-- to 'NoTarget' without a prompt.
+promptSchemaTarget
+  :: (HasPromptIO m, HasGame m) => PlayerKey -> TargetSchema -> m (Maybe ActionTarget)
+promptSchemaTarget pk = \case
+  NoTargetSchema -> pure (Just NoTarget)
+  AnyUnitTargetSchema -> fmap TargetUnit <$> pickTarget pk AnyUnit
+  EnemyUnitTargetSchema -> fmap TargetUnit <$> pickTarget pk enemyUnit
+  FriendlyUnitTargetSchema -> fmap TargetUnit <$> pickTarget pk ownUnit
+  AnyZoneTargetSchema -> fmap (uncurry TargetZone) <$> pickTarget pk AnyCapital
+  EnemyZoneTargetSchema -> fmap (uncurry TargetZone) <$> pickTarget pk enemyCapital
+  SupportTargetSchema -> fmap TargetSupport <$> pickTarget pk AnySupportCard
+
 -- | Fire a target-selection prompt (or auto-resolve, depending on the
 -- target shape) and run a continuation with the chosen pick. If no
 -- target can be acquired, the continuation is skipped silently.

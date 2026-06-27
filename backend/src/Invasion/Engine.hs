@@ -1493,6 +1493,27 @@ instance Run Game where
                   , ("cost", tshow n)
                   ]
                 send $ TacticResolved pk cardDef.code target x
+    PlayTacticFree pk cardKey -> do
+      g <- get
+      let mcardDef =
+            find ((== cardKey) . (.key)) (lookupPlayer pk g).hand >>= (asTactic . (.def))
+      whenJust mcardDef \cardDef -> do
+        let schema = tacticTargetSchema cardDef
+        mtgt <- promptSchemaTarget pk schema
+        whenJust mtgt \tgt -> do
+          g' <- get
+          when (validateTarget pk schema tgt g') $
+            whenJust (takeTacticFromHand cardKey (lookupPlayer pk g')) \(cd, playerWithoutCard) -> do
+              let paidPlayer =
+                    playerWithoutCard
+                      {discard = mkCard cardKey (TacticCardDef cd) : playerWithoutCard.discard}
+              modify (setPlayer pk paidPlayer)
+              recordEvent \h -> h
+                {playedBy = Map.insertWith (<>) pk [cardCodeFilter cd] h.playedBy}
+              logIt LogPlayerAction
+                "log.tactic.played"
+                [("player", playerParam pk), ("card", T.pack cd.title), ("cost", "0")]
+              send (TacticResolved pk cd.code tgt 0)
     TacticResolved pk code target xVal -> do
       g <- get
       case Map.lookup code allCards of
