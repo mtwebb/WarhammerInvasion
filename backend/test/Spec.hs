@@ -12,7 +12,7 @@ import Data.Aeson (Value (..), toJSON)
 import Data.Aeson.KeyMap qualified as KM
 import Data.Map.Strict qualified as Map
 import Invasion.Capital (Capital (..), Damage (..), Developments (..), Zone (..))
-import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUnit, TargetPlayer), allCards, enumerateOptionsPure, someCardCost)
+import Invasion.Card (Card (..), SomeCardDef (..), Target (AnySupportCard, AnyUnit, TargetPlayer), allCards, enumerateOptionsPure, someCardCost, targetableBy)
 import Invasion.Card.Builder (attachmentHp, hitPoints, legendCard, legendCombatBonus, legendDefendsAnyZone, legendPower, race, supportCard)
 import Invasion.CardDef (ActionTarget (..), CardDef (..), Keyword (..))
 import Invasion.Modifier
@@ -1714,6 +1714,37 @@ main = do
       check "playtacticfree: tactic left hand"
         (not (any (\c -> c.key == tk) (activePlayer gTf2).hand))
     _ -> putStrLn "  skip playtacticfree test"
+
+  -- Morathi: LoseAllPower zeroes a unit's effective power.
+  gLp <- (`applyMessage` BeginGame) =<< mkMonoGame "core-004" Dwarf
+  case take 1 (map (.key) (activePlayer gLp).hand) of
+    [uk] -> do
+      let lpk = gLp.currentPlayer
+      gLp2 <- applyMessages gLp
+        [ PutUnitIntoPlay lpk uk BattlefieldZone
+        , InstallModifier (UnitRef uk) (Modifier LoseAllPower EndOfTurn)
+        ]
+      check "morathi: LoseAllPower zeroes effective power"
+        (any (\u -> u.key == uk && u.effectivePower == 0) gLp2.units)
+    _ -> putStrLn "  skip lose-all-power test"
+
+  -- Azhag: a damaged unit you control is untargetable by opponents but
+  -- still targetable by you.
+  case Map.lookup "legends-009" allCards of
+    Just (LegendCardDef azhagDef) -> do
+      gAz <- (`applyMessage` BeginGame) =<< mkMonoGame "core-004" Dwarf
+      case take 1 (map (.key) (activePlayer gAz).hand) of
+        [uk] -> do
+          let apk = gAz.currentPlayer
+          gAz2 <- applyMessages gAz
+            [PutUnitIntoPlay apk uk BattlefieldZone, DealDamageToUnit uk 1]
+          let gAzL = gAz2 {legends = [mkLegendOf apk azhagDef]}
+          check "azhag: damaged own unit untargetable by opponent"
+            (not (targetableBy gAzL apk.next uk apk))
+          check "azhag: still targetable by its controller"
+            (targetableBy gAzL apk uk apk)
+        _ -> putStrLn "  skip azhag test (no hand)"
+    _ -> putStrLn "  skip azhag test (not registered)"
 
   putStrLn "Phase / turn smoke test: OK"
 

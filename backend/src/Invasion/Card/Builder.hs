@@ -283,6 +283,12 @@ legendCostAdjust
   -> CardBuilder Legend ()
 legendCostAdjust f = modifyLegendExtras \e -> e {legendCostAdjustment = f}
 
+-- | A legend grants untargetability-by-opponents to units matching the
+-- predicate (Azhag → damaged units you control).
+legendUntargetableAura
+  :: (Game -> LegendDetails -> UnitDetails -> Bool) -> CardBuilder Legend ()
+legendUntargetableAura f = modifyLegendExtras \e -> e {legendGrantsUntargetable = f}
+
 -- | "Cancel 1 damage to your capital each turn" (Contested Fortress).
 -- Evaluated live by the engine's 'DealDamageToZone' pipeline, once per
 -- turn per copy, on either player's turn.

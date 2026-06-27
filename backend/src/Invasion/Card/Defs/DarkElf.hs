@@ -1374,6 +1374,19 @@ anethraHelbane = legendCard "shield-of-the-gods-102" "Anethra Helbane" do
     me <- playerOf usage.user <$> getGame
     when (length me.hand < 5) $ drawCards usage.user (5 - length me.hand)
 
+morathi :: CardDef Legend
+morathi = legendCard "legends-037" "Morathi" do
+  race DarkElf
+  cost 5
+  loyalty 4
+  legendPower 1 1 1
+  hitPoints 3
+  body
+    "Action: Spend 2 resources to choose a target unit. That unit loses all \
+    \power until the end of the turn."
+  actionWith "Hag Sorceress" 2 [] \usage ->
+    withTarget usage.user AnyUnit \k -> until EndOfTurn (losesAllPower k)
+
 malekith :: CardDef Legend
 malekith = legendCard "legends-036" "Malekith" do
   race DarkElf
