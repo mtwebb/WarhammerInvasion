@@ -15,7 +15,7 @@ import Invasion.Card.Types
 import Invasion.CardDef
 import Data.Map.Strict qualified as Map
 import Invasion.Capital
-import Invasion.Entity (QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
+import Invasion.Entity (LegendDetails (..), QuestDetails (..), SupportDetails (..), TacticContext (..), UnitDetails (..))
 import Invasion.Game hiding (battlefield)
 import Invasion.Message
 import Invasion.Modifier
@@ -1376,6 +1376,26 @@ zoneDevsFor g pk z =
    in d
 
 -- Legends (deluxe expansion) -------------------------------------------
+
+balthasarGelt :: CardDef Legend
+balthasarGelt = legendCard "faith-and-steel-101" "Balthasar Gelt" do
+  race Empire
+  cost 3
+  loyalty 2
+  legendPower 1 1 2
+  hitPoints 3
+  body
+    "Forced: When this legend enters play, you must burn 3 zones instead of \
+    \2 in order to win for the rest of the game. Lower the cost of the first \
+    \card you play on your turn by 1 for each experience attached to this \
+    \legend. Action: When this legend attacks, attach 1 experience to it."
+  onEnterPlay \_owner self -> push (RequireBurnThreeToWin self.controller)
+  legendCostAdjust \g self pk _filt ->
+    if pk == self.controller && null (cardsPlayedThisTurn g pk)
+      then negate (length self.experiences)
+      else 0
+  onMyAttackDeclared \_owner self _zone _attackers ->
+    attachExperience self.key self.cardDef.code
 
 karlFranz :: CardDef Legend
 karlFranz = legendCard "legends-015" "Karl Franz" do

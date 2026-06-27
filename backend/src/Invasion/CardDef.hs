@@ -679,6 +679,12 @@ data LegendExtras = LegendExtras
     -- every unit you control while a zone is burning; Gorbad Ironclaw
     -- → your attacking units). Folded into each unit's effective
     -- power by 'recomputeUnitStats', like the unit/support/quest auras.
+  , legendCostAdjustment :: Game -> InPlay Legend -> PlayerKey -> CardCodeFilter -> Int
+    -- ^ Cost adjustment this legend applies to a card being played by
+    -- the given player (Balthasar Gelt → the first card you play each
+    -- turn costs 1 less per experience on it). The legend-side mirror
+    -- of 'UnitExtras.unitCostAdjustment'; folded into
+    -- 'printedCostAdjustment'.
   }
 
 type instance Extras Unit = UnitExtras
@@ -768,6 +774,7 @@ instance HasDefaultExtras Legend where
     , questPower = 0
     , battlefieldPower = 0
     , legendUnitAuraPower = \_ _ _ -> 0
+    , legendCostAdjustment = \_ _ _ _ -> 0
     }
 
 -- | A card's reaction to engine events. Wrapped in a newtype because

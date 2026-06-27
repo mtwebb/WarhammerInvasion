@@ -276,6 +276,13 @@ legendUnitAura
   :: (Game -> LegendDetails -> UnitDetails -> Int) -> CardBuilder Legend ()
 legendUnitAura f = modifyLegendExtras \e -> e {legendUnitAuraPower = f}
 
+-- | Cost adjustment a legend applies to cards its controller plays
+-- (Balthasar Gelt). Mirrors the unit-side cost-adjustment slice.
+legendCostAdjust
+  :: (Game -> LegendDetails -> PlayerKey -> CardCodeFilter -> Int)
+  -> CardBuilder Legend ()
+legendCostAdjust f = modifyLegendExtras \e -> e {legendCostAdjustment = f}
+
 -- | "Cancel 1 damage to your capital each turn" (Contested Fortress).
 -- Evaluated live by the engine's 'DealDamageToZone' pipeline, once per
 -- turn per copy, on either player's turn.

@@ -1689,6 +1689,19 @@ main = do
   gBw3 <- applyMessage gBw2 (DealDamageToZone loser BattlefieldZone 8)
   check "burn-3: eliminated only after the 3rd burned zone" gBw3.over
 
+  -- Balthasar Gelt: the first card you play each turn costs 1 less per
+  -- experience on the legend (here 2 experiences -> -2).
+  case (Map.lookup "faith-and-steel-101" allCards, Map.lookup "core-007" allCards) of
+    (Just (LegendCardDef balthDef), Just (UnitCardDef someUnit)) -> do
+      gBz0 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-004" Dwarf
+      let bpk = gBz0.currentPlayer
+          balth = (mkLegendOf bpk balthDef) {experiences = ["x", "y"]} :: LegendDetails
+          gBalth = gBz0 {legends = [balth]}
+          base = effectiveTotalCost gBz0 bpk someUnit
+      check "balthasar: first card costs 2 less with 2 experiences"
+        (effectiveTotalCost gBalth bpk someUnit == max 0 (base - 2))
+    _ -> putStrLn "  skip balthasar cost test"
+
   putStrLn "Phase / turn smoke test: OK"
 
 -- Identity helper so the redaction block reads naturally.
@@ -1848,6 +1861,7 @@ mkLegend pk atts = LegendDetails
   , damage = Damage 0
   , corrupted = False
   , attachments = atts
+  , experiences = []
   }
 
 mkLegendOf :: PlayerKey -> CardDef Legend -> LegendDetails

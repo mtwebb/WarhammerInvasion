@@ -774,6 +774,7 @@ allCards =
       ("the-ruinous-hordes-098", UnitCardDef spellweaver),
       ("the-ruinous-hordes-099", UnitCardDef restlessCorpse),
       -- Faith and Steel (Eternal War cycle, pack 6)
+      ("faith-and-steel-101", LegendCardDef balthasarGelt),
       ("faith-and-steel-113", UnitCardDef skulltaker),
       ("faith-and-steel-103", SupportCardDef theEmperorsStatue),
       ("faith-and-steel-104", UnitCardDef celestialWizardAcolyte),
