@@ -475,6 +475,29 @@ coldOneChampion = unitCard "the-ruinous-hordes-096" "Cold One Champion" do
 
 -- Bloodquest: Rising Dawn -----------------------------------------------
 
+-- | "Remove 1 resource token from a Black Ark support card you control
+-- to …" — the shared payment the Dark Elf Commander/Raider units share
+-- (Maranith, Elkana, Fleeting Shade). Prompts for a Black Ark support
+-- the player controls that holds a token, removes one, then runs the
+-- payoff. A no-op when no eligible support exists.
+spendBlackArkToken
+  :: TriggerM m
+  => PlayerKey -> m () -> m ()
+spendBlackArkToken pk cont = do
+  g <- getGame
+  let arks =
+        [ mkCard s.key (SupportCardDef s.cardDef)
+        | s <- g.supports
+        , s.controller == pk
+        , BlackArk `elem` s.cardDef.traits
+        , s.tokens > 0
+        ]
+  chooseFromCards pk 1 1 arks
+    "Remove a resource token from a Black Ark support card." \chosen ->
+      for_ chosen \c -> do
+        adjustSupportTokens c.key (-1)
+        cont
+
 maranith :: CardDef Unit
 maranith = unitCard "rising-dawn-014" "Maranith" do
   race DarkElf
@@ -489,24 +512,13 @@ maranith = unitCard "rising-dawn-014" "Maranith" do
   action "Raid" 0 \usage -> do
     let pk = usage.user
         opp = pk.next
-    g <- getGame
-    let arks =
-          [ mkCard s.key (SupportCardDef s.cardDef)
-          | s <- g.supports
-          , s.controller == pk
-          , BlackArk `elem` s.cardDef.traits
-          , s.tokens > 0
-          ]
-    chooseFromCards pk 1 1 arks
-      "Remove a resource token from a Black Ark support card." \chosen ->
-        for_ chosen \c -> do
-          adjustSupportTokens c.key (-1)
-          oppP <- playerOf opp <$> getGame
-          case oppP.deck of
-            [] -> pure ()
-            (top : _) -> do
-              millFromDeck opp 1
-              when (isJust (asUnit top.def)) $ gainResources pk 2
+    spendBlackArkToken pk do
+      oppP <- playerOf opp <$> getGame
+      case oppP.deck of
+        [] -> pure ()
+        (top : _) -> do
+          millFromDeck opp 1
+          when (isJust (asUnit top.def)) $ gainResources pk 2
 
 towerOfOblivion :: CardDef Support
 towerOfOblivion = supportCard "rising-dawn-015" "Tower of Oblivion" do
@@ -558,6 +570,21 @@ treasureThieves = unitCard "the-accursed-dead-053" "Treasure Thieves" do
 
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
+elkana :: CardDef Unit
+elkana = unitCard "vessel-of-the-winds-074" "Elkana" do
+  race DarkElf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 2
+  trait Commander
+  body
+    "Action: Remove 1 resource token from a Black Ark support card you control to have \
+    \target unit gain {power} until the end of the turn."
+  action "Black Ark Bounty" 0 \usage ->
+    spendBlackArkToken usage.user $
+      withTarget usage.user AnyUnit \k -> until EndOfTurn $ buffPower k 1
+
 templeOfSpite :: CardDef Support
 templeOfSpite = supportCard "vessel-of-the-winds-075" "Temple of Spite" do
   race DarkElf
@@ -581,6 +608,22 @@ templeOfSpite = supportCard "vessel-of-the-winds-075" "Temple of Spite" do
         adjustSupportTokens usage.self.key 1
 
 -- Bloodquest: Portent of Doom -------------------------------------------
+
+fleetingShade :: CardDef Unit
+fleetingShade = unitCard "portent-of-doom-091" "Fleeting Shade" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 1
+  scout
+  battlefieldOnly
+  body
+    "Scout. Battlefield. Action: Remove 1 resource token from a Black Ark card you control \
+    \to have this unit gain Toughness 1 until the end of the turn."
+  action "Shadow Step" 0 \usage ->
+    spendBlackArkToken usage.user $
+      until EndOfTurn $ buffToughness usage.self.key 1
 
 murderlust :: CardDef Tactic
 murderlust = tacticCard "portent-of-doom-093" "Murderlust" do
