@@ -790,6 +790,21 @@ gazeOfNagash = tacticCard "the-imperial-throne-117" "Gaze of Nagash" do
           chooseFromCards pk 0 2 h "Gaze of Nagash: choose up to 2 cards to discard." \chosen ->
             unless (null chosen) $ push (DiscardCardsFromHand pk.next (map (.key) chosen))
 
+pageantOfShrikes :: CardDef Tactic
+pageantOfShrikes = tacticCard "city-of-winter-097" "Pageant of Shrikes" do
+  cost 2
+  orderOnly
+  body
+    "Order only. Play only if you control a Wood Elf unit. Action: Return 3 target \
+    \developments to their owners' hands."
+  playableWhen \g pk ->
+    any (\u -> u.controller == pk && WoodElf `elem` u.cardDef.traits) g.units
+      && hasTarget AnyDevelopmentZone g pk
+  whenResolved \self ->
+    for_ [1 :: Int, 2, 3] \_ ->
+      withTarget self.controller AnyDevelopmentZone \(owner, zk) ->
+        push (ReturnDevelopmentToHand owner zk)
+
 kindredOfLaithKourn :: CardDef Unit
 kindredOfLaithKourn = unitCard "city-of-winter-096" "Kindred of Laith-Kourn" do
   cost 3

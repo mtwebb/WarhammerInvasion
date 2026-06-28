@@ -596,6 +596,7 @@ allCards =
       -- The Capital Cycle — Realm of the Phoenix King (021-040)
       ("realm-of-the-phoenix-king-022", UnitCardDef mushroomHunters),
       ("realm-of-the-phoenix-king-023", SupportCardDef clockworkHorse),
+      ("realm-of-the-phoenix-king-025", UnitCardDef seaLordAislinn),
       ("realm-of-the-phoenix-king-027", UnitCardDef heraldOfMoraiHeg),
       ("realm-of-the-phoenix-king-028", UnitCardDef starDragon),
       ("realm-of-the-phoenix-king-030", SupportCardDef straitsOfLothern),
@@ -628,6 +629,7 @@ allCards =
       ("karaz-a-karak-080", QuestCardDef buildingForWar),
       -- The Capital Cycle — City of Winter (081-100)
       ("city-of-winter-082", TacticCardDef fistsOfMork),
+      ("city-of-winter-081", TacticCardDef burlocksIngenuity),
       ("city-of-winter-083", TacticCardDef pigeonBombs),
       ("city-of-winter-084", TacticCardDef convocationOfEagles),
       ("city-of-winter-085", TacticCardDef soporificMusk),
@@ -639,6 +641,7 @@ allCards =
       ("city-of-winter-093", SupportCardDef harpyAerie),
       ("city-of-winter-094", SupportCardDef courtOfTheWitchKing),
       ("city-of-winter-096", UnitCardDef kindredOfLaithKourn),
+      ("city-of-winter-097", TacticCardDef pageantOfShrikes),
       ("city-of-winter-095", TacticCardDef callOfTheKraken),
       ("city-of-winter-100", QuestCardDef raidingShips),
       -- The Capital Cycle — The Imperial Throne (101-120)

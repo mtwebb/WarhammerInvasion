@@ -769,6 +769,24 @@ hospitableCave = supportCard "shield-of-the-gods-104" "Hospitable Cave" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+burlocksIngenuity :: CardDef Tactic
+burlocksIngenuity = tacticCard "city-of-winter-081" "Burlock's Ingenuity" do
+  race Dwarf
+  cost 0
+  loyalty 2
+  body
+    "Action: Move target development you control to a new zone. Then, you may put \
+    \this card on top of your deck."
+  playableWhen \g pk ->
+    any (\z -> z.developments > Developments 0) (playerOf pk g).capital.zones
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk AnyDevelopmentZone \(owner, fromZ) ->
+      when (owner == pk) $
+        withTarget pk MyAnyZone \toZ ->
+          when (toZ /= fromZ) $ moveDevelopment pk fromZ toZ
+    mayReturnToTopOfDeck pk self.cardDef.code
+
 theGreatGuildHall :: CardDef Support
 theGreatGuildHall = supportCard "karaz-a-karak-069" "The Great Guild Hall" do
   unique

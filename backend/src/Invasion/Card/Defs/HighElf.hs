@@ -582,6 +582,25 @@ convocationOfEagles = tacticCard "city-of-winter-084" "Convocation of Eagles" do
     gainResources self.controller 1
     mayReturnToTopOfDeck self.controller self.cardDef.code
 
+seaLordAislinn :: CardDef Unit
+seaLordAislinn = unitCard "realm-of-the-phoenix-king-025" "Sea Lord Aislinn" do
+  race HighElf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  traits [Hero, Noble]
+  limitOneHeroPerZone
+  body
+    "Limit one Hero per zone. Action: When a Mage or Hero unit enters play under \
+    \your control, return target development to its owner's hand."
+  onFriendlyUnitEnterPlay \_owner self uk -> do
+    g <- getGame
+    whenJust (findUnit uk g) \u ->
+      when (Mage `elem` u.cardDef.traits || Hero `elem` u.cardDef.traits) $
+        withTarget self.controller AnyDevelopmentZone \(owner, zk) ->
+          push (ReturnDevelopmentToHand owner zk)
+
 eataineWarRoom :: CardDef Support
 eataineWarRoom = supportCard "realm-of-the-phoenix-king-032" "Eataine War Room" do
   unique
