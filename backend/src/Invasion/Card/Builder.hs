@@ -682,6 +682,17 @@ cannotBeTargetedSelfWhen
 cannotBeTargetedSelfWhen f =
   modifySupportExtras \e -> e {selfUntargetable = f}
 
+-- | "Attached unit cannot be targeted by ... card effects while
+-- CONDITION." (Helm of Fortune: by opponents while questing.) The
+-- predicate returns @Just opponentOnly@ for the support's own host
+-- while the immunity holds; the host-side mirror of
+-- 'cannotBeTargetedSelfWhen'.
+grantsHostUntargetableWhen
+  :: (Game -> InPlay Support -> InPlay Unit -> Maybe Bool)
+  -> CardBuilder Support ()
+grantsHostUntargetableWhen f =
+  modifySupportExtras \e -> e {grantsHostUntargetable = f}
+
 -- | "Cancel all damage assigned to the attached unit while CONDITION."
 -- (Shield of Aeons: while its host is participating in combat.) Args:
 -- game, this support, the candidate unit — return True only for the
@@ -703,6 +714,12 @@ hostDestroyRansomOf n =
 -- leaves play (Vigilant Elector).
 revertsToUnit :: CardDef Unit -> CardBuilder Support ()
 revertsToUnit cd = modifySupportExtras \e -> e {revertToUnit = Just cd}
+
+-- | "The unit questing on this card adds its power to your kingdom zone
+-- as well." (New Trade Route.)
+questerAddsPowerToKingdom :: CardBuilder Quest ()
+questerAddsPowerToKingdom =
+  modifyQuestExtras \e -> e {questerAddsPowerToKingdom = True}
 
 -- | "Any unit questing on this card can defend any of your zones."
 -- (Protect the Empire.)

@@ -1462,7 +1462,22 @@ targetableBy g picker key controller =
   not (any immune (Map.findWithDefault [] (UnitRef key) g.modifiers))
     && not staticImmune
     && not legendImmune
+    && not hostImmune
   where
+    -- An attachment can grant untargetability to its own host
+    -- (Helm of Fortune → questing High Elf unit). Mirrors
+    -- 'staticImmune' but the immunity lives on the support and
+    -- protects the unit it is attached to.
+    hostImmune =
+      case findUnit key g of
+        Just u ->
+          any
+            ( \s -> case s.cardDef.extras.grantsHostUntargetable g s u of
+                Just opponentOnly -> not opponentOnly || controller /= picker
+                Nothing -> False
+            )
+            (allInPlaySupports g)
+        Nothing -> False
     -- A legend can grant its controller's units untargetability by
     -- opponents (Azhag → damaged units you control).
     legendImmune =

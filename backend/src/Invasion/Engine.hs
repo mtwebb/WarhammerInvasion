@@ -4847,7 +4847,18 @@ zonePower g pk zone =
           | l <- g.legends
           , l.controller == pk
           ]
-   in base + unitPow + supportPow + legendPow + zoneAuraBonus g pk zone
+      -- "The unit questing on this card adds its power to your kingdom
+      -- zone as well." (New Trade Route.)
+      questerKingdomPow
+        | zone == KingdomZone =
+            sum
+              [ maybe 0 (.effectivePower) (q.questingUnit >>= \uk -> findUnit uk g)
+              | q <- g.quests
+              , q.controller == pk
+              , q.cardDef.extras.questerAddsPowerToKingdom
+              ]
+        | otherwise = 0
+   in base + unitPow + supportPow + legendPow + questerKingdomPow + zoneAuraBonus g pk zone
 
 -- | Extra power a player's zone gets from in-play cards that grant a
 -- zone-wide bonus. Driven by the per-support 'zonePowerBonus' slice
