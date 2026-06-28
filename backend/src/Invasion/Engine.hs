@@ -753,7 +753,7 @@ instance Run Game where
       -- keywords and the Hero-per-zone limit are enforced here, not
       -- just in the client's zone picker.
       gEntry <- get
-      let entryOk = case takeUnitFromHand cardKey (lookupPlayer pk gEntry) of
+      let entryOk = case takeForPlay asUnit pk cardKey gEntry (lookupPlayer pk gEntry) of
             Just (cd, _) -> canEnterZone gEntry pk cd zone
             Nothing -> False
       -- Reuse the card's existing key as its in-play UnitKey. This is
@@ -761,7 +761,7 @@ instance Run Game where
       -- zone landing spot.
       when entryOk $ withPaidPlay
         pk
-        (takeUnitFromHand cardKey)
+        (takeForPlay asUnit pk cardKey gEntry)
         (\g cd -> max 0 (effectiveTotalCost g pk cd - pendingDiscountFor pk g))
         \cardDef paidPlayer n -> do
           g <- get
@@ -784,7 +784,7 @@ instance Run Game where
     PlayUnitOnQuest pk cardKey questKey -> do
       g <- get
       let player = lookupPlayer pk g
-      case (takeUnitFromHand cardKey player, findQuest questKey g) of
+      case (takeForPlay asUnit pk cardKey g player, findQuest questKey g) of
         (Just (cardDef, playerWithoutCard), Just q)
           | q.controller == pk
           , q.questingUnit == Nothing
@@ -1162,7 +1162,7 @@ instance Run Game where
               <|> (T.pack . (.cardDef.title) <$> mLegendHost)
       whenJust ((,) <$> mHostZone <*> mHostTitle) \(hostZone, hostTitle) -> do
         let player = lookupPlayer pk g
-        whenJust (takeSupportFromHand cardKey player) \(cardDef, playerWithoutCard) -> do
+        whenJust (takeForPlay asSupport pk cardKey g player) \(cardDef, playerWithoutCard) -> do
           let windowOk =
                 canPlayNonTactic pk g
                   || (PlayAnytime `elem` cardDef.keywords && canPlayTactic pk g)
@@ -1233,10 +1233,10 @@ instance Run Game where
       pure ()
     PlaySupport pk cardKey zone -> do
       gEntry <- get
-      let entryOk = case takeSupportFromHand cardKey (lookupPlayer pk gEntry) of
+      let entryOk = case takeForPlay asSupport pk cardKey gEntry (lookupPlayer pk gEntry) of
             Just (cd, _) -> canEnterZone gEntry pk cd zone
             Nothing -> False
-      when entryOk $ withPaidPlay pk (takeSupportFromHand cardKey) (\g cd -> effectiveTotalCost g pk cd)
+      when entryOk $ withPaidPlay pk (takeForPlay asSupport pk cardKey gEntry) (\g cd -> effectiveTotalCost g pk cd)
         \cardDef paidPlayer n -> do
           let support = freshSupport cardKey pk zone Nothing cardDef
           modify \gx -> (setPlayer pk paidPlayer gx) {supports = support : gx.supports}
@@ -1268,8 +1268,9 @@ instance Run Game where
           logIt LogSystem "log.support.played_from_deck"
             [("player", playerParam pk), ("card", T.pack cardDef.title)]
           send $ SupportEnteredPlay pk cardKey
-    PlayQuest pk cardKey ->
-      withPaidPlay pk (takeQuestFromHand cardKey) (\g cd -> effectiveTotalCost g pk cd)
+    PlayQuest pk cardKey -> do
+      gNow <- get
+      withPaidPlay pk (takeForPlay asQuest pk cardKey gNow) (\g cd -> effectiveTotalCost g pk cd)
         \cardDef paidPlayer n -> do
           let hostPlayer
                 | PlayInOpponentArea `elem` cardDef.keywords = pk.next
@@ -1417,7 +1418,7 @@ instance Run Game where
     PlayTactic pk cardKey target -> do
       g <- get
       let player = lookupPlayer pk g
-      case takeTacticFromHand cardKey player of
+      case takeForPlay asTactic pk cardKey g player of
         Nothing -> pure ()
         Just (cardDef, playerWithoutCard)
           | not (canPlayTactic pk g) ->
@@ -2840,8 +2841,9 @@ instance Run Game where
       -- One legend per player at a time. If one is already in play for
       -- this player, silently refuse.
       hasLegend <- gets (isJust . legendOf pk)
+      gNow <- get
       unless hasLegend $
-        withPaidPlay pk (takeLegendFromHand cardKey) (\g cd -> effectiveTotalCost g pk cd)
+        withPaidPlay pk (takeForPlay asLegend pk cardKey gNow) (\g cd -> effectiveTotalCost g pk cd)
           \cardDef paidPlayer n -> do
             let legendDetails = LegendDetails
                   { key = cardKey
@@ -3219,6 +3221,39 @@ instance Run Game where
             , ("target", T.pack host.cardDef.title)
             ]
         _ -> pure ()
+    AttachDepartedUnitAsAttachment ukey hostKey -> do
+      g <- get
+      -- The departed unit already routed to its owner's discard pile
+      -- (the leave-play handler ran first). Find the card there, pull
+      -- it back out, and re-enter it as a power-draining Attachment on
+      -- the host. The synthetic def reverts to the original unit card
+      -- when the attachment later leaves play, so discard routing and
+      -- uniqueness checks stay coherent.
+      let inDiscard =
+            [ (p.key, ucd)
+            | p <- [g.player1, g.player2]
+            , c <- p.discard
+            , c.key == ukey
+            , Just ucd <- [asUnit c.def]
+            ]
+      case (listToMaybe inDiscard, findUnit hostKey g) of
+        (Just (ownerPk, ucd), Just host) | ukey /= hostKey -> do
+          modifyPlayer ownerPk \p ->
+            p {discard = filter ((/= ukey) . (.key)) p.discard}
+          let attachment =
+                freshSupport ukey ownerPk host.zone (Just hostKey)
+                  (powerDrainAttachmentDef ucd)
+          modify \gx ->
+            let host' =
+                  (host {attachments = attachment : host.attachments})
+                    :: UnitDetails
+             in gx {units = replaceUnit host' gx.units}
+          logIt LogSystem
+            "log.unit.transformed_attachment"
+            [ ("card", T.pack ucd.title)
+            , ("target", T.pack host.cardDef.title)
+            ]
+        _ -> pure ()
     MoveAttachment skey newHostKey -> do
       g <- get
       let hosts =
@@ -3578,6 +3613,26 @@ transformedUnitAttachmentDef original =
       Fixed n -> n
       Variable -> 0
 
+-- | The synthetic Attachment a unit becomes via Spirit Host's
+-- leave-play action: same code/title/races as the original card (so
+-- uniqueness and discard routing stay coherent), reducing the host's
+-- power by the original unit's printed power while attached. Reverts to
+-- the original unit card when it leaves play.
+powerDrainAttachmentDef :: CardDef Unit -> CardDef Support
+powerDrainAttachmentDef original =
+  supportCard original.code original.title do
+    traverse_ race original.races
+    cost costN
+    loyalty original.loyalty
+    trait Attachment
+    attachmentPower (negate original.power)
+    revertsToUnit original
+    body "Attached unit loses [Power]."
+  where
+    costN = case original.cost of
+      Fixed n -> n
+      Variable -> 0
+
 -- | Hydra Blade's destruction ransom: scan the unit's attachments
 -- for a 'hostDestroyRansom'; the first one whose controller can pay
 -- and agrees saves the host (heal all damage, stay in play). Returns
@@ -3767,6 +3822,48 @@ takeQuestFromHand = takeFromPile handPile asQuest
 
 takeQuestFromDeck :: UnitKey -> Player -> Maybe (CardDef Quest, Player)
 takeQuestFromDeck = takeFromPile deckPile asQuest
+
+-- | Card code of Lord of Change (march-of-the-damned-021), which lets
+-- its controller play the top card of their deck as though it were in
+-- their hand.
+lordOfChangeCode :: CardCode
+lordOfChangeCode = "march-of-the-damned-021"
+
+-- | Does this player control a Lord of Change? Gates the "play your
+-- deck's top card as though in hand" permission, server-side.
+controlsLordOfChange :: PlayerKey -> Game -> Bool
+controlsLordOfChange pk g =
+  any (\u -> u.controller == pk && u.cardDef.code == lordOfChangeCode) g.units
+
+-- | Pull the top card of a player's deck, if it matches the key and the
+-- requested kind. Mirror of 'takeFromPile' but restricted to the single
+-- top card (Lord of Change only exposes the very top of the deck).
+takeDeckTopForPlay
+  :: (SomeCardDef -> Maybe (CardDef k))
+  -> UnitKey
+  -> Player
+  -> Maybe (CardDef k, Player)
+takeDeckTopForPlay asKind key p = case p.deck of
+  c : rest | c.key == key, Just cd <- asKind c.def -> Just (cd, p {deck = rest})
+  _ -> Nothing
+
+-- | Pull a card of the given kind for a play action: from hand normally,
+-- or — when the player controls a Lord of Change — from the top of their
+-- deck. Drop-in replacement for the @take*FromHand@ extractors used by
+-- the play handlers, so every play path (units, supports, quests,
+-- tactics, legends, attachments) honours Lord of Change uniformly.
+takeForPlay
+  :: (SomeCardDef -> Maybe (CardDef k))
+  -> PlayerKey
+  -> UnitKey
+  -> Game
+  -> Player
+  -> Maybe (CardDef k, Player)
+takeForPlay asKind pk key g p =
+  takeFromPile handPile asKind key p
+    <|> if controlsLordOfChange pk g
+      then takeDeckTopForPlay asKind key p
+      else Nothing
 
 -- | Fire one scheduled effect by translating it into messages.
 firePendingEffect :: PendingEffect -> StateT Game GameT ()

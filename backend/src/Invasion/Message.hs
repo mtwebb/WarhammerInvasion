@@ -446,6 +446,13 @@ data Message where
     -- support def destroys the host at the host controller's end of
     -- turn; the discard pile receives the original unit card when
     -- the attachment leaves play.
+  AttachDepartedUnitAsAttachment :: UnitKey -> UnitKey -> Message
+    -- ^ Spirit Host: a unit that has already left play (and so is
+    -- sitting in its owner's discard) is pulled back out and attached
+    -- to the second unit as a power-draining Attachment. Mirror of
+    -- 'TransformUnitToAttachment', but sources the card from discard
+    -- because the unit is gone from the board by the time its
+    -- leave-play trigger fires.
   MoveAttachment :: UnitKey -> UnitKey -> Message
     -- ^ Helblaster Crew: detach the named attachment from its host
     -- and attach it to the second unit.

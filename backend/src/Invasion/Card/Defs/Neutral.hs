@@ -1085,6 +1085,21 @@ cryptGhouls = unitCard "march-of-the-damned-043" "Crypt Ghouls" do
   body "Destruction only. Action: When this unit leaves play, gain 2 resources."
   onSelfLeavesPlay \_owner self -> gainResources self.controller 2
 
+spiritHost :: CardDef Unit
+spiritHost = unitCard "march-of-the-damned-046" "Spirit Host" do
+  cost 3
+  power 1
+  hitPoints 3
+  traits [Undead, Warrior]
+  destructionOnly
+  body
+    "Destruction only. Action: When this unit leaves play, attach it to a target unit. \
+    \It then counts as an Attachment support card with the text \"Attached unit loses [Power].\""
+  onSelfLeavesPlay \_owner self ->
+    may self.controller "Attach Spirit Host to a target unit?" $
+      withTarget self.controller AnyUnit \host ->
+        push (AttachDepartedUnitAsAttachment self.key host)
+
 enragedVarghulf :: CardDef Unit
 enragedVarghulf = unitCard "march-of-the-damned-047" "Enraged Varghulf" do
   cost 4

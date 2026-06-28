@@ -588,6 +588,14 @@ handleGameIn env slot user = \case
             | isMortisReanimatable pk cardKey g -> case zone of
                 Just z -> postEngineMsg slot user (Engine.MortisReanimate pk cardKey z)
                 Nothing -> sendGameError slot user "zone_required"
+            -- Lord of Change: the top card of the player's own deck may
+            -- be played as though it were in hand. Route it through the
+            -- same kind-based dispatch the hand path uses; the engine's
+            -- play handlers pull it from the deck top.
+            | Just someCard <- lordOfChangeTopCard pk cardKey g ->
+                case playMessageFor pk cardKey zone target someCard of
+                  Left code -> sendGameError slot user code
+                  Right msg -> postEngineMsg slot user msg
             | otherwise -> sendGameError slot user "card_not_in_hand"
   GameTriggerAction {source, actionIndex, target, targetZone} ->
     withSeatedPlayer slot user \pk -> do
@@ -711,6 +719,20 @@ isMortisReanimatable pk k g =
         in case find ((== k) . (.key)) opp.discard of
              Just c -> isJust (asUnit c.def)
              _ -> False
+
+-- | When the player controls a Lord of Change, the top card of their
+-- own deck may be played as though it were in hand. Returns that card's
+-- definition if its key matches the deck top and the permission holds.
+lordOfChangeTopCard :: PlayerKey -> UnitKey -> Game -> Maybe SomeCardDef
+lordOfChangeTopCard pk k g
+  | not (Engine.controlsLordOfChange pk g) = Nothing
+  | otherwise =
+      let player = case pk of
+            Player1 -> g.player1
+            Player2 -> g.player2
+       in case player.deck of
+            c : _ | c.key == k -> Just c.def
+            _ -> Nothing
 
 -- | Choose the engine 'Message' that corresponds to the player's
 -- 'GamePlayCard' request, based on the card's static kind. Returns a
