@@ -613,6 +613,13 @@ data SupportExtras = SupportExtras
     -- (Dawnstar Sword, Eye of Sheerian, …) return a constant
     -- @Just False@; Helm of Fortune gates it on the host questing.
     -- Consulted by 'targetableBy' alongside the modifier map.
+  , grantsHostUntargetable :: Game -> InPlay Support -> InPlay Unit -> Maybe Bool
+    -- ^ "Attached unit cannot be targeted by ... card effects while
+    -- CONDITION." (Helm of Fortune: by opponents while questing.)
+    -- Returns @Just opponentOnly@ for the support's own host while the
+    -- immunity is active, @Nothing@ otherwise. Consulted by
+    -- 'targetableBy', mirroring 'selfUntargetable' but protecting the
+    -- attached unit rather than the support itself.
   , grantsLegendDefendAnyZone :: Bool
     -- ^ "Attached legend ... can defend any of your zones."
     -- (Descendant of Gods.) When attached to a legend, the legend
@@ -672,6 +679,10 @@ data QuestExtras = QuestExtras
     -- ^ "While a Lizardmen unit is questing on this card, double all
     -- damage assigned by the effects of Savage." (Guardians of the
     -- Gods.) Consulted by the 'ResolveSavage' handler.
+  , questerAddsPowerToKingdom :: Bool
+    -- ^ "The unit questing on this card adds its power to your kingdom
+    -- zone as well." (New Trade Route.) Folded into 'zonePower' for the
+    -- controller's kingdom zone.
   }
 
 -- | Tactic-specific tunables. Empty for now.
@@ -772,6 +783,7 @@ instance HasDefaultExtras Support where
     , imposesCannotDefendOn = \_ _ _ -> False
     , imposesBlankOn = \_ _ _ -> False
     , selfUntargetable = \_ _ -> Nothing
+    , grantsHostUntargetable = \_ _ _ -> Nothing
     , grantsLegendDefendAnyZone = False
     , attachmentLegendCombatBonus = \_ _ -> 0
     }
@@ -784,6 +796,7 @@ instance HasDefaultExtras Quest where
     , questerAttacksAnyZone = False
     , questUnitAuraPower = \_ _ _ -> 0
     , doublesSavageDamage = False
+    , questerAddsPowerToKingdom = False
     }
 
 instance HasDefaultExtras Tactic where

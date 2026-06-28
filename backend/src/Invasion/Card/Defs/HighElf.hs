@@ -458,6 +458,22 @@ avelornSojourner = unitCard "the-ruinous-hordes-091" "Avelorn Sojourner" do
 
 -- Bloodquest: Rising Dawn -----------------------------------------------
 
+helmOfFortune :: CardDef Support
+helmOfFortune = supportCard "rising-dawn-011" "Helm of Fortune" do
+  race HighElf
+  cost 0
+  loyalty 1
+  trait Attachment
+  body
+    "Attach to a target [High Elf] unit. Attached unit gets +1 hit point. Attached unit \
+    \cannot be targeted by opponents' card effects while questing."
+  attachmentHp 1
+  grantsHostUntargetableWhen \g self host ->
+    if self.attachedTo == Just host.key
+      && any (\q -> q.questingUnit == Just host.key) g.quests
+      then Just True
+      else Nothing
+
 lothernSeaMaster :: CardDef Unit
 lothernSeaMaster = unitCard "rising-dawn-009" "Lothern Sea Master" do
   race HighElf

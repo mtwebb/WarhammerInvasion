@@ -1217,6 +1217,39 @@ norseMarauders = unitCard "days-of-blood-016" "Norse Marauders" do
 
 -- Bloodquest: Rising Dawn -----------------------------------------------
 
+mountedMarauders :: CardDef Unit
+mountedMarauders = unitCard "rising-dawn-012" "Mounted Marauders" do
+  race Chaos
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 2
+  traits [Warrior, Cavalry]
+  body
+    "Forced: When this unit attacks and survives combat, defending player must sacrifice a \
+    \quest or support card he controls in the attacked zone, if able."
+  onCombatResolveAsAttacker \_owner self cs -> do
+    g <- getGame
+    when (isJust (findUnit self.key g)) do
+      let dp = cs.defendingPlayer
+          z = cs.targetZone
+          supKeys = [s.key | s <- g.supports, s.controller == dp, s.zone == z]
+          -- Quests always live in the quest zone, so they only count
+          -- when the quest zone is the attacked zone.
+          candidates =
+            [mkCard s.key (SupportCardDef s.cardDef) | s <- g.supports, s.controller == dp, s.zone == z]
+              ++ [ mkCard q.key (QuestCardDef q.cardDef)
+                 | z == QuestZone
+                 , q <- g.quests
+                 , q.controller == dp
+                 ]
+      chooseFromCards dp 1 1 candidates
+        "Sacrifice a quest or support card in the attacked zone." \chosen ->
+          for_ chosen \c ->
+            if c.key `elem` supKeys
+              then push (DestroySupport c.key)
+              else destroyQuest c.key
+
 boonOfTzeentch :: CardDef Tactic
 boonOfTzeentch = tacticCard "rising-dawn-013" "Boon of Tzeentch" do
   race Chaos

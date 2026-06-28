@@ -718,6 +718,14 @@ veteranThunderers = unitCard "days-of-blood-005" "Veteran Thunderers" do
 
 -- Bloodquest: Rising Dawn -----------------------------------------------
 
+newTradeRoute :: CardDef Quest
+newTradeRoute = questCard "rising-dawn-018" "New Trade Route" do
+  race Dwarf
+  cost 0
+  loyalty 2
+  body "Quest. The unit questing on this card adds its power to your kingdom zone as well."
+  questerAddsPowerToKingdom
+
 callingTheCouncil :: CardDef Tactic
 callingTheCouncil = tacticCard "rising-dawn-004" "Calling the Council" do
   race Dwarf

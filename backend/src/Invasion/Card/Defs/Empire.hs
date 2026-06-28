@@ -819,6 +819,21 @@ ostlandGreatswords = unitCard "glory-of-days-past-065" "Ostland Greatswords" do
 
 -- Bloodquest: Rising Dawn -----------------------------------------------
 
+emperorsChosen :: CardDef Unit
+emperorsChosen = unitCard "rising-dawn-007" "Emperor's Chosen" do
+  race Empire
+  cost 2
+  loyalty 3
+  power 1
+  hitPoints 2
+  traits [Warrior, Knight]
+  body
+    "Action: When this unit enters a zone, it gains {power} and Counterstrike 3 until the \
+    \end of the turn."
+  onEnterPlay \_owner self -> do
+    until EndOfTurn $ buffPower self.key 1
+    until EndOfTurn $ buffCounterstrike self.key 3
+
 rageOfTheBear :: CardDef Tactic
 rageOfTheBear = tacticCard "rising-dawn-008" "Rage of the Bear" do
   race Empire
