@@ -642,6 +642,22 @@ courtOfTheWitchKing = supportCard "city-of-winter-094" "Court of the Witch King"
     adjustSupportTokens self.key (-1)
     when (self.tokens == 1) $ millFromDeck self.controller.next 10
 
+scionsOfMisery :: CardDef Unit
+scionsOfMisery = unitCard "the-inevitable-city-015" "Scions of Misery" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Warrior
+  body
+    "Action: When this unit enters play, each unit in any corresponding zone gets \
+    \-1 hit point until the end of the turn."
+  onEnterPlay \_owner self -> do
+    g <- getGame
+    for_ [u | u <- g.units, u.zone == self.zone] \u ->
+      until EndOfTurn $ debuffHP u.key 1
+
 hagQueen :: CardDef Unit
 hagQueen = unitCard "city-of-winter-091" "Hag Queen" do
   race DarkElf

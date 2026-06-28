@@ -902,6 +902,26 @@ creaturePen = supportCard "shield-of-the-gods-106" "Creature Pen" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+madtoofIronleg :: CardDef Unit
+madtoofIronleg = unitCard "the-iron-rock-043" "Madtoof Ironleg" do
+  race Orc
+  cost 4
+  loyalty 3
+  power 2
+  hitPoints 5
+  traits [Hero, Troll]
+  limitOneHeroPerZone
+  body
+    "Limit one Hero per zone. Action: At the beginning of your turn, target unit you \
+    \control gains {power} equal to its loyalty. Then, sacrifice it at the end of the turn."
+  onMyTurnBegin \_owner self ->
+    may self.controller "Use Madtoof Ironleg's ability?" $
+      withTarget self.controller (UnitMatching \me _g u -> u.controller == me) \k -> do
+        g <- getGame
+        whenJust (findUnit k g) \u ->
+          when (u.cardDef.loyalty > 0) $ until EndOfTurn $ buffPower k u.cardDef.loyalty
+        queueEoTSacrifice k
+
 bossPit :: CardDef Support
 bossPit = supportCard "the-iron-rock-049" "Boss Pit" do
   unique

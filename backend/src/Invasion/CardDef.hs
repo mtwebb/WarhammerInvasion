@@ -423,6 +423,10 @@ data UnitExtras = UnitExtras
   , cannotDefend :: Bool
     -- ^ Printed "This unit cannot defend." (Clan Moulder's Elite.)
     -- Excluded from the defender candidate pool.
+  , cannotBeRestored :: Bool
+    -- ^ Printed "This unit cannot be restored." (White Lion Champion.)
+    -- Excluded from the kingdom-phase restore candidate pool, so it
+    -- stays corrupted once corrupted.
   , attackEligibleZones :: [ZoneKind]
     -- ^ Zones this unit may attack from. Default battlefield only;
     -- Greyseer Thanquol attacks from anywhere, Dragonslayer also from
@@ -730,6 +734,7 @@ instance HasDefaultExtras Unit where
     , cancelAllDamageWhen = \_ _ -> False
     , perHitDamageCap = Nothing
     , cannotDefend = False
+    , cannotBeRestored = False
     , attackEligibleZones = [BattlefieldZone]
     , bodyguardLegendRace = Nothing
     , destroyedToZone = \_ _ -> Nothing

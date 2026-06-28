@@ -740,6 +740,33 @@ warhawkRider = unitCard "the-inevitable-city-016" "Warhawk Rider" do
         (c : _) -> push (DiscardCardsFromHand opp [c.key])
         _ -> pure ()
 
+forUsTheBellTolls :: CardDef Tactic
+forUsTheBellTolls = tacticCard "realm-of-the-phoenix-king-038" "For Us the Bell Tolls" do
+  cost 2
+  destructionOnly
+  body
+    "Destruction only. Action: Corrupt a Skaven unit you control to deal X indirect \
+    \damage to target opponent, where X is the number of corrupted Skaven units you control."
+  playableWhen \g pk ->
+    any (\u -> u.controller == pk && Skaven `elem` u.cardDef.traits && not u.corrupted) g.units
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk
+      (UnitMatching \me _g u -> u.controller == me && Skaven `elem` u.cardDef.traits && not u.corrupted)
+      \k -> do
+        corrupt k
+        g <- getGame
+        -- 'corrupt' is queued, so count the freshly-corrupted target too.
+        let x =
+              length
+                [ u
+                | u <- g.units
+                , u.controller == pk
+                , Skaven `elem` u.cardDef.traits
+                , u.corrupted || u.key == k
+                ]
+        when (x > 0) $ indirectDamage pk.next x
+
 mannfredVonCarstein :: CardDef Unit
 mannfredVonCarstein = unitCard "the-inevitable-city-018" "Mannfred Von Carstein" do
   cost 3

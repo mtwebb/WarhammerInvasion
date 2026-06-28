@@ -1125,6 +1125,7 @@ instance Run Game where
             | u <- g.units
             , u.controller == pk
             , u.corrupted
+            , not (unitExtrasOf u).cannotBeRestored
             ]
               <> [ s.key
                  | s <- allInPlaySupports g

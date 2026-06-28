@@ -582,6 +582,17 @@ convocationOfEagles = tacticCard "city-of-winter-084" "Convocation of Eagles" do
     gainResources self.controller 1
     mayReturnToTopOfDeck self.controller self.cardDef.code
 
+whiteLionChampion :: CardDef Unit
+whiteLionChampion = unitCard "realm-of-the-phoenix-king-026" "White Lion Champion" do
+  race HighElf
+  cost 3
+  loyalty 2
+  power 2
+  hitPoints 2
+  traits [Warrior, Elite]
+  body "This unit cannot be restored."
+  cannotBeRestored
+
 seaLordAislinn :: CardDef Unit
 seaLordAislinn = unitCard "realm-of-the-phoenix-king-025" "Sea Lord Aislinn" do
   race HighElf

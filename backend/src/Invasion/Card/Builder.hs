@@ -353,6 +353,11 @@ canAttack f = modifyUnitExtras \e -> e {canAttackZone = f}
 canDefend :: (Game -> PlayerKey -> ZoneKind -> UnitDetails -> Bool) -> CardBuilder Unit ()
 canDefend f = modifyUnitExtras \e -> e {canDefendZone = f}
 
+-- | "This unit cannot be restored." (White Lion Champion.) Stays
+-- corrupted once corrupted — excluded from the restore prompt.
+cannotBeRestored :: CardBuilder Unit ()
+cannotBeRestored = modifyUnitExtras \e -> e {cannotBeRestored = True}
+
 -- | Per-turn damage cap (Daemonettes of Slaanesh).
 perTurnDamageCap :: Int -> CardBuilder Unit ()
 perTurnDamageCap n = modifyUnitExtras \e -> e {damageCap = Just n}
