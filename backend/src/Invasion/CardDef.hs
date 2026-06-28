@@ -193,6 +193,13 @@ data Trait
     -- ^ Mercenary trait (Van Klumpf's Buccaneers).
   | Trader
     -- ^ Trader trait (Toof Trader).
+  | BlackArk
+    -- ^ Black Ark support trait (Tower of Oblivion, Temple of Spite).
+    -- Black Ark supports accrue resource tokens that Dark Elf
+    -- Commander/Raider units (Maranith, Elkana, Fleeting Shade) spend.
+  | Commander
+    -- ^ Commander trait (the Black Ark Dark Elf leaders: Maranith,
+    -- Elkana).
   deriving stock (Show, Eq)
 
 mconcat

@@ -475,12 +475,46 @@ coldOneChampion = unitCard "the-ruinous-hordes-096" "Cold One Champion" do
 
 -- Bloodquest: Rising Dawn -----------------------------------------------
 
+maranith :: CardDef Unit
+maranith = unitCard "rising-dawn-014" "Maranith" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  trait Commander
+  body
+    "Action: Remove 1 resource token from a Black Ark support card you control to discard \
+    \the top card of an opponent's deck. If the discarded card is a unit, gain 2 resources."
+  action "Raid" 0 \usage -> do
+    let pk = usage.user
+        opp = pk.next
+    g <- getGame
+    let arks =
+          [ mkCard s.key (SupportCardDef s.cardDef)
+          | s <- g.supports
+          , s.controller == pk
+          , BlackArk `elem` s.cardDef.traits
+          , s.tokens > 0
+          ]
+    chooseFromCards pk 1 1 arks
+      "Remove a resource token from a Black Ark support card." \chosen ->
+        for_ chosen \c -> do
+          adjustSupportTokens c.key (-1)
+          oppP <- playerOf opp <$> getGame
+          case oppP.deck of
+            [] -> pure ()
+            (top : _) -> do
+              millFromDeck opp 1
+              when (isJust (asUnit top.def)) $ gainResources pk 2
+
 towerOfOblivion :: CardDef Support
 towerOfOblivion = supportCard "rising-dawn-015" "Tower of Oblivion" do
   race DarkElf
   cost 2
   loyalty 2
   power 1
+  trait BlackArk
   body
     "Quest. Action: Discard the top card of your deck to have target unit lose {power} until \
     \the end of the turn. Then, put 1 resource token on this card. (Limit once per turn)."
@@ -530,6 +564,7 @@ templeOfSpite = supportCard "vessel-of-the-winds-075" "Temple of Spite" do
   cost 2
   loyalty 2
   power 1
+  trait BlackArk
   body
     "Quest. Action: Discard the top card of your deck to have target unit get -1 hit point \
     \until the end of the turn. Then, put 1 resource token on this card. (Limit once per turn.)"

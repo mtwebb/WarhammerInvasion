@@ -673,6 +673,7 @@ allCards =
       ("rising-dawn-011", SupportCardDef helmOfFortune),
       ("rising-dawn-012", UnitCardDef mountedMarauders),
       ("rising-dawn-013", TacticCardDef boonOfTzeentch),
+      ("rising-dawn-014", UnitCardDef maranith),
       ("rising-dawn-015", SupportCardDef towerOfOblivion),
       ("rising-dawn-018", QuestCardDef newTradeRoute),
       -- Bloodquest cycle — Fragments of Power (pack 2)
