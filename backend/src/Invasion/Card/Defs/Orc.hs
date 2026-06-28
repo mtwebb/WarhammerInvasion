@@ -902,6 +902,23 @@ creaturePen = supportCard "shield-of-the-gods-106" "Creature Pen" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+bossPit :: CardDef Support
+bossPit = supportCard "the-iron-rock-049" "Boss Pit" do
+  unique
+  race Orc
+  cost 4
+  loyalty 5
+  power 3
+  trait CapitalCenter
+  body
+    "This card enters play with 4 resource tokens on it. Action: At the beginning \
+    \of your turn, remove a resource token from this card. Then, if there are no \
+    \resources on this card, draw 10 cards."
+  onEnterPlay \_owner self -> adjustSupportTokens self.key 4
+  onMyTurnBegin \_owner self -> when (self.tokens > 0) do
+    adjustSupportTokens self.key (-1)
+    when (self.tokens == 1) $ drawCards self.controller 10
+
 mushroomHunters :: CardDef Unit
 mushroomHunters = unitCard "realm-of-the-phoenix-king-022" "Mushroom Hunters" do
   race Orc

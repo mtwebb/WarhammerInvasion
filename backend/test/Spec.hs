@@ -1088,6 +1088,20 @@ main = do
         (not (any ((== tdKey) . (.key)) (getPlG pkTD gTD3).discard))
     _ -> putStrLn "  FAIL top-of-deck setup" >> exitFailure
 
+  -- Support power honours GainPower modifiers (Cathedral of Sigmar's
+  -- "each Empire support … gains power").
+  gSP1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkSP = gSP1.currentPlayer
+  case Map.lookup "the-inevitable-city-011" allCards of
+    Just (SupportCardDef spDef) -> do
+      let spKey = UnitKey 96001
+          gSP2 = gSP1 {supports = freshSupport spKey pkSP KingdomZone Nothing spDef : gSP1.supports}
+          before = zonePower gSP2 pkSP KingdomZone
+      gSP3 <- applyMessage gSP2 (InstallModifier (UnitRef spKey) (Modifier (GainPower 1) EndOfTurn))
+      check "support power: a GainPower modifier raises the zone's power"
+        (zonePower gSP3 pkSP KingdomZone == before + 1)
+    _ -> putStrLn "  FAIL support-power setup" >> exitFailure
+
   -- Reanimate from discard (Lord of the Dead): put a unit from the
   -- discard pile into play for free; it returns to the deck bottom at
   -- end of turn, like Necromancy.

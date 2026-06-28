@@ -4814,7 +4814,18 @@ zonePower g pk zone =
       -- cards "cannot be declared as attackers or defenders" and
       -- nothing more — they still produce resources and draw.
       unitPow = sum $ map (.effectivePower) $ mine g.units
-      supportPow = sum $ map (.cardDef.power) $ mine g.supports
+      -- Supports contribute their printed power plus any turn-scoped
+      -- GainPower modifiers on them (Cathedral of Sigmar).
+      supportPow =
+        sum
+          [ s.cardDef.power
+              + sum
+                [ n
+                | Modifier (GainPower n) _ <-
+                    Map.findWithDefault [] (UnitRef s.key) g.modifiers
+                ]
+          | s <- mine g.supports
+          ]
       -- Legends live on the capital board (not in a single zone): each
       -- contributes the power printed *for the queried zone* to its
       -- controller, in all three zones simultaneously.

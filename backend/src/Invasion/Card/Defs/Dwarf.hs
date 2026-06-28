@@ -769,6 +769,37 @@ hospitableCave = supportCard "shield-of-the-gods-104" "Hospitable Cave" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+theGreatGuildHall :: CardDef Support
+theGreatGuildHall = supportCard "karaz-a-karak-069" "The Great Guild Hall" do
+  unique
+  race Dwarf
+  cost 5
+  loyalty 5
+  power 4
+  trait CapitalCenter
+  body
+    "This card enters play with 4 resource tokens on it. Action: At the beginning \
+    \of your turn, remove a resource token from this card. Then, if there are no \
+    \resource tokens on this card, search your deck for up to 5 [Dwarf] support \
+    \cards, reveal them, and add them to your hand. Then, shuffle your deck."
+  onEnterPlay \_owner self -> adjustSupportTokens self.key 4
+  onMyTurnBegin \_owner self -> when (self.tokens > 0) do
+    adjustSupportTokens self.key (-1)
+    when (self.tokens == 1) do
+      let pk = self.controller
+      me <- playerOf pk <$> getGame
+      let dwarfSupports =
+            [ c
+            | c <- me.deck
+            , SupportCardDef cd <- [c.def]
+            , Dwarf `elem` cd.races
+            ]
+      chooseFromCards pk 0 5 dwarfSupports
+        "Choose up to 5 Dwarf support cards to add to your hand." \chosen -> do
+          unless (null chosen) $
+            push (TakeCardsFromDeckToHand pk (map (.key) chosen))
+          shuffleDeck pk
+
 heartForge :: CardDef Support
 heartForge = supportCard "karaz-a-karak-067" "Heart Forge" do
   race Dwarf

@@ -625,6 +625,23 @@ barbedSnares = tacticCard "city-of-winter-086" "Barbed Snares" do
     millFromDeck self.controller.next 2
     mayReturnToTopOfDeck self.controller self.cardDef.code
 
+courtOfTheWitchKing :: CardDef Support
+courtOfTheWitchKing = supportCard "city-of-winter-094" "Court of the Witch King" do
+  unique
+  race DarkElf
+  cost 4
+  loyalty 5
+  power 3
+  trait CapitalCenter
+  body
+    "This card enters play with 4 resource tokens on it. Action: At the beginning \
+    \of your turn, remove a resource token from this card. Then, if there are no \
+    \resource tokens on this card, discard the top 10 cards of target opponent's deck."
+  onEnterPlay \_owner self -> adjustSupportTokens self.key 4
+  onMyTurnBegin \_owner self -> when (self.tokens > 0) do
+    adjustSupportTokens self.key (-1)
+    when (self.tokens == 1) $ millFromDeck self.controller.next 10
+
 hagQueen :: CardDef Unit
 hagQueen = unitCard "city-of-winter-091" "Hag Queen" do
   race DarkElf

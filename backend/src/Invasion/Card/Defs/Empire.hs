@@ -912,6 +912,30 @@ devoteeOfChamon = unitCard "the-imperial-throne-105" "Devotee of Chamon" do
         dealUncancellableDamage k 1
         until EndOfTurn $ buffPower usage.self.key 1
 
+cathedralOfSigmar :: CardDef Support
+cathedralOfSigmar = supportCard "the-imperial-throne-111" "Cathedral of Sigmar" do
+  unique
+  race Empire
+  cost 4
+  loyalty 5
+  power 3
+  trait CapitalCenter
+  body
+    "This card enters play with 4 resource tokens on it. Action: At the beginning \
+    \of your turn, remove a resource token from this card. Then, if there are no \
+    \resource tokens on this card, each [Empire] support card and [Empire] unit you \
+    \control gains {power} until the end of the turn."
+  onEnterPlay \_owner self -> adjustSupportTokens self.key 4
+  onMyTurnBegin \_owner self -> when (self.tokens > 0) do
+    adjustSupportTokens self.key (-1)
+    when (self.tokens == 1) do
+      let pk = self.controller
+      g <- getGame
+      for_ [u | u <- g.units, u.controller == pk, Empire `elem` u.cardDef.races] \u ->
+        until EndOfTurn $ buffPower u.key 1
+      for_ [s | s <- g.supports, s.controller == pk, Empire `elem` s.cardDef.races] \s ->
+        until EndOfTurn $ buffPower s.key 1
+
 pigeonBombs :: CardDef Tactic
 pigeonBombs = tacticCard "city-of-winter-083" "Pigeon Bombs" do
   race Empire

@@ -582,6 +582,23 @@ convocationOfEagles = tacticCard "city-of-winter-084" "Convocation of Eagles" do
     gainResources self.controller 1
     mayReturnToTopOfDeck self.controller self.cardDef.code
 
+eataineWarRoom :: CardDef Support
+eataineWarRoom = supportCard "realm-of-the-phoenix-king-032" "Eataine War Room" do
+  unique
+  race HighElf
+  cost 3
+  loyalty 5
+  power 2
+  trait CapitalCenter
+  body
+    "This card enters play with 4 resource tokens on it. Action: At the beginning \
+    \of your turn, remove a resource token from this card. Then, if there are no \
+    \resource tokens on this card, deal 10 indirect damage to target opponent."
+  onEnterPlay \_owner self -> adjustSupportTokens self.key 4
+  onMyTurnBegin \_owner self -> when (self.tokens > 0) do
+    adjustSupportTokens self.key (-1)
+    when (self.tokens == 1) $ indirectDamage self.controller.next 10
+
 princeOfCaledor :: CardDef Unit
 princeOfCaledor = unitCard "the-inevitable-city-004" "Prince of Caledor" do
   race HighElf
