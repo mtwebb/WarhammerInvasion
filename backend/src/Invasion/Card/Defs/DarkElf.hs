@@ -596,6 +596,49 @@ blackGuards = unitCard "shield-of-the-gods-113" "Black Guards" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+theEbonblades :: CardDef Unit
+theEbonblades = unitCard "city-of-winter-089" "The Ebonblades" do
+  race DarkElf
+  cost 1
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Warrior
+  battlefieldOnly
+  body "Battlefield only. While you control a Sorcerer unit, this unit gains {power}."
+  selfPower \g u ->
+    if any (\v -> v.controller == u.controller && Sorceror `elem` v.cardDef.traits) g.units
+      then 1
+      else 0
+
+spawnOfKintearer :: CardDef Unit
+spawnOfKintearer = unitCard "realm-of-the-phoenix-king-035" "Spawn of Kintearer" do
+  race DarkElf
+  cost 5
+  loyalty 3
+  power 3
+  hitPoints 5
+  trait Cavalry
+  feared 1
+  body
+    "Feared 1 (while this unit is attacking, blank the text box of 1 target unit \
+    \except for Traits). Action: When this unit attacks, discard the top card of \
+    \target player's deck for every Cavalry unit you control."
+  onMyAttackDeclared \_owner self _z _atk -> do
+    -- Feared 1: blank one target unit's text box.
+    withTarget self.controller AnyUnit \k -> until EndOfTurn $ blankUnit k
+    -- Mill the opponent (the meaningful "target player") one card per
+    -- Cavalry unit you control, including this one.
+    g <- getGame
+    let cavalry =
+          length
+            [ u
+            | u <- g.units
+            , u.controller == self.controller
+            , Cavalry `elem` u.cardDef.traits
+            ]
+    when (cavalry > 0) $ millFromDeck self.controller.next cavalry
+
 harpyAerie :: CardDef Support
 harpyAerie = supportCard "city-of-winter-093" "Harpy Aerie" do
   race DarkElf

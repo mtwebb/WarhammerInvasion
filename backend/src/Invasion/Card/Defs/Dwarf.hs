@@ -769,6 +769,17 @@ hospitableCave = supportCard "shield-of-the-gods-104" "Hospitable Cave" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+heartForge :: CardDef Support
+heartForge = supportCard "karaz-a-karak-067" "Heart Forge" do
+  race Dwarf
+  cost 2
+  loyalty 3
+  power 1
+  trait Location
+  body "Kingdom. Lower the cost of each Rune card you play by 1."
+  globalCostAdjust \_g self pk filt ->
+    if pk == self.controller && Rune `elem` filt.cfTraits then -1 else 0
+
 runeblades :: CardDef Unit
 runeblades = unitCard "karaz-a-karak-064" "Runeblades" do
   race Dwarf

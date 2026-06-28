@@ -595,9 +595,11 @@ allCards =
       -- The Capital Cycle — Realm of the Phoenix King (021-040)
       ("realm-of-the-phoenix-king-023", SupportCardDef clockworkHorse),
       ("realm-of-the-phoenix-king-027", UnitCardDef heraldOfMoraiHeg),
+      ("realm-of-the-phoenix-king-028", UnitCardDef starDragon),
       ("realm-of-the-phoenix-king-030", SupportCardDef straitsOfLothern),
       ("realm-of-the-phoenix-king-033", TacticCardDef inflame),
       ("realm-of-the-phoenix-king-034", SupportCardDef horrificFavour),
+      ("realm-of-the-phoenix-king-035", UnitCardDef spawnOfKintearer),
       -- The Capital Cycle — The Iron Rock (041-060)
       ("the-iron-rock-041", UnitCardDef guildOfEngineers),
       ("the-iron-rock-042", UnitCardDef bannaThief),
@@ -611,12 +613,14 @@ allCards =
       ("karaz-a-karak-061", UnitCardDef mountainSentry),
       ("karaz-a-karak-062", UnitCardDef queenHelga),
       ("karaz-a-karak-064", UnitCardDef runeblades),
+      ("karaz-a-karak-067", SupportCardDef heartForge),
       ("karaz-a-karak-070", TacticCardDef leaveNoTrace),
       ("karaz-a-karak-076", UnitCardDef zombieDragon),
       ("karaz-a-karak-079", TacticCardDef buildingPlans),
       ("karaz-a-karak-080", QuestCardDef buildingForWar),
       -- The Capital Cycle — City of Winter (081-100)
       ("city-of-winter-087", UnitCardDef bannermanOfTheCrag),
+      ("city-of-winter-089", UnitCardDef theEbonblades),
       ("city-of-winter-090", UnitCardDef anlecLookout),
       ("city-of-winter-093", SupportCardDef harpyAerie),
       ("city-of-winter-095", TacticCardDef callOfTheKraken),

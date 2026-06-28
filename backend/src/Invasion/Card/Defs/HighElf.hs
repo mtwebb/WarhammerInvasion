@@ -551,6 +551,26 @@ ellyrianElite = unitCard "shield-of-the-gods-109" "Ellyrian Elite" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+starDragon :: CardDef Unit
+starDragon = unitCard "realm-of-the-phoenix-king-028" "Star Dragon" do
+  race HighElf
+  cost 10
+  loyalty 4
+  power 5
+  hitPoints 5
+  trait Dragon
+  feared 2
+  body
+    "Feared 2 (while this unit is attacking, blank the text box of 2 target units \
+    \except for Traits). Lower the cost to play this unit by 1 for each Spell card \
+    \in your discard pile."
+  selfCostAdjust \g pk ->
+    negate (length [c | c <- (playerOf pk g).discard, Spell `elem` someCardTraits c.def])
+  -- Feared 2: blank up to two target units' text boxes while attacking.
+  onMyAttackDeclared \_owner self _z _atk ->
+    withUpTo self.controller 2 AnyUnit \ks ->
+      for_ ks \k -> until EndOfTurn $ blankUnit k
+
 princeOfCaledor :: CardDef Unit
 princeOfCaledor = unitCard "the-inevitable-city-004" "Prince of Caledor" do
   race HighElf
