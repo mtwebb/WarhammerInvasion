@@ -3161,6 +3161,16 @@ instance Run Game where
         logIt LogSystem
           "log.discard.returned_to_hand"
           [("player", playerParam pk), ("count", tshow (length taken))]
+    PutDiscardCardOnDeckBottom pk key -> do
+      g <- get
+      let player = lookupPlayer pk g
+          (taken, rest) = partition ((== key) . (.key)) player.discard
+      unless (null taken) do
+        let player' = player {discard = rest, deck = player.deck <> taken}
+        modify (setPlayer pk player')
+        logIt LogSystem
+          "log.discard.to_deck_bottom"
+          [("player", playerParam pk), ("count", tshow (length taken))]
     DiscardCardsFromHand pk keys -> do
       g <- get
       let player = lookupPlayer pk g
@@ -4255,6 +4265,7 @@ eligibleDefenderCandidates g defender zone =
   , not u.corrupted
   , not (hasModifier g.modifiers u.key CannotDefend)
   , not (unitExtrasOf u).cannotDefend
+  , (unitExtrasOf u).canDefendZone g defender zone u
   , not (any (\s -> s.cardDef.extras.imposesCannotDefendOn g s u) (allInPlaySupports g))
   ]
     -- A legend can defend its controller's zones only when an

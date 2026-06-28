@@ -447,6 +447,9 @@ data Message where
   DiscardCardsFromDeck :: PlayerKey -> [UnitKey] -> Message
     -- ^ Discard the named cards from anywhere in the player's deck,
     -- preserving the order of the rest (Plague Monk).
+  PutDiscardCardOnDeckBottom :: PlayerKey -> UnitKey -> Message
+    -- ^ Move a card with this key from the player's discard pile to the
+    -- bottom of their deck (Mannfred Von Carstein).
   ReturnCardsFromDiscardToHand :: PlayerKey -> [UnitKey] -> Message
     -- ^ Move the named cards from the player's discard pile into their
     -- hand (Gift of Life). Mirror of 'TakeCardsFromDeckToHand'.

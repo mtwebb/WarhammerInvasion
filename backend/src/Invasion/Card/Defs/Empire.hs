@@ -912,6 +912,24 @@ devoteeOfChamon = unitCard "the-imperial-throne-105" "Devotee of Chamon" do
         dealUncancellableDamage k 1
         until EndOfTurn $ buffPower usage.self.key 1
 
+theImperialZoo :: CardDef Support
+theImperialZoo = supportCard "the-imperial-throne-109" "The Imperial Zoo" do
+  race Empire
+  cost 1
+  loyalty 3
+  trait Location
+  body
+    "This card gains {power} for each resource token on it. Action: Spend X \
+    \resources to put a resource token on this card. X is the number of resource \
+    \tokens on this card."
+  zonePowerAura \_g s zone -> if s.zone == zone then s.tokens else 0
+  action "Expand the menagerie" 0 \usage -> do
+    g <- getGame
+    whenJust (findSupport usage.self.key g) \s ->
+      when ((playerOf usage.user g).resources >= Resources s.tokens) do
+        payResources usage.user s.tokens
+        adjustSupportTokens usage.self.key 1
+
 cathedralOfSigmar :: CardDef Support
 cathedralOfSigmar = supportCard "the-imperial-throne-111" "Cathedral of Sigmar" do
   unique

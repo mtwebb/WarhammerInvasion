@@ -590,6 +590,7 @@ allCards =
       ("the-inevitable-city-013", SupportCardDef ironThroneroom),
       ("the-inevitable-city-014", TacticCardDef stormOfChange),
       ("the-inevitable-city-016", UnitCardDef warhawkRider),
+      ("the-inevitable-city-018", UnitCardDef mannfredVonCarstein),
       ("the-inevitable-city-019", TacticCardDef willpower),
       ("the-inevitable-city-020", QuestCardDef raidingCamps),
       -- The Capital Cycle — Realm of the Phoenix King (021-040)
@@ -647,8 +648,10 @@ allCards =
       ("the-imperial-throne-106", UnitCardDef priestsOfSigmar),
       ("the-imperial-throne-107", UnitCardDef stirlandDeathjacks),
       ("the-imperial-throne-108", UnitCardDef wingedRidersOfKislev),
+      ("the-imperial-throne-109", SupportCardDef theImperialZoo),
       ("the-imperial-throne-111", SupportCardDef cathedralOfSigmar),
       ("the-imperial-throne-112", TacticCardDef doublingOfTheGuard),
+      ("the-imperial-throne-114", UnitCardDef daemonPrince),
       ("the-imperial-throne-115", SupportCardDef sacrificialPyre),
       ("the-imperial-throne-117", TacticCardDef gazeOfNagash),
       ("the-imperial-throne-118", TacticCardDef aPromiseOfWar),

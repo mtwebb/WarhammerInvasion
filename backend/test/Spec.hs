@@ -1102,6 +1102,38 @@ main = do
         (zonePower gSP3 pkSP KingdomZone == before + 1)
     _ -> putStrLn "  FAIL support-power setup" >> exitFailure
 
+  -- Daemon Prince: the canDefend gate keys off exactly 3 resource tokens.
+  gDP1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkDP = gDP1.currentPlayer
+  case Map.lookup "the-imperial-throne-114" allCards of
+    Just (UnitCardDef dpDef) -> do
+      let dpKey = UnitKey 98001
+          mkDP toks = (freshUnit dpKey pkDP BattlefieldZone dpDef) {tokens = toks} :: UnitDetails
+          g0 = gDP1 {units = mkDP 0 : gDP1.units}
+          g3 = gDP1 {units = mkDP 3 : gDP1.units}
+      check "daemon prince: cannot defend with 0 tokens"
+        (dpKey `notElem` eligibleDefenderCandidates g0 pkDP BattlefieldZone)
+      check "daemon prince: can defend with exactly 3 tokens"
+        (dpKey `elem` eligibleDefenderCandidates g3 pkDP BattlefieldZone)
+    _ -> putStrLn "  FAIL daemon-prince setup" >> exitFailure
+
+  -- PutDiscardCardOnDeckBottom (Mannfred): a discarded card goes to the
+  -- bottom of the deck.
+  gDB1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkDB = gDB1.currentPlayer
+  case Map.lookup "core-006" allCards of
+    Just sd -> do
+      let dbKey = UnitKey 98101
+          plDB = getPlG pkDB gDB1
+          plDB' = plDB {discard = Card {key = dbKey, def = sd} : plDB.discard}
+          gDB2 = setPlG pkDB plDB' gDB1
+      gDB3 <- applyMessage gDB2 (PutDiscardCardOnDeckBottom pkDB dbKey)
+      check "discard->deck bottom: card left the discard pile"
+        (not (any ((== dbKey) . (.key)) (getPlG pkDB gDB3).discard))
+      check "discard->deck bottom: card is at the bottom of the deck"
+        (not (null (getPlG pkDB gDB3).deck) && (last (getPlG pkDB gDB3).deck).key == dbKey)
+    _ -> putStrLn "  FAIL discard-bottom setup" >> exitFailure
+
   -- Reanimate from discard (Lord of the Dead): put a unit from the
   -- discard pile into play for free; it returns to the deck bottom at
   -- end of turn, like Necromancy.

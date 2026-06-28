@@ -1356,6 +1356,25 @@ theBleedingWall = supportCard "the-inevitable-city-011" "The Bleeding Wall" do
         adjustSupportTokens usage.self.key (-2)
         withTarget usage.user (UnitMatching \_ _ u -> u.corrupted) destroyUnit
 
+daemonPrince :: CardDef Unit
+daemonPrince = unitCard "the-imperial-throne-114" "Daemon Prince" do
+  race Chaos
+  cost 0
+  loyalty 3
+  power 4
+  hitPoints 4
+  trait Daemon
+  battlefieldOnly
+  body
+    "Battlefield only. This unit cannot be declared as an attacker or defender \
+    \unless it has exactly 3 resource tokens on it. Action: Sacrifice a unit to put \
+    \a resource token on this unit."
+  canAttack \_g _pk _zone u -> u.tokens == 3
+  canDefend \_g _pk _zone u -> u.tokens == 3
+  action "Empower" 0 \usage ->
+    sacrificeOwnUnit usage.user "Sacrifice a unit to empower the Daemon Prince." \_k ->
+      adjustUnitTokens usage.self.key 1
+
 soporificMusk :: CardDef Tactic
 soporificMusk = tacticCard "city-of-winter-085" "Soporific Musk" do
   race Chaos

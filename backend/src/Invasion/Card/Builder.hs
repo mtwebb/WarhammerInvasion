@@ -348,6 +348,11 @@ preDamageRedirectHook f =
 canAttack :: (Game -> PlayerKey -> ZoneKind -> UnitDetails -> Bool) -> CardBuilder Unit ()
 canAttack f = modifyUnitExtras \e -> e {canAttackZone = f}
 
+-- | Predicate gating defender eligibility (Daemon Prince). Symmetric to
+-- 'canAttack'.
+canDefend :: (Game -> PlayerKey -> ZoneKind -> UnitDetails -> Bool) -> CardBuilder Unit ()
+canDefend f = modifyUnitExtras \e -> e {canDefendZone = f}
+
 -- | Per-turn damage cap (Daemonettes of Slaanesh).
 perTurnDamageCap :: Int -> CardBuilder Unit ()
 perTurnDamageCap n = modifyUnitExtras \e -> e {damageCap = Just n}

@@ -740,6 +740,34 @@ warhawkRider = unitCard "the-inevitable-city-016" "Warhawk Rider" do
         (c : _) -> push (DiscardCardsFromHand opp [c.key])
         _ -> pure ()
 
+mannfredVonCarstein :: CardDef Unit
+mannfredVonCarstein = unitCard "the-inevitable-city-018" "Mannfred Von Carstein" do
+  cost 3
+  power 1
+  hitPoints 3
+  traits [Undead, Vampire]
+  destructionOnly
+  body
+    "Destruction only. This card gains {power} for each resource token on it. \
+    \Action: Discard a card from your hand to put target unit in an opponent's \
+    \discard pile on the bottom of his deck. Then, place a resource token on this card."
+  selfPower \_g self -> self.tokens
+  action "Command the dead" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    let me = playerOf pk g
+    unless (null me.hand) $
+      chooseFromCards pk 1 1 me.hand "Discard a card from your hand." \discarded ->
+        for_ discarded \dc -> do
+          push (DiscardCardsFromHand pk [dc.key])
+          let opp = pk.next
+          g2 <- getGame
+          let oppUnits = [c | c <- (playerOf opp g2).discard, isJust (asUnit c.def)]
+          chooseFromCards pk 0 1 oppUnits
+            "Choose an opponent's discarded unit to bury at the bottom of their deck." \picked ->
+              for_ picked \c -> push (PutDiscardCardOnDeckBottom opp c.key)
+          adjustUnitTokens usage.self.key 1
+
 gazeOfNagash :: CardDef Tactic
 gazeOfNagash = tacticCard "the-imperial-throne-117" "Gaze of Nagash" do
   cost 2

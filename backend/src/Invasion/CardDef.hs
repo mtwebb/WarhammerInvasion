@@ -355,6 +355,10 @@ data UnitExtras = UnitExtras
     -- ^ Whether this unit may be declared as an attacker against
     -- the named defender zone (Sworn of Khorne requires a corrupted
     -- defender). Default: always True.
+  , canDefendZone :: Game -> PlayerKey -> ZoneKind -> InPlay Unit -> Bool
+    -- ^ Whether this unit may be declared as a defender of the named
+    -- zone (Daemon Prince needs exactly 3 resource tokens). Default:
+    -- always True. Symmetric to 'canAttackZone'.
   , damageCap :: Maybe Int
     -- ^ Per-turn damage cap on this unit (Daemonettes of Slaanesh).
   , corruptsOnCombatDamage :: Bool
@@ -710,6 +714,7 @@ instance HasDefaultExtras Unit where
     , combatPowerBonus = \_ _ -> 0
     , unitAuraPower = \_ _ _ -> 0
     , canAttackZone = \_ _ _ _ -> True
+    , canDefendZone = \_ _ _ _ -> True
     , damageCap = Nothing
     , corruptsOnCombatDamage = False
     , extraTargetTax = \_ _ _ -> 0
