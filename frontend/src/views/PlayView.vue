@@ -342,6 +342,39 @@ const mortisDiscardCards = computed<EngineCard[]>(() => {
   return discard.filter((c) => c.kind === 'Unit')
 })
 
+// Lord of Change: while you control one, you may play the top card of
+// your own deck as though it were in your hand (any card kind). The
+// engine routes a GamePlayCard whose key matches the deck top to the
+// normal play path (Invasion.Server.WebSocket.lordOfChangeTopCard).
+const LORD_OF_CHANGE_CODE = 'march-of-the-damned-021'
+const controlsLordOfChange = computed<boolean>(() =>
+  props.engine.units.some(
+    (u) => u.controller === mySeatKey.value && u.cardDef.code === LORD_OF_CHANGE_CODE,
+  ),
+)
+
+// Do I currently hold priority in the open action window (any trigger)?
+// Tactics may be played in any such window; non-tactics need the capital
+// window specifically.
+const iHoldPriority = computed<boolean>(() => {
+  const aw = props.engine.actionWindow
+  return !!aw && aw.awaiting.contents === mySeatKey.value
+})
+
+const lordOfChangeTopCard = computed<EngineCard | null>(() => {
+  if (!controlsLordOfChange.value) return null
+  // `deck` is typed `unknown[]` because it's normally hidden; Lord of
+  // Change makes the top card public, and the server ships it as a full
+  // EngineCard (per-viewer deck redaction isn't implemented yet).
+  const deck = me.value?.deck
+  if (!deck || !deck.length) return null
+  const top = deck[0] as Partial<EngineCard>
+  if (!top || typeof top.key !== 'number') return null
+  const card = top as EngineCard
+  const ok = card.kind === 'Tactic' ? iHoldPriority.value : inMyCapitalWindow.value
+  return ok ? card : null
+})
+
 function onNecromancyClick(card: EngineCard, ev: MouseEvent) {
   if (!isSeated.value) return
   const rect = (ev.currentTarget as HTMLElement).getBoundingClientRect()
@@ -464,6 +497,20 @@ const popoverStyle = computed<Record<string, string>>(() => {
           {{ c.title }}
         </button>
       </template>
+    </div>
+
+    <!-- Lord of Change: the top card of your deck, playable as though it
+         were in your hand. Reuses the normal play popover. -->
+    <div v-if="lordOfChangeTopCard" class="necromancy-strip">
+      <span class="necromancy-strip-label">{{ t('game.play.lord_of_change.label') }}</span>
+      <button
+        :key="'loc' + lordOfChangeTopCard.key"
+        type="button"
+        class="necromancy-card"
+        @click="onNecromancyClick(lordOfChangeTopCard, $event)"
+      >
+        {{ lordOfChangeTopCard.title }}
+      </button>
     </div>
 
     <!-- Combat arrows: attackers → attacked zone / legend. -->

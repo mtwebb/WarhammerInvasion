@@ -912,6 +912,8 @@ game:
     necromancy:
       label: "Necromancy — play from discard:"
       mortis_label: "Mortis Engine — play from enemy discard:"
+    lord_of_change:
+      label: "Lord of Change — play your deck's top card:"
     action:
       heading: Play card
       kingdom: Kingdom

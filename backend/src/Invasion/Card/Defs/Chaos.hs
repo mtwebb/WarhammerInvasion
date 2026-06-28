@@ -1712,6 +1712,23 @@ tzeentchsFirestorm = tacticCard "assault-on-ulthuan-054" "Tzeentch's Firestorm" 
 
 -- March of the Damned --------------------------------------------------
 
+-- | The "play with decks revealed" clause is already satisfied: the
+-- engine ships full deck contents to both clients. The "play your top
+-- deck card as though in hand" permission is keyed off this card's
+-- presence in play ('Engine.controlsLordOfChange'), so the def itself
+-- needs only its statline and text.
+lordOfChange :: CardDef Unit
+lordOfChange = unitCard "march-of-the-damned-021" "Lord of Change" do
+  race Chaos
+  cost 6
+  loyalty 3
+  power 3
+  hitPoints 4
+  trait Daemon
+  body
+    "Players play with the top card of their decks revealed. You may play \
+    \the top card of your deck as though it were in your hand."
+
 brayShaman :: CardDef Unit
 brayShaman = unitCard "march-of-the-damned-022" "Bray Shaman" do
   race Chaos

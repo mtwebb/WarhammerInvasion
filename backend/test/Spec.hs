@@ -1014,6 +1014,53 @@ main = do
         _ -> putStrLn "  skip mortis-engine (opponent hand empty)"
     _ -> putStrLn "  FAIL mortis-engine setup (hand too small or def missing)" >> exitFailure
 
+  -- Spirit Host: when it leaves play it may attach to a target unit as
+  -- a power-draining Attachment. We test the engine message directly
+  -- (the card sits in discard, as it would after leaving play).
+  gSH1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkSH = gSH1.currentPlayer
+  case (firstHandKeys 1 gSH1, Map.lookup "march-of-the-damned-046" allCards) of
+    ([hostKey], Just (UnitCardDef shDef)) -> do
+      gSH2 <- applyMessage gSH1 (PutUnitIntoPlay pkSH hostKey BattlefieldZone)
+      let hostPow0 = head [u.effectivePower | u <- gSH2.units, u.key == hostKey]
+          spiritKey = UnitKey 90001
+          plSH = getPlG pkSH gSH2
+          plSH' = plSH {discard = Card {key = spiritKey, def = UnitCardDef shDef} : plSH.discard}
+          gSH3 = setPlG pkSH plSH' gSH2
+      gSH4 <- applyMessage gSH3 (AttachDepartedUnitAsAttachment spiritKey hostKey)
+      check "spirit host: re-entered as an attachment on the host"
+        (any (\u -> u.key == hostKey && any ((== spiritKey) . (.key)) u.attachments) gSH4.units)
+      check "spirit host: drains 1 power from the host"
+        (head [u.effectivePower | u <- gSH4.units, u.key == hostKey] == hostPow0 - 1)
+      check "spirit host: left the discard pile"
+        (not (any ((== spiritKey) . (.key)) (getPlG pkSH gSH4).discard))
+    _ -> putStrLn "  FAIL spirit-host setup" >> exitFailure
+
+  -- Lord of Change: while one is in play, the controller may play the
+  -- top card of their own deck as though it were in their hand.
+  gLC1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkLC = gLC1.currentPlayer
+  gLC2 <- applyMessages gLC1
+    [PassPriority pkLC, PassPriority pkLC.next, PassPriority pkLC, PassPriority pkLC.next]
+  case (Map.lookup "march-of-the-damned-021" allCards, (getPlG pkLC gLC2).deck) of
+    (Just (UnitCardDef locDef), topCard : _) -> do
+      let deckTopKey = topCard.key
+          plLC' = (getPlG pkLC gLC2) {resources = Resources 10}
+          gReady = setPlG pkLC plLC' gLC2
+          locKey = UnitKey 95001
+          gWithLoC = gReady {units = freshUnit locKey pkLC BattlefieldZone locDef : gReady.units}
+      -- Without a Lord of Change in play, the deck top is not playable.
+      gNoLoC <- applyMessage gReady (PlayUnit pkLC deckTopKey BattlefieldZone)
+      check "lord of change: deck top is unplayable without one in play"
+        (not (any ((== deckTopKey) . (.key)) gNoLoC.units))
+      -- With one in play, the deck top plays as though from hand.
+      gLC3 <- applyMessage gWithLoC (PlayUnit pkLC deckTopKey BattlefieldZone)
+      check "lord of change: the deck's top card entered play"
+        (any ((== deckTopKey) . (.key)) gLC3.units)
+      check "lord of change: the card left the deck"
+        (not (any ((== deckTopKey) . (.key)) (getPlG pkLC gLC3).deck))
+    _ -> putStrLn "  FAIL lord-of-change setup" >> exitFailure
+
   -- Reanimate from discard (Lord of the Dead): put a unit from the
   -- discard pile into play for free; it returns to the deck bottom at
   -- end of turn, like Necromancy.
