@@ -625,6 +625,21 @@ barbedSnares = tacticCard "city-of-winter-086" "Barbed Snares" do
     millFromDeck self.controller.next 2
     mayReturnToTopOfDeck self.controller self.cardDef.code
 
+hagQueen :: CardDef Unit
+hagQueen = unitCard "city-of-winter-091" "Hag Queen" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 4
+  traits [WitchElf, Sorceror]
+  body
+    "Action: Corrupt this unit to discard a card at random from target opponent's \
+    \hand. Then, this unit takes 1 damage."
+  actionWith "Hex" 0 [CorruptSelf] \usage -> do
+    discardRandom usage.user.next
+    dealDamage usage.self.key 1
+
 theEbonblades :: CardDef Unit
 theEbonblades = unitCard "city-of-winter-089" "The Ebonblades" do
   race DarkElf

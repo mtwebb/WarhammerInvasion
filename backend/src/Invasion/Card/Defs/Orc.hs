@@ -902,6 +902,28 @@ creaturePen = supportCard "shield-of-the-gods-106" "Creature Pen" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+mushroomHunters :: CardDef Unit
+mushroomHunters = unitCard "realm-of-the-phoenix-king-022" "Mushroom Hunters" do
+  race Orc
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Goblin
+  body
+    "Action: At the beginning of your turn, discard the top card of your deck. This \
+    \card gains {power} equal to the {power} of the discarded card until the end of \
+    \the turn."
+  onMyTurnBegin \_owner self -> do
+    g <- getGame
+    let pk = self.controller
+    case (playerOf pk g).deck of
+      top : _ -> do
+        let pwr = maybe 0 (.power) (asUnit top.def)
+        millFromDeck pk 1
+        when (pwr > 0) $ until EndOfTurn $ buffPower self.key pwr
+      _ -> pure ()
+
 toofTrader :: CardDef Unit
 toofTrader = unitCard "the-iron-rock-046" "Toof Trader" do
   race Orc

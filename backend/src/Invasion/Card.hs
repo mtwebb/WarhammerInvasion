@@ -593,6 +593,7 @@ allCards =
       ("the-inevitable-city-019", TacticCardDef willpower),
       ("the-inevitable-city-020", QuestCardDef raidingCamps),
       -- The Capital Cycle — Realm of the Phoenix King (021-040)
+      ("realm-of-the-phoenix-king-022", UnitCardDef mushroomHunters),
       ("realm-of-the-phoenix-king-023", SupportCardDef clockworkHorse),
       ("realm-of-the-phoenix-king-027", UnitCardDef heraldOfMoraiHeg),
       ("realm-of-the-phoenix-king-028", UnitCardDef starDragon),
@@ -630,7 +631,9 @@ allCards =
       ("city-of-winter-087", UnitCardDef bannermanOfTheCrag),
       ("city-of-winter-089", UnitCardDef theEbonblades),
       ("city-of-winter-090", UnitCardDef anlecLookout),
+      ("city-of-winter-091", UnitCardDef hagQueen),
       ("city-of-winter-093", SupportCardDef harpyAerie),
+      ("city-of-winter-096", UnitCardDef kindredOfLaithKourn),
       ("city-of-winter-095", TacticCardDef callOfTheKraken),
       ("city-of-winter-100", QuestCardDef raidingShips),
       -- The Capital Cycle — The Imperial Throne (101-120)
@@ -642,6 +645,7 @@ allCards =
       ("the-imperial-throne-108", UnitCardDef wingedRidersOfKislev),
       ("the-imperial-throne-112", TacticCardDef doublingOfTheGuard),
       ("the-imperial-throne-115", SupportCardDef sacrificialPyre),
+      ("the-imperial-throne-117", TacticCardDef gazeOfNagash),
       ("the-imperial-throne-118", TacticCardDef aPromiseOfWar),
       ("the-imperial-throne-120", QuestCardDef recruitingForWar),
       -- Bloodquest cycle — Rising Dawn (pack 1)

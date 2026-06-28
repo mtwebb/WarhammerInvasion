@@ -740,6 +740,45 @@ warhawkRider = unitCard "the-inevitable-city-016" "Warhawk Rider" do
         (c : _) -> push (DiscardCardsFromHand opp [c.key])
         _ -> pure ()
 
+gazeOfNagash :: CardDef Tactic
+gazeOfNagash = tacticCard "the-imperial-throne-117" "Gaze of Nagash" do
+  cost 2
+  traits [Undead, Spell]
+  destructionOnly
+  body
+    "Destruction only. Action: Corrupt a Vampire unit you control to look at target \
+    \opponent's hand. Choose and discard up to 2 cards from that hand."
+  playableWhen \g pk ->
+    any (\u -> u.controller == pk && Vampire `elem` u.cardDef.traits) g.units
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk
+      (UnitMatching \me _g u -> u.controller == me && Vampire `elem` u.cardDef.traits)
+      \v -> do
+        corrupt v
+        g <- getGame
+        let h = (playerOf pk.next g).hand
+        unless (null h) $
+          chooseFromCards pk 0 2 h "Gaze of Nagash: choose up to 2 cards to discard." \chosen ->
+            unless (null chosen) $ push (DiscardCardsFromHand pk.next (map (.key) chosen))
+
+kindredOfLaithKourn :: CardDef Unit
+kindredOfLaithKourn = unitCard "city-of-winter-096" "Kindred of Laith-Kourn" do
+  cost 3
+  power 0
+  hitPoints 5
+  trait WoodElf
+  orderOnly
+  body "Order only. Action: Sacrifice a development in this zone to heal all damage on this unit."
+  action "Renew" 0 \usage -> do
+    g <- getGame
+    whenJust (findUnit usage.self.key g) \u -> do
+      let devs = Map.findWithDefault [] u.zone (playerOf u.controller g).developmentCards
+          Damage d = u.damage
+      when (not (null devs) && d > 0) do
+        destroyDevelopment u.controller u.zone
+        healUnit u.key d
+
 buildingPlans :: CardDef Tactic
 buildingPlans = tacticCard "karaz-a-karak-079" "Building Plans" do
   cost 1
