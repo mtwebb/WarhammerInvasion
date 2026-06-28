@@ -353,15 +353,26 @@ const controlsLordOfChange = computed<boolean>(() =>
   ),
 )
 
+// Do I currently hold priority in the open action window (any trigger)?
+// Tactics may be played in any such window; non-tactics need the capital
+// window specifically.
+const iHoldPriority = computed<boolean>(() => {
+  const aw = props.engine.actionWindow
+  return !!aw && aw.awaiting.contents === mySeatKey.value
+})
+
 const lordOfChangeTopCard = computed<EngineCard | null>(() => {
-  if (!inMyCapitalWindow.value || !controlsLordOfChange.value) return null
+  if (!controlsLordOfChange.value) return null
   // `deck` is typed `unknown[]` because it's normally hidden; Lord of
   // Change makes the top card public, and the server ships it as a full
   // EngineCard (per-viewer deck redaction isn't implemented yet).
   const deck = me.value?.deck
   if (!deck || !deck.length) return null
   const top = deck[0] as Partial<EngineCard>
-  return top && typeof top.key === 'number' ? (top as EngineCard) : null
+  if (!top || typeof top.key !== 'number') return null
+  const card = top as EngineCard
+  const ok = card.kind === 'Tactic' ? iHoldPriority.value : inMyCapitalWindow.value
+  return ok ? card : null
 })
 
 function onNecromancyClick(card: EngineCard, ev: MouseEvent) {
