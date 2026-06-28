@@ -214,6 +214,11 @@ data Message where
     -- 'ActionTarget' carries the choice from 'PlayTactic'; the 'Int'
     -- carries the X value paid for variable-cost tactics (0 for
     -- fixed-cost tactics).
+  ReturnTacticToTopOfDeck :: PlayerKey -> CardCode -> Message
+    -- ^ Move the most-recently-discarded copy of this tactic from the
+    -- player's discard pile to the top of their deck (the City of
+    -- Winter "Then, you may put this card on top of your deck." tactic
+    -- family). No-op if no matching card is in discard.
   -- Prompts
   RequestPrompt :: Prompt -> Message
     -- ^ Suspend the engine with the given prompt. 'gameMain' will
@@ -240,6 +245,9 @@ data Message where
   DealDamageToZone :: PlayerKey -> ZoneKind -> Int -> Message
     -- ^ Add N damage tokens to a capital zone. May burn the zone (and
     -- a second burn eliminates the player).
+  DealDamageToZoneUncancellable :: PlayerKey -> ZoneKind -> Int -> Message
+    -- ^ Like 'DealDamageToZone' but bypasses capital shields, redirects,
+    -- and cancel-1 supports (Pigeon Bombs). A burned zone still wastes it.
   -- Free unit summons (Iron Throneroom payoff, Reckless Attack, …).
   PutUnitIntoPlay :: PlayerKey -> UnitKey -> ZoneKind -> Message
     -- ^ Like 'PlayUnit' but skips the cost check / payment and pulls
@@ -300,6 +308,9 @@ data Message where
     -- it to the player's least-damaged non-burned zone to maximise
     -- survival; a player-driven allocator prompt is a follow-up
     -- (the rules let the player choose).
+  IndirectDamageUncancellable :: PlayerKey -> Int -> Message
+    -- ^ Like 'IndirectDamage' but the allocated points bypass capital
+    -- shields (Pigeon Bombs).
   -- Combat redirection
   RedirectAttackZone :: ZoneKind -> Message
     -- ^ Sigmar's Intervention. Rewrite the current 'CombatState's
@@ -436,6 +447,9 @@ data Message where
   DiscardCardsFromDeck :: PlayerKey -> [UnitKey] -> Message
     -- ^ Discard the named cards from anywhere in the player's deck,
     -- preserving the order of the rest (Plague Monk).
+  PutDiscardCardOnDeckBottom :: PlayerKey -> UnitKey -> Message
+    -- ^ Move a card with this key from the player's discard pile to the
+    -- bottom of their deck (Mannfred Von Carstein).
   ReturnCardsFromDiscardToHand :: PlayerKey -> [UnitKey] -> Message
     -- ^ Move the named cards from the player's discard pile into their
     -- hand (Gift of Life). Mirror of 'TakeCardsFromDeckToHand'.

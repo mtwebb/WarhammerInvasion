@@ -902,6 +902,94 @@ creaturePen = supportCard "shield-of-the-gods-106" "Creature Pen" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+madtoofIronleg :: CardDef Unit
+madtoofIronleg = unitCard "the-iron-rock-043" "Madtoof Ironleg" do
+  race Orc
+  cost 4
+  loyalty 3
+  power 2
+  hitPoints 5
+  traits [Hero, Troll]
+  limitOneHeroPerZone
+  body
+    "Limit one Hero per zone. Action: At the beginning of your turn, target unit you \
+    \control gains {power} equal to its loyalty. Then, sacrifice it at the end of the turn."
+  onMyTurnBegin \_owner self ->
+    may self.controller "Use Madtoof Ironleg's ability?" $
+      withTarget self.controller (UnitMatching \me _g u -> u.controller == me) \k -> do
+        g <- getGame
+        whenJust (findUnit k g) \u ->
+          when (u.cardDef.loyalty > 0) $ until EndOfTurn $ buffPower k u.cardDef.loyalty
+        queueEoTSacrifice k
+
+bossPit :: CardDef Support
+bossPit = supportCard "the-iron-rock-049" "Boss Pit" do
+  unique
+  race Orc
+  cost 4
+  loyalty 5
+  power 3
+  trait CapitalCenter
+  body
+    "This card enters play with 4 resource tokens on it. Action: At the beginning \
+    \of your turn, remove a resource token from this card. Then, if there are no \
+    \resources on this card, draw 10 cards."
+  onEnterPlay \_owner self -> adjustSupportTokens self.key 4
+  onMyTurnBegin \_owner self -> when (self.tokens > 0) do
+    adjustSupportTokens self.key (-1)
+    when (self.tokens == 1) $ drawCards self.controller 10
+
+mushroomHunters :: CardDef Unit
+mushroomHunters = unitCard "realm-of-the-phoenix-king-022" "Mushroom Hunters" do
+  race Orc
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Goblin
+  body
+    "Action: At the beginning of your turn, discard the top card of your deck. This \
+    \card gains {power} equal to the {power} of the discarded card until the end of \
+    \the turn."
+  onMyTurnBegin \_owner self -> do
+    g <- getGame
+    let pk = self.controller
+    case (playerOf pk g).deck of
+      top : _ -> do
+        let pwr = maybe 0 (.power) (asUnit top.def)
+        millFromDeck pk 1
+        when (pwr > 0) $ until EndOfTurn $ buffPower self.key pwr
+      _ -> pure ()
+
+toofTrader :: CardDef Unit
+toofTrader = unitCard "the-iron-rock-046" "Toof Trader" do
+  race Orc
+  cost 2
+  loyalty 1
+  power 0
+  hitPoints 1
+  trait Trader
+  body "Lower the cost of each Creature card you play by 1 (to a minimum of 1)."
+  unitCostAdjust \_g self pk filt ->
+    if pk == self.controller
+      && Creature `elem` filt.cfTraits
+      && (case filt.cfCost of Fixed c -> c > 1; Variable -> False)
+      then -1
+      else 0
+
+fistsOfMork :: CardDef Tactic
+fistsOfMork = tacticCard "city-of-winter-082" "Fists of Mork" do
+  race Orc
+  cost 1
+  loyalty 1
+  body
+    "Action: Deal 2 indirect damage to each player. Then, you may put this card \
+    \on top of your deck."
+  whenResolved \self -> do
+    indirectDamage self.controller 2
+    indirectDamage self.controller.next 2
+    mayReturnToTopOfDeck self.controller self.cardDef.code
+
 rugludsArmouredOrcs :: CardDef Unit
 rugludsArmouredOrcs = unitCard "the-iron-rock-045" "Ruglud's Armoured Orcs" do
   race Orc

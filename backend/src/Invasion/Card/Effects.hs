@@ -240,6 +240,11 @@ moveDevelopment pk fromZ toZ = push (MoveDevelopment pk fromZ toZ)
 indirectDamage :: HasQueue Message m => PlayerKey -> Int -> m ()
 indirectDamage pk n = push (IndirectDamage pk n)
 
+-- | "Player takes N uncancellable indirect damage." As 'indirectDamage'
+-- but the points bypass capital shields (Pigeon Bombs).
+indirectDamageUncancellable :: HasQueue Message m => PlayerKey -> Int -> m ()
+indirectDamageUncancellable pk n = push (IndirectDamageUncancellable pk n)
+
 -- | Trigger an off-phase attack, e.g. "Wolves of the North". The
 -- engine runs the full 5-step combat ladder regardless of the
 -- current phase: the per-card hooks ('when this unit attacks',
@@ -438,6 +443,17 @@ may
 may pk prompt action = do
   yes <- askYesNo pk prompt
   when yes action
+
+-- | "Then, you may put this card on top of your deck." The City of
+-- Winter tactic family. Call from a tactic's 'whenResolved' with the
+-- card's own controller and code; the just-resolved copy is pulled from
+-- the discard pile back to the top of the deck if the player agrees.
+mayReturnToTopOfDeck
+  :: (HasPromptIO m, HasGame m, HasQueue Message m)
+  => PlayerKey -> CardCode -> m ()
+mayReturnToTopOfDeck pk code =
+  may pk "Put this card on top of your deck?" $
+    push (ReturnTacticToTopOfDeck pk code)
 
 -- | "Sacrifice one of your units." Prompts the firing player for a
 -- unit they control, destroys it, and runs the continuation with

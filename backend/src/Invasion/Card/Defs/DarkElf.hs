@@ -596,6 +596,126 @@ blackGuards = unitCard "shield-of-the-gods-113" "Black Guards" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+countermoves :: CardDef Tactic
+countermoves = tacticCard "the-iron-rock-055" "Countermoves" do
+  race DarkElf
+  cost 2
+  loyalty 2
+  trait WitchElf
+  body "Play when an opponent plays a tactic. Action: Destroy target unit."
+  -- The engine resolves tactics immediately (no interrupt stack), so we
+  -- approximate the reaction window: Countermoves is playable while the
+  -- opponent has played a tactic this turn and a destroy target exists.
+  playableWhen \g pk ->
+    any (\cf -> cf.cfKind == Tactic)
+      (Map.findWithDefault [] pk.next (Map.findWithDefault mempty ThisTurn g.history).playedBy)
+      && hasTarget AnyUnit g pk
+  whenResolved \self ->
+    withTarget self.controller AnyUnit destroyUnit
+
+barbedSnares :: CardDef Tactic
+barbedSnares = tacticCard "city-of-winter-086" "Barbed Snares" do
+  race DarkElf
+  cost 1
+  loyalty 2
+  body
+    "Action: Discard the top 2 cards of target opponent's deck. Then, you may put \
+    \this card on top of your deck."
+  whenResolved \self -> do
+    millFromDeck self.controller.next 2
+    mayReturnToTopOfDeck self.controller self.cardDef.code
+
+courtOfTheWitchKing :: CardDef Support
+courtOfTheWitchKing = supportCard "city-of-winter-094" "Court of the Witch King" do
+  unique
+  race DarkElf
+  cost 4
+  loyalty 5
+  power 3
+  trait CapitalCenter
+  body
+    "This card enters play with 4 resource tokens on it. Action: At the beginning \
+    \of your turn, remove a resource token from this card. Then, if there are no \
+    \resource tokens on this card, discard the top 10 cards of target opponent's deck."
+  onEnterPlay \_owner self -> adjustSupportTokens self.key 4
+  onMyTurnBegin \_owner self -> when (self.tokens > 0) do
+    adjustSupportTokens self.key (-1)
+    when (self.tokens == 1) $ millFromDeck self.controller.next 10
+
+scionsOfMisery :: CardDef Unit
+scionsOfMisery = unitCard "the-inevitable-city-015" "Scions of Misery" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Warrior
+  body
+    "Action: When this unit enters play, each unit in any corresponding zone gets \
+    \-1 hit point until the end of the turn."
+  onEnterPlay \_owner self -> do
+    g <- getGame
+    for_ [u | u <- g.units, u.zone == self.zone] \u ->
+      until EndOfTurn $ debuffHP u.key 1
+
+hagQueen :: CardDef Unit
+hagQueen = unitCard "city-of-winter-091" "Hag Queen" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 4
+  traits [WitchElf, Sorceror]
+  body
+    "Action: Corrupt this unit to discard a card at random from target opponent's \
+    \hand. Then, this unit takes 1 damage."
+  actionWith "Hex" 0 [CorruptSelf] \usage -> do
+    discardRandom usage.user.next
+    dealDamage usage.self.key 1
+
+theEbonblades :: CardDef Unit
+theEbonblades = unitCard "city-of-winter-089" "The Ebonblades" do
+  race DarkElf
+  cost 1
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Warrior
+  battlefieldOnly
+  body "Battlefield only. While you control a Sorcerer unit, this unit gains {power}."
+  selfPower \g u ->
+    if any (\v -> v.controller == u.controller && Sorceror `elem` v.cardDef.traits) g.units
+      then 1
+      else 0
+
+spawnOfKintearer :: CardDef Unit
+spawnOfKintearer = unitCard "realm-of-the-phoenix-king-035" "Spawn of Kintearer" do
+  race DarkElf
+  cost 5
+  loyalty 3
+  power 3
+  hitPoints 5
+  trait Cavalry
+  feared 1
+  body
+    "Feared 1 (while this unit is attacking, blank the text box of 1 target unit \
+    \except for Traits). Action: When this unit attacks, discard the top card of \
+    \target player's deck for every Cavalry unit you control."
+  onMyAttackDeclared \_owner self _z _atk -> do
+    -- Feared 1: blank one target unit's text box.
+    withTarget self.controller AnyUnit \k -> until EndOfTurn $ blankUnit k
+    -- Mill the opponent (the meaningful "target player") one card per
+    -- Cavalry unit you control, including this one.
+    g <- getGame
+    let cavalry =
+          length
+            [ u
+            | u <- g.units
+            , u.controller == self.controller
+            , Cavalry `elem` u.cardDef.traits
+            ]
+    when (cavalry > 0) $ millFromDeck self.controller.next cavalry
+
 harpyAerie :: CardDef Support
 harpyAerie = supportCard "city-of-winter-093" "Harpy Aerie" do
   race DarkElf

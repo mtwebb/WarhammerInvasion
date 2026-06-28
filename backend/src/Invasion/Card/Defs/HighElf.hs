@@ -551,6 +551,84 @@ ellyrianElite = unitCard "shield-of-the-gods-109" "Ellyrian Elite" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+starDragon :: CardDef Unit
+starDragon = unitCard "realm-of-the-phoenix-king-028" "Star Dragon" do
+  race HighElf
+  cost 10
+  loyalty 4
+  power 5
+  hitPoints 5
+  trait Dragon
+  feared 2
+  body
+    "Feared 2 (while this unit is attacking, blank the text box of 2 target units \
+    \except for Traits). Lower the cost to play this unit by 1 for each Spell card \
+    \in your discard pile."
+  selfCostAdjust \g pk ->
+    negate (length [c | c <- (playerOf pk g).discard, Spell `elem` someCardTraits c.def])
+  -- Feared 2: blank up to two target units' text boxes while attacking.
+  onMyAttackDeclared \_owner self _z _atk ->
+    withUpTo self.controller 2 AnyUnit \ks ->
+      for_ ks \k -> until EndOfTurn $ blankUnit k
+
+convocationOfEagles :: CardDef Tactic
+convocationOfEagles = tacticCard "city-of-winter-084" "Convocation of Eagles" do
+  race HighElf
+  cost 0
+  loyalty 2
+  body
+    "Action: Gain 1 resource. Then, you may put this card on top of your deck."
+  whenResolved \self -> do
+    gainResources self.controller 1
+    mayReturnToTopOfDeck self.controller self.cardDef.code
+
+whiteLionChampion :: CardDef Unit
+whiteLionChampion = unitCard "realm-of-the-phoenix-king-026" "White Lion Champion" do
+  race HighElf
+  cost 3
+  loyalty 2
+  power 2
+  hitPoints 2
+  traits [Warrior, Elite]
+  body "This unit cannot be restored."
+  cannotBeRestored
+
+seaLordAislinn :: CardDef Unit
+seaLordAislinn = unitCard "realm-of-the-phoenix-king-025" "Sea Lord Aislinn" do
+  race HighElf
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  traits [Hero, Noble]
+  limitOneHeroPerZone
+  body
+    "Limit one Hero per zone. Action: When a Mage or Hero unit enters play under \
+    \your control, return target development to its owner's hand."
+  onFriendlyUnitEnterPlay \_owner self uk -> do
+    g <- getGame
+    whenJust (findUnit uk g) \u ->
+      when (Mage `elem` u.cardDef.traits || Hero `elem` u.cardDef.traits) $
+        withTarget self.controller AnyDevelopmentZone \(owner, zk) ->
+          push (ReturnDevelopmentToHand owner zk)
+
+eataineWarRoom :: CardDef Support
+eataineWarRoom = supportCard "realm-of-the-phoenix-king-032" "Eataine War Room" do
+  unique
+  race HighElf
+  cost 3
+  loyalty 5
+  power 2
+  trait CapitalCenter
+  body
+    "This card enters play with 4 resource tokens on it. Action: At the beginning \
+    \of your turn, remove a resource token from this card. Then, if there are no \
+    \resource tokens on this card, deal 10 indirect damage to target opponent."
+  onEnterPlay \_owner self -> adjustSupportTokens self.key 4
+  onMyTurnBegin \_owner self -> when (self.tokens > 0) do
+    adjustSupportTokens self.key (-1)
+    when (self.tokens == 1) $ indirectDamage self.controller.next 10
+
 princeOfCaledor :: CardDef Unit
 princeOfCaledor = unitCard "the-inevitable-city-004" "Prince of Caledor" do
   race HighElf

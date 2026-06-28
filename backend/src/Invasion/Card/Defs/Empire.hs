@@ -873,6 +873,123 @@ steelStandard = unitCard "shield-of-the-gods-107" "Steel Standard" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+sonsOfCoin :: CardDef Unit
+sonsOfCoin = unitCard "the-iron-rock-052" "Sons of Coin" do
+  race Empire
+  cost 2
+  loyalty 1
+  power 2
+  hitPoints 2
+  trait Noble
+  kingdomOnly
+  body
+    "Kingdom only. Forced: At the beginning of your turn, spend 1 resource or deal \
+    \1 damage to this section of your capital."
+  onMyTurnBegin \_owner self -> do
+    let pk = self.controller
+    g <- getGame
+    if (playerOf pk g).resources >= Resources 1
+      then do
+        yes <- askYesNo pk "Sons of Coin: spend 1 resource? (No deals 1 damage to this section.)"
+        if yes then payResources pk 1 else dealZoneDamage pk self.zone 1
+      else dealZoneDamage pk self.zone 1
+
+devoteeOfChamon :: CardDef Unit
+devoteeOfChamon = unitCard "the-imperial-throne-105" "Devotee of Chamon" do
+  race Empire
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 1
+  trait Mage
+  body
+    "Action: Deal 1 uncancellable damage to a Mage unit you control. Then, this \
+    \unit gains {power} until the end of the turn."
+  action "Transmute" 0 \usage ->
+    withTarget usage.user
+      (UnitMatching \me _g u -> u.controller == me && Mage `elem` u.cardDef.traits)
+      \k -> do
+        dealUncancellableDamage k 1
+        until EndOfTurn $ buffPower usage.self.key 1
+
+theImperialZoo :: CardDef Support
+theImperialZoo = supportCard "the-imperial-throne-109" "The Imperial Zoo" do
+  race Empire
+  cost 1
+  loyalty 3
+  trait Location
+  body
+    "This card gains {power} for each resource token on it. Action: Spend X \
+    \resources to put a resource token on this card. X is the number of resource \
+    \tokens on this card."
+  zonePowerAura \_g s zone -> if s.zone == zone then s.tokens else 0
+  action "Expand the menagerie" 0 \usage -> do
+    g <- getGame
+    whenJust (findSupport usage.self.key g) \s ->
+      when ((playerOf usage.user g).resources >= Resources s.tokens) do
+        payResources usage.user s.tokens
+        adjustSupportTokens usage.self.key 1
+
+cathedralOfSigmar :: CardDef Support
+cathedralOfSigmar = supportCard "the-imperial-throne-111" "Cathedral of Sigmar" do
+  unique
+  race Empire
+  cost 4
+  loyalty 5
+  power 3
+  trait CapitalCenter
+  body
+    "This card enters play with 4 resource tokens on it. Action: At the beginning \
+    \of your turn, remove a resource token from this card. Then, if there are no \
+    \resource tokens on this card, each [Empire] support card and [Empire] unit you \
+    \control gains {power} until the end of the turn."
+  onEnterPlay \_owner self -> adjustSupportTokens self.key 4
+  onMyTurnBegin \_owner self -> when (self.tokens > 0) do
+    adjustSupportTokens self.key (-1)
+    when (self.tokens == 1) do
+      let pk = self.controller
+      g <- getGame
+      for_ [u | u <- g.units, u.controller == pk, Empire `elem` u.cardDef.races] \u ->
+        until EndOfTurn $ buffPower u.key 1
+      for_ [s | s <- g.supports, s.controller == pk, Empire `elem` s.cardDef.races] \s ->
+        until EndOfTurn $ buffPower s.key 1
+
+pigeonBombs :: CardDef Tactic
+pigeonBombs = tacticCard "city-of-winter-083" "Pigeon Bombs" do
+  race Empire
+  cost 0
+  loyalty 3
+  body
+    "Action: Deal 1 uncancellable indirect damage to target player. Then, you may \
+    \put this card on top of your deck."
+  whenResolved \self -> do
+    withTarget self.controller TargetPlayer \p -> indirectDamageUncancellable p 1
+    mayReturnToTopOfDeck self.controller self.cardDef.code
+
+vanKlumpfsBuccaneers :: CardDef Unit
+vanKlumpfsBuccaneers = unitCard "the-inevitable-city-003" "Van Klumpf's Buccaneers" do
+  race Empire
+  cost 1
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Mercenary
+  battlefieldOnly
+  body
+    "Battlefield only. When this unit attacks, deal damage equal to its power to \
+    \each zone with no units."
+  onMyAttackDeclared \_owner self _zone _attackers -> do
+    g <- getGame
+    let pwr = self.effectivePower
+        occupied = [(u.controller, u.zone) | u <- g.units]
+        allZones =
+          [ (pk, zk)
+          | pk <- [Player1, Player2]
+          , zk <- [KingdomZone, QuestZone, BattlefieldZone]
+          ]
+        empties = [z | z <- allZones, z `notElem` occupied]
+    when (pwr > 0) $ for_ empties \(owner, zk) -> dealZoneDamage owner zk pwr
+
 imperialDrummer :: CardDef Unit
 imperialDrummer = unitCard "the-imperial-throne-103" "Imperial Drummer" do
   race Empire

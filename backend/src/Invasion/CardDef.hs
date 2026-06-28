@@ -189,6 +189,10 @@ data Trait
   | Tribute
     -- ^ Tribute support trait — the Hidden Kingdoms Embassy / Offering
     -- loyalty-waiver supports.
+  | Mercenary
+    -- ^ Mercenary trait (Van Klumpf's Buccaneers).
+  | Trader
+    -- ^ Trader trait (Toof Trader).
   deriving stock (Show, Eq)
 
 mconcat
@@ -351,6 +355,10 @@ data UnitExtras = UnitExtras
     -- ^ Whether this unit may be declared as an attacker against
     -- the named defender zone (Sworn of Khorne requires a corrupted
     -- defender). Default: always True.
+  , canDefendZone :: Game -> PlayerKey -> ZoneKind -> InPlay Unit -> Bool
+    -- ^ Whether this unit may be declared as a defender of the named
+    -- zone (Daemon Prince needs exactly 3 resource tokens). Default:
+    -- always True. Symmetric to 'canAttackZone'.
   , damageCap :: Maybe Int
     -- ^ Per-turn damage cap on this unit (Daemonettes of Slaanesh).
   , corruptsOnCombatDamage :: Bool
@@ -415,6 +423,10 @@ data UnitExtras = UnitExtras
   , cannotDefend :: Bool
     -- ^ Printed "This unit cannot defend." (Clan Moulder's Elite.)
     -- Excluded from the defender candidate pool.
+  , cannotBeRestored :: Bool
+    -- ^ Printed "This unit cannot be restored." (White Lion Champion.)
+    -- Excluded from the kingdom-phase restore candidate pool, so it
+    -- stays corrupted once corrupted.
   , attackEligibleZones :: [ZoneKind]
     -- ^ Zones this unit may attack from. Default battlefield only;
     -- Greyseer Thanquol attacks from anywhere, Dragonslayer also from
@@ -624,6 +636,9 @@ data CardCodeFilter = CardCodeFilter
   , cfKind :: CardKind
   , cfRaces :: [Race]
   , cfTraits :: [Trait]
+  , cfCost :: Number
+    -- ^ The card's printed cost. Lets cost-adjustment hooks respect a
+    -- "to a minimum of N" clause (Toof Trader).
   }
   deriving stock Show
 
@@ -703,6 +718,7 @@ instance HasDefaultExtras Unit where
     , combatPowerBonus = \_ _ -> 0
     , unitAuraPower = \_ _ _ -> 0
     , canAttackZone = \_ _ _ _ -> True
+    , canDefendZone = \_ _ _ _ -> True
     , damageCap = Nothing
     , corruptsOnCombatDamage = False
     , extraTargetTax = \_ _ _ -> 0
@@ -718,6 +734,7 @@ instance HasDefaultExtras Unit where
     , cancelAllDamageWhen = \_ _ -> False
     , perHitDamageCap = Nothing
     , cannotDefend = False
+    , cannotBeRestored = False
     , attackEligibleZones = [BattlefieldZone]
     , bodyguardLegendRace = Nothing
     , destroyedToZone = \_ _ -> Nothing
@@ -841,6 +858,7 @@ cardCodeFilter c = CardCodeFilter
   , cfKind = c.kind
   , cfRaces = c.races
   , cfTraits = c.traits
+  , cfCost = c.cost
   }
 
 -- The 'receive' function field can't be 'Show'n, so we derive a manual

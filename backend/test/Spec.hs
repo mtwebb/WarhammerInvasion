@@ -361,6 +361,16 @@ main = do
   check "burn: game not over from re-damaging one burned zone"
     (not gBz2.over)
 
+  -- Uncancellable zone damage (Pigeon Bombs) bypasses a capital shield.
+  let oppUC = gCor1.currentPlayer.next
+  gUC1 <- applyMessage gCor1 (ArmCapitalShield oppUC (Just 5) 0)
+  gUC2 <- applyMessage gUC1 (DealDamageToZone oppUC QuestZone 3)
+  check "uncancellable: a normal hit is absorbed by the shield"
+    ((inactivePlayer gUC2).capital.quest.damage == Damage 0)
+  gUC3 <- applyMessage gUC2 (DealDamageToZoneUncancellable oppUC QuestZone 3)
+  check "uncancellable: uncancellable damage bypasses the shield"
+    ((inactivePlayer gUC3).capital.quest.damage == Damage 3)
+
   -- Zone-entry keywords are enforced server-side: a "Battlefield
   -- only." unit is refused from the kingdom but accepted into the
   -- battlefield.
@@ -1060,6 +1070,69 @@ main = do
       check "lord of change: the card left the deck"
         (not (any ((== deckTopKey) . (.key)) (getPlG pkLC gLC3).deck))
     _ -> putStrLn "  FAIL lord-of-change setup" >> exitFailure
+
+  -- City of Winter "put this card on top of your deck" primitive: a
+  -- resolved tactic in the discard pile returns to the top of the deck.
+  gTD1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkTD = gTD1.currentPlayer
+  case Map.lookup "city-of-winter-084" allCards of
+    Just (TacticCardDef tacDef) -> do
+      let tdKey = UnitKey 97001
+          plTD = getPlG pkTD gTD1
+          plTD' = plTD {discard = Card {key = tdKey, def = TacticCardDef tacDef} : plTD.discard}
+          gTD2 = setPlG pkTD plTD' gTD1
+      gTD3 <- applyMessage gTD2 (ReturnTacticToTopOfDeck pkTD "city-of-winter-084")
+      check "top-of-deck: card moved to the top of the deck"
+        (not (null (getPlG pkTD gTD3).deck) && (head (getPlG pkTD gTD3).deck).key == tdKey)
+      check "top-of-deck: card left the discard pile"
+        (not (any ((== tdKey) . (.key)) (getPlG pkTD gTD3).discard))
+    _ -> putStrLn "  FAIL top-of-deck setup" >> exitFailure
+
+  -- Support power honours GainPower modifiers (Cathedral of Sigmar's
+  -- "each Empire support … gains power").
+  gSP1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkSP = gSP1.currentPlayer
+  case Map.lookup "the-inevitable-city-011" allCards of
+    Just (SupportCardDef spDef) -> do
+      let spKey = UnitKey 96001
+          gSP2 = gSP1 {supports = freshSupport spKey pkSP KingdomZone Nothing spDef : gSP1.supports}
+          before = zonePower gSP2 pkSP KingdomZone
+      gSP3 <- applyMessage gSP2 (InstallModifier (UnitRef spKey) (Modifier (GainPower 1) EndOfTurn))
+      check "support power: a GainPower modifier raises the zone's power"
+        (zonePower gSP3 pkSP KingdomZone == before + 1)
+    _ -> putStrLn "  FAIL support-power setup" >> exitFailure
+
+  -- Daemon Prince: the canDefend gate keys off exactly 3 resource tokens.
+  gDP1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkDP = gDP1.currentPlayer
+  case Map.lookup "the-imperial-throne-114" allCards of
+    Just (UnitCardDef dpDef) -> do
+      let dpKey = UnitKey 98001
+          mkDP toks = (freshUnit dpKey pkDP BattlefieldZone dpDef) {tokens = toks} :: UnitDetails
+          g0 = gDP1 {units = mkDP 0 : gDP1.units}
+          g3 = gDP1 {units = mkDP 3 : gDP1.units}
+      check "daemon prince: cannot defend with 0 tokens"
+        (dpKey `notElem` eligibleDefenderCandidates g0 pkDP BattlefieldZone)
+      check "daemon prince: can defend with exactly 3 tokens"
+        (dpKey `elem` eligibleDefenderCandidates g3 pkDP BattlefieldZone)
+    _ -> putStrLn "  FAIL daemon-prince setup" >> exitFailure
+
+  -- PutDiscardCardOnDeckBottom (Mannfred): a discarded card goes to the
+  -- bottom of the deck.
+  gDB1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkDB = gDB1.currentPlayer
+  case Map.lookup "core-006" allCards of
+    Just sd -> do
+      let dbKey = UnitKey 98101
+          plDB = getPlG pkDB gDB1
+          plDB' = plDB {discard = Card {key = dbKey, def = sd} : plDB.discard}
+          gDB2 = setPlG pkDB plDB' gDB1
+      gDB3 <- applyMessage gDB2 (PutDiscardCardOnDeckBottom pkDB dbKey)
+      check "discard->deck bottom: card left the discard pile"
+        (not (any ((== dbKey) . (.key)) (getPlG pkDB gDB3).discard))
+      check "discard->deck bottom: card is at the bottom of the deck"
+        (not (null (getPlG pkDB gDB3).deck) && (last (getPlG pkDB gDB3).deck).key == dbKey)
+    _ -> putStrLn "  FAIL discard-bottom setup" >> exitFailure
 
   -- Reanimate from discard (Lord of the Dead): put a unit from the
   -- discard pile into play for free; it returns to the deck bottom at
