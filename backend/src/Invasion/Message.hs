@@ -214,6 +214,11 @@ data Message where
     -- 'ActionTarget' carries the choice from 'PlayTactic'; the 'Int'
     -- carries the X value paid for variable-cost tactics (0 for
     -- fixed-cost tactics).
+  ReturnTacticToTopOfDeck :: PlayerKey -> CardCode -> Message
+    -- ^ Move the most-recently-discarded copy of this tactic from the
+    -- player's discard pile to the top of their deck (the City of
+    -- Winter "Then, you may put this card on top of your deck." tactic
+    -- family). No-op if no matching card is in discard.
   -- Prompts
   RequestPrompt :: Prompt -> Message
     -- ^ Suspend the engine with the given prompt. 'gameMain' will

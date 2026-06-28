@@ -873,6 +873,45 @@ steelStandard = unitCard "shield-of-the-gods-107" "Steel Standard" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+sonsOfCoin :: CardDef Unit
+sonsOfCoin = unitCard "the-iron-rock-052" "Sons of Coin" do
+  race Empire
+  cost 2
+  loyalty 1
+  power 2
+  hitPoints 2
+  trait Noble
+  kingdomOnly
+  body
+    "Kingdom only. Forced: At the beginning of your turn, spend 1 resource or deal \
+    \1 damage to this section of your capital."
+  onMyTurnBegin \_owner self -> do
+    let pk = self.controller
+    g <- getGame
+    if (playerOf pk g).resources >= Resources 1
+      then do
+        yes <- askYesNo pk "Sons of Coin: spend 1 resource? (No deals 1 damage to this section.)"
+        if yes then payResources pk 1 else dealZoneDamage pk self.zone 1
+      else dealZoneDamage pk self.zone 1
+
+devoteeOfChamon :: CardDef Unit
+devoteeOfChamon = unitCard "the-imperial-throne-105" "Devotee of Chamon" do
+  race Empire
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 1
+  trait Mage
+  body
+    "Action: Deal 1 uncancellable damage to a Mage unit you control. Then, this \
+    \unit gains {power} until the end of the turn."
+  action "Transmute" 0 \usage ->
+    withTarget usage.user
+      (UnitMatching \me _g u -> u.controller == me && Mage `elem` u.cardDef.traits)
+      \k -> do
+        dealUncancellableDamage k 1
+        until EndOfTurn $ buffPower usage.self.key 1
+
 vanKlumpfsBuccaneers :: CardDef Unit
 vanKlumpfsBuccaneers = unitCard "the-inevitable-city-003" "Van Klumpf's Buccaneers" do
   race Empire

@@ -571,6 +571,17 @@ starDragon = unitCard "realm-of-the-phoenix-king-028" "Star Dragon" do
     withUpTo self.controller 2 AnyUnit \ks ->
       for_ ks \k -> until EndOfTurn $ blankUnit k
 
+convocationOfEagles :: CardDef Tactic
+convocationOfEagles = tacticCard "city-of-winter-084" "Convocation of Eagles" do
+  race HighElf
+  cost 0
+  loyalty 2
+  body
+    "Action: Gain 1 resource. Then, you may put this card on top of your deck."
+  whenResolved \self -> do
+    gainResources self.controller 1
+    mayReturnToTopOfDeck self.controller self.cardDef.code
+
 princeOfCaledor :: CardDef Unit
 princeOfCaledor = unitCard "the-inevitable-city-004" "Prince of Caledor" do
   race HighElf

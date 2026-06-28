@@ -605,7 +605,9 @@ allCards =
       ("the-iron-rock-042", UnitCardDef bannaThief),
       ("the-iron-rock-044", UnitCardDef squigLobber),
       ("the-iron-rock-045", UnitCardDef rugludsArmouredOrcs),
+      ("the-iron-rock-046", UnitCardDef toofTrader),
       ("the-iron-rock-050", TacticCardDef snotlingAmbush),
+      ("the-iron-rock-052", UnitCardDef sonsOfCoin),
       ("the-iron-rock-054", UnitCardDef beastmanShaman),
       ("the-iron-rock-058", UnitCardDef chakax),
       ("the-iron-rock-060", QuestCardDef raidingParties),
@@ -619,6 +621,10 @@ allCards =
       ("karaz-a-karak-079", TacticCardDef buildingPlans),
       ("karaz-a-karak-080", QuestCardDef buildingForWar),
       -- The Capital Cycle — City of Winter (081-100)
+      ("city-of-winter-082", TacticCardDef fistsOfMork),
+      ("city-of-winter-084", TacticCardDef convocationOfEagles),
+      ("city-of-winter-085", TacticCardDef soporificMusk),
+      ("city-of-winter-086", TacticCardDef barbedSnares),
       ("city-of-winter-087", UnitCardDef bannermanOfTheCrag),
       ("city-of-winter-089", UnitCardDef theEbonblades),
       ("city-of-winter-090", UnitCardDef anlecLookout),
@@ -628,6 +634,7 @@ allCards =
       -- The Capital Cycle — The Imperial Throne (101-120)
       ("the-imperial-throne-102", UnitCardDef babySquig),
       ("the-imperial-throne-103", UnitCardDef imperialDrummer),
+      ("the-imperial-throne-105", UnitCardDef devoteeOfChamon),
       ("the-imperial-throne-106", UnitCardDef priestsOfSigmar),
       ("the-imperial-throne-107", UnitCardDef stirlandDeathjacks),
       ("the-imperial-throne-108", UnitCardDef wingedRidersOfKislev),

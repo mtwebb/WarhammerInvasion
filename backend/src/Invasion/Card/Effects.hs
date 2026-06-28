@@ -439,6 +439,17 @@ may pk prompt action = do
   yes <- askYesNo pk prompt
   when yes action
 
+-- | "Then, you may put this card on top of your deck." The City of
+-- Winter tactic family. Call from a tactic's 'whenResolved' with the
+-- card's own controller and code; the just-resolved copy is pulled from
+-- the discard pile back to the top of the deck if the player agrees.
+mayReturnToTopOfDeck
+  :: (HasPromptIO m, HasGame m, HasQueue Message m)
+  => PlayerKey -> CardCode -> m ()
+mayReturnToTopOfDeck pk code =
+  may pk "Put this card on top of your deck?" $
+    push (ReturnTacticToTopOfDeck pk code)
+
 -- | "Sacrifice one of your units." Prompts the firing player for a
 -- unit they control, destroys it, and runs the continuation with
 -- the sacrificed unit's key. The continuation is skipped if no

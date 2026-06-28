@@ -1061,6 +1061,23 @@ main = do
         (not (any ((== deckTopKey) . (.key)) (getPlG pkLC gLC3).deck))
     _ -> putStrLn "  FAIL lord-of-change setup" >> exitFailure
 
+  -- City of Winter "put this card on top of your deck" primitive: a
+  -- resolved tactic in the discard pile returns to the top of the deck.
+  gTD1 <- (`applyMessage` BeginGame) =<< mkMonoGame "core-006" Dwarf
+  let pkTD = gTD1.currentPlayer
+  case Map.lookup "city-of-winter-084" allCards of
+    Just (TacticCardDef tacDef) -> do
+      let tdKey = UnitKey 97001
+          plTD = getPlG pkTD gTD1
+          plTD' = plTD {discard = Card {key = tdKey, def = TacticCardDef tacDef} : plTD.discard}
+          gTD2 = setPlG pkTD plTD' gTD1
+      gTD3 <- applyMessage gTD2 (ReturnTacticToTopOfDeck pkTD "city-of-winter-084")
+      check "top-of-deck: card moved to the top of the deck"
+        (not (null (getPlG pkTD gTD3).deck) && (head (getPlG pkTD gTD3).deck).key == tdKey)
+      check "top-of-deck: card left the discard pile"
+        (not (any ((== tdKey) . (.key)) (getPlG pkTD gTD3).discard))
+    _ -> putStrLn "  FAIL top-of-deck setup" >> exitFailure
+
   -- Reanimate from discard (Lord of the Dead): put a unit from the
   -- discard pile into play for free; it returns to the deck bottom at
   -- end of turn, like Necromancy.

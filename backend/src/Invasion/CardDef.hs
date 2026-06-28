@@ -191,6 +191,8 @@ data Trait
     -- loyalty-waiver supports.
   | Mercenary
     -- ^ Mercenary trait (Van Klumpf's Buccaneers).
+  | Trader
+    -- ^ Trader trait (Toof Trader).
   deriving stock (Show, Eq)
 
 mconcat
@@ -626,6 +628,9 @@ data CardCodeFilter = CardCodeFilter
   , cfKind :: CardKind
   , cfRaces :: [Race]
   , cfTraits :: [Trait]
+  , cfCost :: Number
+    -- ^ The card's printed cost. Lets cost-adjustment hooks respect a
+    -- "to a minimum of N" clause (Toof Trader).
   }
   deriving stock Show
 
@@ -843,6 +848,7 @@ cardCodeFilter c = CardCodeFilter
   , cfKind = c.kind
   , cfRaces = c.races
   , cfTraits = c.traits
+  , cfCost = c.cost
   }
 
 -- The 'receive' function field can't be 'Show'n, so we derive a manual

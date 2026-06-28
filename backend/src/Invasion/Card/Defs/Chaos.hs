@@ -1356,6 +1356,19 @@ theBleedingWall = supportCard "the-inevitable-city-011" "The Bleeding Wall" do
         adjustSupportTokens usage.self.key (-2)
         withTarget usage.user (UnitMatching \_ _ u -> u.corrupted) destroyUnit
 
+soporificMusk :: CardDef Tactic
+soporificMusk = tacticCard "city-of-winter-085" "Soporific Musk" do
+  race Chaos
+  cost 1
+  loyalty 2
+  body
+    "Action: Target corrupted unit loses all power until the end of the turn. \
+    \Then, you may put this card on top of your deck."
+  whenResolved \self -> do
+    withTarget self.controller (unitWhere (.corrupted)) \k ->
+      until EndOfTurn $ losesAllPower k
+    mayReturnToTopOfDeck self.controller self.cardDef.code
+
 pinkHorror :: CardDef Unit
 pinkHorror = unitCard "the-inevitable-city-007" "Pink Horror" do
   race Chaos

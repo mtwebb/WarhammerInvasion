@@ -596,6 +596,18 @@ blackGuards = unitCard "shield-of-the-gods-113" "Black Guards" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+barbedSnares :: CardDef Tactic
+barbedSnares = tacticCard "city-of-winter-086" "Barbed Snares" do
+  race DarkElf
+  cost 1
+  loyalty 2
+  body
+    "Action: Discard the top 2 cards of target opponent's deck. Then, you may put \
+    \this card on top of your deck."
+  whenResolved \self -> do
+    millFromDeck self.controller.next 2
+    mayReturnToTopOfDeck self.controller self.cardDef.code
+
 theEbonblades :: CardDef Unit
 theEbonblades = unitCard "city-of-winter-089" "The Ebonblades" do
   race DarkElf

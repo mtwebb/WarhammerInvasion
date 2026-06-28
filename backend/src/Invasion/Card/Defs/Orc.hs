@@ -902,6 +902,35 @@ creaturePen = supportCard "shield-of-the-gods-106" "Creature Pen" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+toofTrader :: CardDef Unit
+toofTrader = unitCard "the-iron-rock-046" "Toof Trader" do
+  race Orc
+  cost 2
+  loyalty 1
+  power 0
+  hitPoints 1
+  trait Trader
+  body "Lower the cost of each Creature card you play by 1 (to a minimum of 1)."
+  unitCostAdjust \_g self pk filt ->
+    if pk == self.controller
+      && Creature `elem` filt.cfTraits
+      && (case filt.cfCost of Fixed c -> c > 1; Variable -> False)
+      then -1
+      else 0
+
+fistsOfMork :: CardDef Tactic
+fistsOfMork = tacticCard "city-of-winter-082" "Fists of Mork" do
+  race Orc
+  cost 1
+  loyalty 1
+  body
+    "Action: Deal 2 indirect damage to each player. Then, you may put this card \
+    \on top of your deck."
+  whenResolved \self -> do
+    indirectDamage self.controller 2
+    indirectDamage self.controller.next 2
+    mayReturnToTopOfDeck self.controller self.cardDef.code
+
 rugludsArmouredOrcs :: CardDef Unit
 rugludsArmouredOrcs = unitCard "the-iron-rock-045" "Ruglud's Armoured Orcs" do
   race Orc

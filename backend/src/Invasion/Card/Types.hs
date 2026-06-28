@@ -107,6 +107,15 @@ someCardTitle = \case
   TacticCardDef cd -> cd.title
   LegendCardDef cd -> cd.title
 
+-- | The card code of any card definition, regardless of kind.
+someCardCode :: SomeCardDef -> CardCode
+someCardCode = \case
+  UnitCardDef cd -> cd.code
+  SupportCardDef cd -> cd.code
+  QuestCardDef cd -> cd.code
+  TacticCardDef cd -> cd.code
+  LegendCardDef cd -> cd.code
+
 -- | The printed keywords of any card definition, regardless of kind.
 -- Used by the combat Ambush step, which reads 'Ambush' off facedown
 -- developments without knowing their card kind.

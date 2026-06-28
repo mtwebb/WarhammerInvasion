@@ -1539,6 +1539,19 @@ instance Run Game where
           modify \gx -> gx
             {lastResolvedTactic = Just (code, target, xVal)}
         _ -> pure ()
+    ReturnTacticToTopOfDeck pk code -> do
+      g <- get
+      let player = lookupPlayer pk g
+      -- The just-resolved copy was prepended to the discard pile, so the
+      -- first card matching this code is "this card".
+      case break ((== code) . someCardCode . (.def)) player.discard of
+        (before, c : after) -> do
+          modifyPlayer pk \p ->
+            p {discard = before <> after, deck = c : p.deck}
+          logIt LogSystem
+            "log.tactic.returned_to_deck"
+            [("player", playerParam pk), ("card", T.pack (someCardTitle c.def))]
+        _ -> pure ()
     ClearTacticDamageContext ->
       modify \gx -> gx {tacticDamageContext = Nothing}
     RequestPrompt p -> do
