@@ -361,6 +361,16 @@ main = do
   check "burn: game not over from re-damaging one burned zone"
     (not gBz2.over)
 
+  -- Uncancellable zone damage (Pigeon Bombs) bypasses a capital shield.
+  let oppUC = gCor1.currentPlayer.next
+  gUC1 <- applyMessage gCor1 (ArmCapitalShield oppUC (Just 5) 0)
+  gUC2 <- applyMessage gUC1 (DealDamageToZone oppUC QuestZone 3)
+  check "uncancellable: a normal hit is absorbed by the shield"
+    ((inactivePlayer gUC2).capital.quest.damage == Damage 0)
+  gUC3 <- applyMessage gUC2 (DealDamageToZoneUncancellable oppUC QuestZone 3)
+  check "uncancellable: uncancellable damage bypasses the shield"
+    ((inactivePlayer gUC3).capital.quest.damage == Damage 3)
+
   -- Zone-entry keywords are enforced server-side: a "Battlefield
   -- only." unit is refused from the kingdom but accepted into the
   -- battlefield.

@@ -245,6 +245,9 @@ data Message where
   DealDamageToZone :: PlayerKey -> ZoneKind -> Int -> Message
     -- ^ Add N damage tokens to a capital zone. May burn the zone (and
     -- a second burn eliminates the player).
+  DealDamageToZoneUncancellable :: PlayerKey -> ZoneKind -> Int -> Message
+    -- ^ Like 'DealDamageToZone' but bypasses capital shields, redirects,
+    -- and cancel-1 supports (Pigeon Bombs). A burned zone still wastes it.
   -- Free unit summons (Iron Throneroom payoff, Reckless Attack, …).
   PutUnitIntoPlay :: PlayerKey -> UnitKey -> ZoneKind -> Message
     -- ^ Like 'PlayUnit' but skips the cost check / payment and pulls
@@ -305,6 +308,9 @@ data Message where
     -- it to the player's least-damaged non-burned zone to maximise
     -- survival; a player-driven allocator prompt is a follow-up
     -- (the rules let the player choose).
+  IndirectDamageUncancellable :: PlayerKey -> Int -> Message
+    -- ^ Like 'IndirectDamage' but the allocated points bypass capital
+    -- shields (Pigeon Bombs).
   -- Combat redirection
   RedirectAttackZone :: ZoneKind -> Message
     -- ^ Sigmar's Intervention. Rewrite the current 'CombatState's

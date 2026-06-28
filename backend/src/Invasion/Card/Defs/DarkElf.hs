@@ -596,6 +596,23 @@ blackGuards = unitCard "shield-of-the-gods-113" "Black Guards" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+countermoves :: CardDef Tactic
+countermoves = tacticCard "the-iron-rock-055" "Countermoves" do
+  race DarkElf
+  cost 2
+  loyalty 2
+  trait WitchElf
+  body "Play when an opponent plays a tactic. Action: Destroy target unit."
+  -- The engine resolves tactics immediately (no interrupt stack), so we
+  -- approximate the reaction window: Countermoves is playable while the
+  -- opponent has played a tactic this turn and a destroy target exists.
+  playableWhen \g pk ->
+    any (\cf -> cf.cfKind == Tactic)
+      (Map.findWithDefault [] pk.next (Map.findWithDefault mempty ThisTurn g.history).playedBy)
+      && hasTarget AnyUnit g pk
+  whenResolved \self ->
+    withTarget self.controller AnyUnit destroyUnit
+
 barbedSnares :: CardDef Tactic
 barbedSnares = tacticCard "city-of-winter-086" "Barbed Snares" do
   race DarkElf

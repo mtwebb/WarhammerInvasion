@@ -1663,53 +1663,24 @@ instance Run Game where
           afterGrants <- consumeCapitalShieldGrants targetPlayer raised
           afterRedirect <- applyCapitalRedirects targetPlayer zoneKind afterGrants
           amount <- applyCapitalShields targetPlayer zoneKind afterRedirect
-          when (amount > 0) $ do
-            g <- get
-            -- Add damage; burn if it now meets or exceeds HP, and if
-            -- that's the second burn on this capital eliminate the
-            -- player.
-            let target = lookupPlayer targetPlayer g
-                zoneL = getZone zoneKind target
-                Damage existing = zoneL.damage
-                HitPoints zoneHp = zoneL.hitPoints
-                total = existing + amount
-                (newDmg, justBurned) =
-                  if total >= zoneHp && not zoneL.burned
-                    then (Damage 0, True)
-                    else (Damage total, False)
-                zoneL' =
-                  zoneL
-                    { damage = newDmg
-                    , burned = zoneL.burned || justBurned
-                    }
-                target' = setZone zoneKind zoneL' target
-            modify (setPlayer targetPlayer target')
+          landZoneDamage targetPlayer zoneKind amount
+    DealDamageToZoneUncancellable targetPlayer zoneKind raw -> do
+      -- Like 'DealDamageToZone' but bypasses capital shields, redirects,
+      -- and cancel-1 supports (Pigeon Bombs' uncancellable indirect
+      -- damage). A burned zone still wastes the damage.
+      g0 <- get
+      let amount = max 0 raw
+          targetZone0 = getZone zoneKind (lookupPlayer targetPlayer g0)
+      if targetZone0.burned
+        then
+          when (amount > 0) $
             logIt LogSystem
-              "log.zone.damaged"
+              "log.zone.damage_wasted"
               [ ("player", playerParam targetPlayer)
               , ("zone", zoneParam zoneKind)
               , ("amount", tshow amount)
               ]
-            -- Get 'Em Ladz!: each player watching this zone draws a card
-            -- per point of damage that just landed.
-            watchers <- gets (.zoneDamageDrawWatchers)
-            for_ watchers \(watcher, owner, z) ->
-              when (owner == targetPlayer && z == zoneKind) $
-                replicateM_ amount (send (Draw (Drawing StandardDraw watcher)))
-            when justBurned $ do
-              logIt LogResult
-                "log.zone.burned"
-                [ ("player", playerParam targetPlayer)
-                , ("zone", zoneParam zoneKind)
-                ]
-              -- Check for elimination. Normally two burned zones = lose,
-              -- but if the opponent (the would-be winner) controls a
-              -- "burn 3 to win" legend, they need a third.
-              g2 <- get
-              let burnedNow = burnedZoneCount target'.capital
-                  needed = if targetPlayer.next `elem` g2.burnThreeToWin then 3 else 2
-              when (burnedNow >= needed) $
-                send $ Eliminate targetPlayer CapitalBurned
+        else landZoneDamage targetPlayer zoneKind amount
     HealCapital pk raw -> do
       -- Heal up to N total damage tokens off the capital, spending the
       -- budget greedily on the most-damaged unburned zone, then the
@@ -2744,6 +2715,21 @@ instance Run Game where
             [ ("player", playerParam pk)
             , ("amount", tshow totalAllocated)
             ]
+    IndirectDamageUncancellable pk amount ->
+      -- Like 'IndirectDamage' but the allocated points bypass capital
+      -- shields (Pigeon Bombs). The targeted player still distributes
+      -- them across their non-burned zones.
+      when (amount > 0) $ do
+        allocation <- collectIndirect pk amount mempty
+        let totalAllocated = sum (Map.elems allocation)
+        for_ (Map.toList allocation) $ \(zk, n) ->
+          when (n > 0) $ send (DealDamageToZoneUncancellable pk zk n)
+        when (totalAllocated > 0) $
+          logIt LogSystem
+            "log.capital.indirect"
+            [ ("player", playerParam pk)
+            , ("amount", tshow totalAllocated)
+            ]
     RedirectAttackZone newZone -> do
       g <- get
       whenJust g.combat \cs ->
@@ -3569,6 +3555,59 @@ freshSupport key controller zone attachedTo cardDef = SupportDetails
   , tokens = 0
   , corrupted = False
   }
+
+-- | Apply a finalized amount of damage to a capital zone: add it, burn
+-- the zone if it now meets or exceeds HP, fire zone-damage watchers, and
+-- eliminate the player on the burn that crosses the threshold. Shared by
+-- the cancellable ('DealDamageToZone') and uncancellable
+-- ('DealDamageToZoneUncancellable') paths — the amount has already been
+-- through (or skipped) the shield machinery by the time it lands here.
+landZoneDamage
+  :: PlayerKey -> ZoneKind -> Int -> StateT Game GameT ()
+landZoneDamage targetPlayer zoneKind amount =
+  when (amount > 0) $ do
+    g <- get
+    -- Add damage; burn if it now meets or exceeds HP, and if that's the
+    -- second burn on this capital eliminate the player.
+    let target = lookupPlayer targetPlayer g
+        zoneL = getZone zoneKind target
+        Damage existing = zoneL.damage
+        HitPoints zoneHp = zoneL.hitPoints
+        total = existing + amount
+        (newDmg, justBurned) =
+          if total >= zoneHp && not zoneL.burned
+            then (Damage 0, True)
+            else (Damage total, False)
+        zoneL' =
+          zoneL
+            { damage = newDmg
+            , burned = zoneL.burned || justBurned
+            }
+        target' = setZone zoneKind zoneL' target
+    modify (setPlayer targetPlayer target')
+    logIt LogSystem
+      "log.zone.damaged"
+      [ ("player", playerParam targetPlayer)
+      , ("zone", zoneParam zoneKind)
+      , ("amount", tshow amount)
+      ]
+    -- Get 'Em Ladz!: each player watching this zone draws a card per
+    -- point of damage that just landed.
+    watchers <- gets (.zoneDamageDrawWatchers)
+    for_ watchers \(watcher, owner, z) ->
+      when (owner == targetPlayer && z == zoneKind) $
+        replicateM_ amount (send (Draw (Drawing StandardDraw watcher)))
+    when justBurned $ do
+      logIt LogResult
+        "log.zone.burned"
+        [ ("player", playerParam targetPlayer)
+        , ("zone", zoneParam zoneKind)
+        ]
+      g2 <- get
+      let burnedNow = burnedZoneCount target'.capital
+          needed = if targetPlayer.next `elem` g2.burnThreeToWin then 3 else 2
+      when (burnedNow >= needed) $
+        send $ Eliminate targetPlayer CapitalBurned
 
 -- | Push a card onto the named player's discard pile.
 discardToController

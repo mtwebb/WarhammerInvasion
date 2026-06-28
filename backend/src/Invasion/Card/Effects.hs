@@ -240,6 +240,11 @@ moveDevelopment pk fromZ toZ = push (MoveDevelopment pk fromZ toZ)
 indirectDamage :: HasQueue Message m => PlayerKey -> Int -> m ()
 indirectDamage pk n = push (IndirectDamage pk n)
 
+-- | "Player takes N uncancellable indirect damage." As 'indirectDamage'
+-- but the points bypass capital shields (Pigeon Bombs).
+indirectDamageUncancellable :: HasQueue Message m => PlayerKey -> Int -> m ()
+indirectDamageUncancellable pk n = push (IndirectDamageUncancellable pk n)
+
 -- | Trigger an off-phase attack, e.g. "Wolves of the North". The
 -- engine runs the full 5-step combat ladder regardless of the
 -- current phase: the per-card hooks ('when this unit attacks',

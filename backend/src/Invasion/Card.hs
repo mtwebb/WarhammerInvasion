@@ -608,6 +608,7 @@ allCards =
       ("the-iron-rock-046", UnitCardDef toofTrader),
       ("the-iron-rock-050", TacticCardDef snotlingAmbush),
       ("the-iron-rock-052", UnitCardDef sonsOfCoin),
+      ("the-iron-rock-055", TacticCardDef countermoves),
       ("the-iron-rock-054", UnitCardDef beastmanShaman),
       ("the-iron-rock-058", UnitCardDef chakax),
       ("the-iron-rock-060", QuestCardDef raidingParties),
@@ -622,6 +623,7 @@ allCards =
       ("karaz-a-karak-080", QuestCardDef buildingForWar),
       -- The Capital Cycle — City of Winter (081-100)
       ("city-of-winter-082", TacticCardDef fistsOfMork),
+      ("city-of-winter-083", TacticCardDef pigeonBombs),
       ("city-of-winter-084", TacticCardDef convocationOfEagles),
       ("city-of-winter-085", TacticCardDef soporificMusk),
       ("city-of-winter-086", TacticCardDef barbedSnares),

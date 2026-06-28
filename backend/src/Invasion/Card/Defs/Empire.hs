@@ -912,6 +912,18 @@ devoteeOfChamon = unitCard "the-imperial-throne-105" "Devotee of Chamon" do
         dealUncancellableDamage k 1
         until EndOfTurn $ buffPower usage.self.key 1
 
+pigeonBombs :: CardDef Tactic
+pigeonBombs = tacticCard "city-of-winter-083" "Pigeon Bombs" do
+  race Empire
+  cost 0
+  loyalty 3
+  body
+    "Action: Deal 1 uncancellable indirect damage to target player. Then, you may \
+    \put this card on top of your deck."
+  whenResolved \self -> do
+    withTarget self.controller TargetPlayer \p -> indirectDamageUncancellable p 1
+    mayReturnToTopOfDeck self.controller self.cardDef.code
+
 vanKlumpfsBuccaneers :: CardDef Unit
 vanKlumpfsBuccaneers = unitCard "the-inevitable-city-003" "Van Klumpf's Buccaneers" do
   race Empire
