@@ -579,12 +579,17 @@ allCards =
       ("fiery-dawn-114", TacticCardDef callTheBrayherd),
       -- The Capital Cycle — The Inevitable City (001-020)
       ("the-inevitable-city-002", UnitCardDef squigTrackers),
+      ("the-inevitable-city-003", UnitCardDef vanKlumpfsBuccaneers),
       ("the-inevitable-city-004", UnitCardDef princeOfCaledor),
       ("the-inevitable-city-005", UnitCardDef doomBearer),
+      ("the-inevitable-city-007", UnitCardDef pinkHorror),
       ("the-inevitable-city-008", UnitCardDef savageForsaken),
+      ("the-inevitable-city-010", UnitCardDef screamersOfTzeentch),
       ("the-inevitable-city-011", SupportCardDef theBleedingWall),
+      ("the-inevitable-city-012", SupportCardDef wallOfMaggots),
       ("the-inevitable-city-013", SupportCardDef ironThroneroom),
       ("the-inevitable-city-014", TacticCardDef stormOfChange),
+      ("the-inevitable-city-016", UnitCardDef warhawkRider),
       ("the-inevitable-city-019", TacticCardDef willpower),
       ("the-inevitable-city-020", QuestCardDef raidingCamps),
       -- The Capital Cycle — Realm of the Phoenix King (021-040)

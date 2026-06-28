@@ -873,6 +873,30 @@ steelStandard = unitCard "shield-of-the-gods-107" "Steel Standard" do
 
 -- The Capital Cycle ----------------------------------------------------
 
+vanKlumpfsBuccaneers :: CardDef Unit
+vanKlumpfsBuccaneers = unitCard "the-inevitable-city-003" "Van Klumpf's Buccaneers" do
+  race Empire
+  cost 1
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Mercenary
+  battlefieldOnly
+  body
+    "Battlefield only. When this unit attacks, deal damage equal to its power to \
+    \each zone with no units."
+  onMyAttackDeclared \_owner self _zone _attackers -> do
+    g <- getGame
+    let pwr = self.effectivePower
+        occupied = [(u.controller, u.zone) | u <- g.units]
+        allZones =
+          [ (pk, zk)
+          | pk <- [Player1, Player2]
+          , zk <- [KingdomZone, QuestZone, BattlefieldZone]
+          ]
+        empties = [z | z <- allZones, z `notElem` occupied]
+    when (pwr > 0) $ for_ empties \(owner, zk) -> dealZoneDamage owner zk pwr
+
 imperialDrummer :: CardDef Unit
 imperialDrummer = unitCard "the-imperial-throne-103" "Imperial Drummer" do
   race Empire

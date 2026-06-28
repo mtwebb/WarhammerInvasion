@@ -1356,6 +1356,65 @@ theBleedingWall = supportCard "the-inevitable-city-011" "The Bleeding Wall" do
         adjustSupportTokens usage.self.key (-2)
         withTarget usage.user (UnitMatching \_ _ u -> u.corrupted) destroyUnit
 
+pinkHorror :: CardDef Unit
+pinkHorror = unitCard "the-inevitable-city-007" "Pink Horror" do
+  race Chaos
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Daemon
+  body
+    "Action: When this unit enters play, put a card named Pink Horror or Blue \
+    \Horrors into play from your hand."
+  onEnterPlay \_owner self -> do
+    let pk = self.controller
+    me <- playerOf pk <$> getGame
+    let candidates =
+          [ c
+          | c <- me.hand
+          , Just cd <- [asUnit c.def]
+          , cd.title `elem` ["Pink Horror", "Blue Horrors"]
+          ]
+    unless (null candidates) $
+      may pk "Put a Pink Horror or Blue Horrors into play from your hand?" $
+        chooseFromCards pk 1 1 candidates "Choose a unit to put into play." \case
+          (c : _) -> withTarget pk MyAnyZone \zk -> putUnitIntoPlay pk FromHand c.key zk
+          _ -> pure ()
+
+screamersOfTzeentch :: CardDef Unit
+screamersOfTzeentch = unitCard "the-inevitable-city-010" "Screamers of Tzeentch" do
+  race Chaos
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Creature
+  feared 1
+  body
+    "Feared 1 (while this unit is attacking, blank the text box of 1 target unit \
+    \except for Traits). Forced: At the beginning of your turn, corrupt this unit."
+  -- Feared 1: while attacking, blank one target unit's text box.
+  onMyAttackDeclared \_owner self _z _atk ->
+    withTarget self.controller AnyUnit \k ->
+      until EndOfTurn $ blankUnit k
+  onMyTurnBegin \_owner self -> corrupt self.key
+
+wallOfMaggots :: CardDef Support
+wallOfMaggots = supportCard "the-inevitable-city-012" "Wall of Maggots" do
+  race Chaos
+  cost 1
+  loyalty 1
+  trait Fortification
+  body
+    "Action: When this zone is attacked, corrupt target attacking unit (this does \
+    \not prevent the unit from attacking)."
+  onMyZoneAttacked \_owner _self cs ->
+    unless (null cs.attackers) $
+      withTarget cs.defendingPlayer
+        (UnitMatching \_me _g u -> u.key `elem` cs.attackers)
+        corrupt
+
 beastmanShaman :: CardDef Unit
 beastmanShaman = unitCard "the-iron-rock-054" "Beastman Shaman" do
   race Chaos

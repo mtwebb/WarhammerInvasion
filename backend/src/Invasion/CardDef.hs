@@ -189,6 +189,8 @@ data Trait
   | Tribute
     -- ^ Tribute support trait — the Hidden Kingdoms Embassy / Offering
     -- loyalty-waiver supports.
+  | Mercenary
+    -- ^ Mercenary trait (Van Klumpf's Buccaneers).
   deriving stock (Show, Eq)
 
 mconcat

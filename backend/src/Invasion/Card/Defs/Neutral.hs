@@ -721,6 +721,25 @@ willpower = tacticCard "the-inevitable-city-019" "Willpower" do
       whenJust (findUnit k g) \u ->
         until EndOfTurn $ buffPower k u.cardDef.loyalty
 
+warhawkRider :: CardDef Unit
+warhawkRider = unitCard "the-inevitable-city-016" "Warhawk Rider" do
+  cost 4
+  power 1
+  hitPoints 3
+  trait WoodElf
+  orderOnly
+  body
+    "Order only. Action: When this unit attacks or defends, target opponent \
+    \chooses and discards a card from his hand."
+  onMyAttackOrDefend \_owner self -> do
+    let opp = self.controller.next
+    g <- getGame
+    let h = (playerOf opp g).hand
+    unless (null h) $
+      chooseFromCards opp 1 1 h "Warhawk Rider: choose a card to discard." \case
+        (c : _) -> push (DiscardCardsFromHand opp [c.key])
+        _ -> pure ()
+
 buildingPlans :: CardDef Tactic
 buildingPlans = tacticCard "karaz-a-karak-079" "Building Plans" do
   cost 1
