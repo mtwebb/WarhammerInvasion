@@ -291,6 +291,12 @@ flipDevelopment pk zk = push (FlipDevelopment pk zk)
 addQuestToken :: HasQueue Message m => UnitKey -> Int -> m ()
 addQuestToken k n = push (AdjustQuestTokens k n)
 
+-- | Like 'addQuestToken' but does not broadcast 'QuestTokensAdded'. Used
+-- by reactions to quest-token gains (Blessed Enchantress's bonus token)
+-- so they don't retrigger off their own output.
+addQuestTokenQuiet :: HasQueue Message m => UnitKey -> Int -> m ()
+addQuestTokenQuiet k n = push (AdjustQuestTokensQuiet k n)
+
 -- | "Destroy a unit."
 destroyUnit :: HasQueue Message m => UnitKey -> m ()
 destroyUnit k = push (DestroyUnit k)

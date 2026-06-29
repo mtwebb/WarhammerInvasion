@@ -202,6 +202,10 @@ data Trait
     -- Elkana).
   | Rogue
     -- ^ Rogue trait (Agent of Malekith, Carroburg Cutthroats).
+  | Enchantress
+    -- ^ Enchantress trait (Blessed Enchantress).
+  | Sorceress
+    -- ^ Sorceress trait (Hidden Sorceress).
   deriving stock (Show, Eq)
 
 mconcat

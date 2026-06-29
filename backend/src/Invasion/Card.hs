@@ -675,6 +675,8 @@ allCards =
       ("rising-dawn-013", TacticCardDef boonOfTzeentch),
       ("rising-dawn-014", UnitCardDef maranith),
       ("rising-dawn-015", SupportCardDef towerOfOblivion),
+      ("rising-dawn-016", UnitCardDef blessedEnchantress),
+      ("rising-dawn-017", UnitCardDef hiddenSorceress),
       ("rising-dawn-018", QuestCardDef newTradeRoute),
       -- Bloodquest cycle — Fragments of Power (pack 2)
       ("fragments-of-power-021", SupportCardDef starCrownFragments),

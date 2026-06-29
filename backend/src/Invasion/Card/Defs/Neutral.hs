@@ -692,6 +692,41 @@ bordertown = supportCard "days-of-blood-019" "Bordertown" do
           when (isJust g.combat) $ destroySupport self.key
     _ -> pure ()
 
+-- Bloodquest: Rising Dawn -----------------------------------------------
+
+blessedEnchantress :: CardDef Unit
+blessedEnchantress = unitCard "rising-dawn-016" "Blessed Enchantress" do
+  cost 3
+  loyalty 0
+  power 1
+  hitPoints 2
+  trait Enchantress
+  orderOnly
+  body
+    "Order only. Forced: When another card effect puts at least 1 resource \
+    \token on a quest in this zone, put 1 additional resource token on that quest."
+  -- "This zone" is the quest zone the Enchantress occupies, so it fires
+  -- only while questing and only for its controller's own quest. The
+  -- bonus token uses the quiet path so it never retriggers this reaction.
+  onQuestTokensAdded \_owner self qController qkey _n ->
+    when (self.zone == QuestZone && qController == self.controller) $
+      addQuestTokenQuiet qkey 1
+
+hiddenSorceress :: CardDef Unit
+hiddenSorceress = unitCard "rising-dawn-017" "Hidden Sorceress" do
+  cost 3
+  loyalty 0
+  power 2
+  hitPoints 1
+  trait Sorceress
+  destructionOnly
+  body
+    "Destruction only. Forced: When an opponent puts at least 1 resource token \
+    \on a quest in any corresponding zone, remove 1 resource token from that quest."
+  onQuestTokensAdded \_owner self qController qkey _n ->
+    when (qController == self.controller.next) $
+      addQuestToken qkey (-1)
+
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
 magePriestOfItza :: CardDef Unit

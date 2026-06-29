@@ -129,6 +129,21 @@ onSelfDamaged handler = onReceive $ Receive \msg owner self -> case msg of
     | uk == self.key, n > 0 -> handler owner self n
   _ -> pure ()
 
+-- | "When a card effect puts one or more resource tokens on a quest."
+-- Fires off the 'QuestTokensAdded' narration; the handler receives the
+-- quest's controller, the quest key, and the count added. Used by the
+-- Rising Dawn reaction units (Blessed Enchantress, Hidden Sorceress).
+-- Reactions that add quest tokens in response should use
+-- 'addQuestTokenQuiet' so they don't retrigger themselves.
+onQuestTokensAdded
+  :: HasField "key" UnitDetails UnitKey
+  => (forall m. TriggerM m => Player -> UnitDetails -> PlayerKey -> UnitKey -> Int -> m ())
+  -> CardBuilder Unit ()
+onQuestTokensAdded handler = onReceive $ Receive \msg owner self -> case msg of
+  QuestTokensAdded pk qkey n
+    | n > 0 -> handler owner self pk qkey n
+  _ -> pure ()
+
 -- | "When this card leaves play for any reason." Fires off the
 -- narration message ('UnitLeftPlay'), so it covers destruction,
 -- sacrifice, AND bounce-to-hand — distinct from 'onSelfDestroyed',

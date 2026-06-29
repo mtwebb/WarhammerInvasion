@@ -179,7 +179,18 @@ data Message where
     -- ^ Add (positive) or remove (negative) tokens from a support's
     -- counter. Clamped to >= 0.
   AdjustQuestTokens :: UnitKey -> Int -> Message
-    -- ^ Same for a quest card.
+    -- ^ Same for a quest card. A positive adjustment broadcasts a
+    -- 'QuestTokensAdded' narration so reaction cards (Blessed
+    -- Enchantress, Hidden Sorceress) can respond.
+  AdjustQuestTokensQuiet :: UnitKey -> Int -> Message
+    -- ^ Like 'AdjustQuestTokens' but suppresses the 'QuestTokensAdded'
+    -- broadcast. Used by the very reactions that respond to quest tokens
+    -- (Blessed Enchantress's bonus token) so they don't retrigger
+    -- themselves into an infinite loop.
+  QuestTokensAdded :: PlayerKey -> UnitKey -> Int -> Message
+    -- ^ Narration: a card effect just put @n > 0@ resource tokens on the
+    -- quest @UnitKey@, controlled by @PlayerKey@. Emitted after the
+    -- token count is applied.
   -- Support destruction
   DestroySupport :: UnitKey -> Message
     -- ^ Remove a free-standing support from play. Card goes to its
