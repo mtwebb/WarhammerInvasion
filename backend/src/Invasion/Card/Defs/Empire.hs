@@ -902,6 +902,58 @@ hiddenOperative = questCard "the-accursed-dead-059" "Hidden Operative" do
       for_ q.questingUnit \quester ->
         withTarget usage.user MyAnyZone \zk -> moveUnit quester zk
 
+-- Bloodquest: Vessel of the Winds ---------------------------------------
+
+masterEngineer :: CardDef Unit
+masterEngineer = unitCard "vessel-of-the-winds-068" "Master Engineer" do
+  race Empire
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Engineer
+  body "Action: Spend 1 resource to put a Siege or Fortification card into play in this zone from your hand."
+  action "Deploy machine" 1 \usage -> do
+    let pk = usage.user
+    me <- playerOf pk <$> getGame
+    let candidates =
+          [ c
+          | c <- me.hand
+          , SupportCardDef cd <- [c.def]
+          , Siege `elem` cd.traits || Fortification `elem` cd.traits
+          ]
+    chooseFromCards pk 0 1 candidates
+      "Put a Siege or Fortification support into play in this zone." \chosen ->
+        for_ chosen \c ->
+          push (PutSupportIntoPlayFromHand pk c.key usage.self.zone)
+
+-- Bloodquest: Portent of Doom -------------------------------------------
+
+carroburgCutthroats :: CardDef Unit
+carroburgCutthroats = unitCard "portent-of-doom-087" "Carroburg Cutthroats" do
+  race Empire
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 2
+  trait Rogue
+  body "Kingdom or Quest. Action: Discard a quest from your hand to take 1 resource from target opponent."
+  action "Extort" 0 \usage ->
+    when (usage.self.zone `elem` [KingdomZone, QuestZone]) do
+      let pk = usage.user
+          opp = pk.next
+      me <- playerOf pk <$> getGame
+      let quests = [c | c <- me.hand, isJust (asQuest c.def)]
+      chooseFromCards pk 0 1 quests
+        "Discard a quest to take 1 resource from your opponent." \chosen ->
+          for_ chosen \c -> do
+            push (DiscardCardsFromHand pk [c.key])
+            g <- getGame
+            let Resources r = (playerOf opp g).resources
+            when (r > 0) do
+              payResources opp 1
+              gainResources pk 1
+
 -- Bloodquest: Shield of the Gods ----------------------------------------
 
 steelStandard :: CardDef Unit

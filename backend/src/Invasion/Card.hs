@@ -707,10 +707,13 @@ allCards =
       ("vessel-of-the-winds-074", UnitCardDef elkana),
       ("vessel-of-the-winds-075", SupportCardDef templeOfSpite),
       ("vessel-of-the-winds-076", UnitCardDef magePriestOfItza),
+      ("vessel-of-the-winds-068", UnitCardDef masterEngineer),
+      ("vessel-of-the-winds-080", QuestCardDef secretCrypts),
       -- Bloodquest cycle — Portent of Doom (pack 5)
       ("portent-of-doom-089", UnitCardDef princeAlthran),
       ("portent-of-doom-091", UnitCardDef fleetingShade),
       ("portent-of-doom-086", TacticCardDef progressInNumbers),
+      ("portent-of-doom-087", UnitCardDef carroburgCutthroats),
       ("portent-of-doom-093", TacticCardDef murderlust),
       ("portent-of-doom-094", UnitCardDef swordsOfChaos),
       ("portent-of-doom-097", TacticCardDef ghostlyApparition),
