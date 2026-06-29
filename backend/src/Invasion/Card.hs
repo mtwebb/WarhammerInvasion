@@ -675,6 +675,8 @@ allCards =
       ("rising-dawn-013", TacticCardDef boonOfTzeentch),
       ("rising-dawn-014", UnitCardDef maranith),
       ("rising-dawn-015", SupportCardDef towerOfOblivion),
+      ("rising-dawn-016", UnitCardDef blessedEnchantress),
+      ("rising-dawn-017", UnitCardDef hiddenSorceress),
       ("rising-dawn-018", QuestCardDef newTradeRoute),
       -- Bloodquest cycle — Fragments of Power (pack 2)
       ("fragments-of-power-021", SupportCardDef starCrownFragments),
@@ -684,6 +686,7 @@ allCards =
       ("fragments-of-power-031", UnitCardDef swornOfKhorne),
       ("fragments-of-power-032", SupportCardDef stolenSkin),
       ("fragments-of-power-036", SupportCardDef descendantOfGods),
+      ("fragments-of-power-033", UnitCardDef agentOfMalekith),
       -- Bloodquest cycle — The Accursed Dead (pack 3)
       ("the-accursed-dead-042", LegendCardDef kurtHelborg),
       ("the-accursed-dead-043", UnitCardDef recklessEngineer),
@@ -692,6 +695,9 @@ allCards =
       ("the-accursed-dead-051", UnitCardDef strickenWarrior),
       ("the-accursed-dead-052", SupportCardDef riftOfBattle),
       ("the-accursed-dead-053", UnitCardDef treasureThieves),
+      ("the-accursed-dead-046", TacticCardDef purgedByFlame),
+      ("the-accursed-dead-049", UnitCardDef roamingShaman),
+      ("the-accursed-dead-059", QuestCardDef hiddenOperative),
       -- Bloodquest cycle — Vessel of the Winds (pack 4)
       ("vessel-of-the-winds-061", SupportCardDef windcatcherPrism),
       ("vessel-of-the-winds-062", LegendCardDef gorbadIronclaw),
@@ -704,6 +710,7 @@ allCards =
       -- Bloodquest cycle — Portent of Doom (pack 5)
       ("portent-of-doom-089", UnitCardDef princeAlthran),
       ("portent-of-doom-091", UnitCardDef fleetingShade),
+      ("portent-of-doom-086", TacticCardDef progressInNumbers),
       ("portent-of-doom-093", TacticCardDef murderlust),
       ("portent-of-doom-094", UnitCardDef swordsOfChaos),
       ("portent-of-doom-097", TacticCardDef ghostlyApparition),
@@ -720,6 +727,8 @@ allCards =
       ("shield-of-the-gods-112", TacticCardDef necrodomosProphecy),
       ("shield-of-the-gods-113", UnitCardDef blackGuards),
       ("shield-of-the-gods-114", SupportCardDef naggarondForge),
+      ("shield-of-the-gods-116", TacticCardDef deathInTheShadows),
+      ("shield-of-the-gods-119", QuestCardDef throughAllOfTime),
       ("shield-of-the-gods-120", QuestCardDef guardiansOfTheGods),
       -- Legends (deluxe expansion)
       ("legends-001", LegendCardDef grombrindal),

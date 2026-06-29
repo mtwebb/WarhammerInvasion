@@ -531,6 +531,18 @@ lionStandard = unitCard "the-accursed-dead-045" "Lion Standard" do
   action "Bolster" 1 \usage ->
     withTarget usage.user AnyUnit \k -> until EndOfTurn $ buffHP k 1
 
+purgedByFlame :: CardDef Tactic
+purgedByFlame = tacticCard "the-accursed-dead-046" "Purged By Flame" do
+  race HighElf
+  cost 1
+  loyalty 2
+  body "Action: Put up to 2 resource tokens on a non-quest card you control."
+  -- Partial: targets a unit you control (the common case). Putting the
+  -- tokens on a support card you control, or choosing fewer than 2, is
+  -- not modelled — the effect always adds 2.
+  whenResolved \self ->
+    withTarget self.controller ownUnit \k -> adjustUnitTokens k 2
+
 -- Bloodquest: Portent of Doom -------------------------------------------
 
 princeAlthran :: CardDef Unit
@@ -564,6 +576,41 @@ ellyrianElite = unitCard "shield-of-the-gods-109" "Ellyrian Elite" do
   traits [Cavalry, Elite]
   scout
   body "Scout."
+
+throughAllOfTime :: CardDef Quest
+throughAllOfTime = questCard "shield-of-the-gods-119" "Through All of Time" do
+  race HighElf
+  cost 0
+  loyalty 2
+  body
+    "Quest. Action: Move a resource token from this card to a [High Elf] card \
+    \with a resource token on it. Quest. Action: Put 1 resource token on this \
+    \card at the beginning of your turn if a unit is questing here."
+  forced accrueTokenWhileQuesting
+  action "Channel the winds" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    whenJust (findQuest usage.self.key g) \me ->
+      when (me.tokens >= 1) do
+        let heUnits = [u | u <- g.units, HighElf `elem` u.cardDef.races, u.tokens >= 1]
+            heSupports = [s | s <- g.supports, HighElf `elem` s.cardDef.races, s.tokens >= 1]
+            heQuests = [q | q <- g.quests, HighElf `elem` q.cardDef.races, q.tokens >= 1]
+            unitKeys = map (.key) heUnits
+            supportKeys = map (.key) heSupports
+            eligible =
+              [mkCard u.key (UnitCardDef u.cardDef) | u <- heUnits]
+                <> [mkCard s.key (SupportCardDef s.cardDef) | s <- heSupports]
+                <> [mkCard q.key (QuestCardDef q.cardDef) | q <- heQuests]
+        chooseFromCards pk 0 1 eligible
+          "Move a resource token to a High Elf card that already has one." \chosen ->
+            for_ chosen \c -> do
+              addQuestToken usage.self.key (-1)
+              if c.key `elem` unitKeys
+                then adjustUnitTokens c.key 1
+                else
+                  if c.key `elem` supportKeys
+                    then adjustSupportTokens c.key 1
+                    else addQuestToken c.key 1
 
 -- The Capital Cycle ----------------------------------------------------
 

@@ -1358,6 +1358,21 @@ instance Run Game where
             [ ("card", T.pack q.cardDef.title)
             , ("count", tshow n)
             ]
+          -- Broadcast the actual increase (post-clamp) so reaction cards
+          -- can respond. Removals (delta <= applied 0) stay silent.
+          let applied = n - q.tokens
+          when (applied > 0) $ send (QuestTokensAdded q.controller qkey applied)
+    AdjustQuestTokensQuiet qkey delta -> do
+      g <- get
+      whenJust (findQuest qkey g) \q -> do
+          let n = max 0 (q.tokens + delta)
+              q' = (q {tokens = n}) :: QuestDetails
+          modify \gx -> gx {quests = replaceQuest q' gx.quests}
+          logIt LogSystem
+            "log.quest.tokens"
+            [ ("card", T.pack q.cardDef.title)
+            , ("count", tshow n)
+            ]
     DestroySupport skey -> do
       msupport <- gets (findSupport skey)
       case msupport of

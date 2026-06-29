@@ -542,6 +542,44 @@ towerOfOblivion = supportCard "rising-dawn-015" "Tower of Oblivion" do
         until EndOfTurn $ buffPower k (-1)
         adjustSupportTokens usage.self.key 1
 
+-- Bloodquest: Fragments of Power ----------------------------------------
+
+agentOfMalekith :: CardDef Unit
+agentOfMalekith = unitCard "fragments-of-power-033" "Agent of Malekith" do
+  race DarkElf
+  cost 1
+  loyalty 2
+  power 0
+  hitPoints 2
+  trait Rogue
+  body "Action: When this unit enters or leaves play, remove 1 resource token from target card."
+  onEnterPlay \_owner self -> removeTokenFromTargetCard self.controller
+  onSelfLeavesPlay \_owner self -> removeTokenFromTargetCard self.controller
+
+-- | "Remove 1 resource token from target card." A resource token can sit
+-- on a unit, support, or quest, so enumerate every card that currently
+-- carries at least one and dispatch the −1 to the right token store.
+removeTokenFromTargetCard pk = do
+  g <- getGame
+  let units = [u | u <- g.units, u.tokens >= 1]
+      supports = [s | s <- g.supports, s.tokens >= 1]
+      quests = [q | q <- g.quests, q.tokens >= 1]
+      unitKeys = map (.key) units
+      supportKeys = map (.key) supports
+      eligible =
+        [mkCard u.key (UnitCardDef u.cardDef) | u <- units]
+          <> [mkCard s.key (SupportCardDef s.cardDef) | s <- supports]
+          <> [mkCard q.key (QuestCardDef q.cardDef) | q <- quests]
+  chooseFromCards pk 0 1 eligible
+    "Remove a resource token from a target card." \chosen ->
+      for_ chosen \c ->
+        if c.key `elem` unitKeys
+          then adjustUnitTokens c.key (-1)
+          else
+            if c.key `elem` supportKeys
+              then adjustSupportTokens c.key (-1)
+              else addQuestToken c.key (-1)
+
 -- Bloodquest: The Accursed Dead -----------------------------------------
 
 treasureThieves :: CardDef Unit

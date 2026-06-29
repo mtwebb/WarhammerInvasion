@@ -200,6 +200,12 @@ data Trait
   | Commander
     -- ^ Commander trait (the Black Ark Dark Elf leaders: Maranith,
     -- Elkana).
+  | Rogue
+    -- ^ Rogue trait (Agent of Malekith, Carroburg Cutthroats).
+  | Enchantress
+    -- ^ Enchantress trait (Blessed Enchantress).
+  | Sorceress
+    -- ^ Sorceress trait (Hidden Sorceress).
   deriving stock (Show, Eq)
 
 mconcat

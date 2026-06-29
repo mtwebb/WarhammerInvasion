@@ -858,6 +858,27 @@ orcBully = unitCard "rising-dawn-005" "Orc Bully" do
     for_ [u.key | u <- g.units, u.controller == self.controller, Goblin `elem` u.cardDef.traits] \k ->
       dealDamage k 1
 
+-- Bloodquest: Portent of Doom -------------------------------------------
+
+progressInNumbers :: CardDef Tactic
+progressInNumbers = tacticCard "portent-of-doom-086" "Progress in Numbers" do
+  race Orc
+  cost 1
+  loyalty 1
+  body "Action: Put 1 resource token on target quest for each unit questing here."
+  -- "Questing here" is modelled as the number of your quests that have a
+  -- questing unit (the engine has no per-tactic zone anchor); those
+  -- tokens then go onto a target quest in play.
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    let questers = length [q | q <- g.quests, q.controller == pk, isJust q.questingUnit]
+        targets = [mkCard q.key (QuestCardDef q.cardDef) | q <- g.quests]
+    when (questers > 0) $
+      chooseFromCards pk 0 1 targets
+        "Put resource tokens on a target quest." \chosen ->
+          for_ chosen \c -> addQuestToken c.key questers
+
 -- Bloodquest: Shield of the Gods ----------------------------------------
 
 manglerSquigs :: CardDef Unit

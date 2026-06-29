@@ -692,6 +692,41 @@ bordertown = supportCard "days-of-blood-019" "Bordertown" do
           when (isJust g.combat) $ destroySupport self.key
     _ -> pure ()
 
+-- Bloodquest: Rising Dawn -----------------------------------------------
+
+blessedEnchantress :: CardDef Unit
+blessedEnchantress = unitCard "rising-dawn-016" "Blessed Enchantress" do
+  cost 3
+  loyalty 0
+  power 1
+  hitPoints 2
+  trait Enchantress
+  orderOnly
+  body
+    "Order only. Forced: When another card effect puts at least 1 resource \
+    \token on a quest in this zone, put 1 additional resource token on that quest."
+  -- "This zone" is the quest zone the Enchantress occupies, so it fires
+  -- only while questing and only for its controller's own quest. The
+  -- bonus token uses the quiet path so it never retriggers this reaction.
+  onQuestTokensAdded \_owner self qController qkey _n ->
+    when (self.zone == QuestZone && qController == self.controller) $
+      addQuestTokenQuiet qkey 1
+
+hiddenSorceress :: CardDef Unit
+hiddenSorceress = unitCard "rising-dawn-017" "Hidden Sorceress" do
+  cost 3
+  loyalty 0
+  power 2
+  hitPoints 1
+  trait Sorceress
+  destructionOnly
+  body
+    "Destruction only. Forced: When an opponent puts at least 1 resource token \
+    \on a quest in any corresponding zone, remove 1 resource token from that quest."
+  onQuestTokensAdded \_owner self qController qkey _n ->
+    when (qController == self.controller.next) $
+      addQuestToken qkey (-1)
+
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
 magePriestOfItza :: CardDef Unit
@@ -706,6 +741,30 @@ magePriestOfItza = unitCard "vessel-of-the-winds-076" "Mage-Priest of Itza" do
     "Order only. Action: When this unit enters play, shuffle the top 5 cards of your discard \
     \pile back into your deck."
   onEnterPlay \_owner self -> recycleDiscard self.controller 5
+
+-- Bloodquest: Shield of the Gods ----------------------------------------
+
+deathInTheShadows :: CardDef Tactic
+deathInTheShadows = tacticCard "shield-of-the-gods-116" "Death in the Shadows" do
+  cost 1
+  trait Skaven
+  destructionOnly
+  body
+    "Destruction only. Action: Corrupt a Skaven unit you control to deal 1 \
+    \damage to target unit. Then, if that unit has 1 remaining hit point, \
+    \destroy it."
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    let mySkaven = [u.key | u <- g.units, u.controller == pk, hasTrait Skaven u]
+    forcePickUnit pk mySkaven "Corrupt a Skaven unit you control." \sk -> do
+      corrupt sk
+      withTarget pk AnyUnit \k -> do
+        dealDamage k 1
+        g2 <- getGame
+        whenJust (findUnit k g2) \u -> do
+          let Damage d = u.damage
+          when (u.effectiveMaxHP - d - 1 == 1) $ destroyUnit k
 
 -- The Capital Cycle ----------------------------------------------------
 
