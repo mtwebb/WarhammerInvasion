@@ -577,6 +577,41 @@ ellyrianElite = unitCard "shield-of-the-gods-109" "Ellyrian Elite" do
   scout
   body "Scout."
 
+throughAllOfTime :: CardDef Quest
+throughAllOfTime = questCard "shield-of-the-gods-119" "Through All of Time" do
+  race HighElf
+  cost 0
+  loyalty 2
+  body
+    "Quest. Action: Move a resource token from this card to a [High Elf] card \
+    \with a resource token on it. Quest. Action: Put 1 resource token on this \
+    \card at the beginning of your turn if a unit is questing here."
+  forced accrueTokenWhileQuesting
+  action "Channel the winds" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    whenJust (findQuest usage.self.key g) \me ->
+      when (me.tokens >= 1) do
+        let heUnits = [u | u <- g.units, HighElf `elem` u.cardDef.races, u.tokens >= 1]
+            heSupports = [s | s <- g.supports, HighElf `elem` s.cardDef.races, s.tokens >= 1]
+            heQuests = [q | q <- g.quests, HighElf `elem` q.cardDef.races, q.tokens >= 1]
+            unitKeys = map (.key) heUnits
+            supportKeys = map (.key) heSupports
+            eligible =
+              [mkCard u.key (UnitCardDef u.cardDef) | u <- heUnits]
+                <> [mkCard s.key (SupportCardDef s.cardDef) | s <- heSupports]
+                <> [mkCard q.key (QuestCardDef q.cardDef) | q <- heQuests]
+        chooseFromCards pk 0 1 eligible
+          "Move a resource token to a High Elf card that already has one." \chosen ->
+            for_ chosen \c -> do
+              addQuestToken usage.self.key (-1)
+              if c.key `elem` unitKeys
+                then adjustUnitTokens c.key 1
+                else
+                  if c.key `elem` supportKeys
+                    then adjustSupportTokens c.key 1
+                    else addQuestToken c.key 1
+
 -- The Capital Cycle ----------------------------------------------------
 
 starDragon :: CardDef Unit

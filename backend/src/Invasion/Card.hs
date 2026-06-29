@@ -684,6 +684,7 @@ allCards =
       ("fragments-of-power-031", UnitCardDef swornOfKhorne),
       ("fragments-of-power-032", SupportCardDef stolenSkin),
       ("fragments-of-power-036", SupportCardDef descendantOfGods),
+      ("fragments-of-power-033", UnitCardDef agentOfMalekith),
       -- Bloodquest cycle — The Accursed Dead (pack 3)
       ("the-accursed-dead-042", LegendCardDef kurtHelborg),
       ("the-accursed-dead-043", UnitCardDef recklessEngineer),
@@ -707,6 +708,7 @@ allCards =
       -- Bloodquest cycle — Portent of Doom (pack 5)
       ("portent-of-doom-089", UnitCardDef princeAlthran),
       ("portent-of-doom-091", UnitCardDef fleetingShade),
+      ("portent-of-doom-086", TacticCardDef progressInNumbers),
       ("portent-of-doom-093", TacticCardDef murderlust),
       ("portent-of-doom-094", UnitCardDef swordsOfChaos),
       ("portent-of-doom-097", TacticCardDef ghostlyApparition),
@@ -724,6 +726,7 @@ allCards =
       ("shield-of-the-gods-113", UnitCardDef blackGuards),
       ("shield-of-the-gods-114", SupportCardDef naggarondForge),
       ("shield-of-the-gods-116", TacticCardDef deathInTheShadows),
+      ("shield-of-the-gods-119", QuestCardDef throughAllOfTime),
       ("shield-of-the-gods-120", QuestCardDef guardiansOfTheGods),
       -- Legends (deluxe expansion)
       ("legends-001", LegendCardDef grombrindal),
