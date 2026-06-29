@@ -729,6 +729,37 @@ hiddenSorceress = unitCard "rising-dawn-017" "Hidden Sorceress" do
 
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
+secretCrypts :: CardDef Quest
+secretCrypts = questCard "vessel-of-the-winds-080" "Secret Crypts" do
+  cost 1
+  loyalty 0
+  trait Undead
+  destructionOnly
+  body
+    "Destruction only. Quest. Action: When an Undead unit enters play under \
+    \your control, put 1 resource token on this card if a unit is questing \
+    \here. Quest. Action: Remove 2 resource tokens from this card to return \
+    \target Undead unit you control to its owner's hand."
+  onFriendlyUnitEnterPlay \_owner self uk -> do
+    g <- getGame
+    case findUnit uk g of
+      Just u
+        | Undead `elem` u.cardDef.traits ->
+            withQuest self.key \q ->
+              when (isJust q.questingUnit) $ addQuestToken self.key 1
+      _ -> pure ()
+  action "Raise the dead" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    whenJust (findQuest usage.self.key g) \me ->
+      when (me.tokens >= 2) do
+        let undeadUnits =
+              [u.key | u <- g.units, u.controller == pk, Undead `elem` u.cardDef.traits]
+        forcePickUnit pk undeadUnits
+          "Return an Undead unit you control to its owner's hand." \k -> do
+            addQuestToken usage.self.key (-2)
+            returnUnitToHand k
+
 magePriestOfItza :: CardDef Unit
 magePriestOfItza = unitCard "vessel-of-the-winds-076" "Mage-Priest of Itza" do
   cost 3
