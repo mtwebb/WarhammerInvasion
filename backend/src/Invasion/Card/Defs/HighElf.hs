@@ -612,6 +612,30 @@ throughAllOfTime = questCard "shield-of-the-gods-119" "Through All of Time" do
                     then adjustSupportTokens c.key 1
                     else addQuestToken c.key 1
 
+valourOfAges :: CardDef Tactic
+valourOfAges = tacticCard "shield-of-the-gods-110" "Valour of Ages" do
+  race HighElf
+  cost 0
+  loyalty 3
+  body
+    "Action: Target defending unit you control that is defending alone deals \
+    \damage equal to its power to each attacking unit. Sacrifice it at the end \
+    \of the turn."
+  playableWhen \g pk -> case g.combat of
+    Just cs -> cs.defendingPlayer == pk && length cs.defenders == 1
+    Nothing -> False
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    case g.combat of
+      Just cs
+        | cs.defendingPlayer == pk
+        , [d] <- cs.defenders ->
+            whenJust (findUnit d g) \u -> do
+              for_ cs.attackers \k -> dealDamage k u.effectivePower
+              queueEoTSacrifice d
+      _ -> pure ()
+
 -- The Capital Cycle ----------------------------------------------------
 
 starDragon :: CardDef Unit

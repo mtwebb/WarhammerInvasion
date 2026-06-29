@@ -1592,6 +1592,34 @@ snotlingInvasion = questCard "fragments-of-power-038" "Snotling Invasion" do
 
 -- Bloodquest cycle — Vessel of the Winds -------------------------------
 
+gatheringTheHorde :: CardDef Quest
+gatheringTheHorde = questCard "vessel-of-the-winds-078" "Gathering the Horde" do
+  race Orc
+  cost 1
+  loyalty 2
+  trait Epic
+  body
+    "Quest. Action: Put 1 resource token on this card at the beginning of your \
+    \turn if a unit is questing here. Quest. Action: Remove X resource tokens \
+    \from this card to discard the top X cards of your deck. Put all [Orc] \
+    \units discarded this way into play (in one of your zones). Then, sacrifice \
+    \this card."
+  forced accrueTokenWhileQuesting
+  action "Unleash the horde" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    whenJust (findQuest usage.self.key g) \me ->
+      when (me.tokens > 0) do
+        let x = me.tokens
+            topX = take x (playerOf pk g).deck
+            orcUnitKeys = [c.key | c <- topX, isRace c.def Orc, isJust (asUnit c.def)]
+        addQuestToken usage.self.key (negate x)
+        millFromDeck pk x
+        unless (null orcUnitKeys) $
+          withTarget pk MyAnyZone \z ->
+            for_ orcUnitKeys \k -> putUnitIntoPlay pk FromDiscard k z
+        destroyQuest usage.self.key
+
 morglorTheMangler :: CardDef Support
 morglorTheMangler = supportCard "vessel-of-the-winds-067" "Morglor the Mangler" do
   race Orc

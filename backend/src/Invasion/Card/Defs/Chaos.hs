@@ -1371,6 +1371,20 @@ necrodomosProphecy = tacticCard "shield-of-the-gods-112" "Necrodomo's Prophecy" 
             shuffleDeck pk
             arrangeDeckCards pk (map (.key) chosen) []
 
+slaaneshCultist :: CardDef Unit
+slaaneshCultist = unitCard "shield-of-the-gods-111" "Slaanesh Cultist" do
+  race Chaos
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Zealot
+  cannotBeRestored
+  body "This unit cannot be restored. Forced: When this unit is corrupted, destroy target corrupted unit."
+  onUnitCorrupted \_owner self uk ->
+    when (uk == self.key) $
+      withTarget self.controller (UnitMatching \_pk _g u -> u.corrupted) \k -> destroyUnit k
+
 swordsOfChaos :: CardDef Unit
 swordsOfChaos = unitCard "portent-of-doom-094" "Swords of Chaos" do
   race Chaos

@@ -712,6 +712,7 @@ allCards =
       ("vessel-of-the-winds-068", UnitCardDef masterEngineer),
       ("vessel-of-the-winds-080", QuestCardDef secretCrypts),
       ("vessel-of-the-winds-079", QuestCardDef pleasureCults),
+      ("vessel-of-the-winds-078", QuestCardDef gatheringTheHorde),
       -- Bloodquest cycle — Portent of Doom (pack 5)
       ("portent-of-doom-089", UnitCardDef princeAlthran),
       ("portent-of-doom-091", UnitCardDef fleetingShade),
@@ -719,6 +720,8 @@ allCards =
       ("portent-of-doom-087", UnitCardDef carroburgCutthroats),
       ("portent-of-doom-093", TacticCardDef murderlust),
       ("portent-of-doom-094", UnitCardDef swordsOfChaos),
+      ("shield-of-the-gods-111", UnitCardDef slaaneshCultist),
+      ("shield-of-the-gods-110", TacticCardDef valourOfAges),
       ("portent-of-doom-097", TacticCardDef ghostlyApparition),
       ("portent-of-doom-098", TacticCardDef shieldOfTheGods),
       -- Bloodquest cycle — Shield of the Gods (pack 6)
