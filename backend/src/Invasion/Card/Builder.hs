@@ -185,6 +185,13 @@ orderOnly = keyword OrderOnly
 destructionOnly :: CardBuilder k ()
 destructionOnly = keyword DestructionOnly
 
+-- | "Grudge" support keyword: "When your capital is dealt combat damage,
+-- you may put this card into play from your hand (in any zone)." The
+-- engine offers the support from hand when its owner's capital takes
+-- combat damage (see the 'DealDamageToZone' handler).
+grudge :: CardBuilder Support ()
+grudge = keyword Grudge
+
 -- | "Invasion" quest meta-builder: adds the 'Invasion' trait and the
 -- 'PlayInOpponentControl' keyword, so the quest is played from your hand
 -- but enters under the opponent's control (controller = zoneOwner =

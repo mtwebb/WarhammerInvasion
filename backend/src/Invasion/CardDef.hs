@@ -78,6 +78,11 @@ data Keyword
     -- ^ "Feared X (while this unit is attacking, blank the text box of X
     -- target units except for Traits)." (Zombie Dragon, Spawn of
     -- Kintearer.) Implemented per-card via an attack-declared trigger.
+  | Grudge
+    -- ^ "Grudge" supports (Stone / Blood / Ancient Vengeance): "When
+    -- your capital is dealt combat damage, you may put this card into
+    -- play from your hand." The engine offers each Grudge support in the
+    -- damaged player's hand after combat damage lands on a capital zone.
   deriving stock (Show, Eq)
 
 data Cost = PayResources Number | NoCost

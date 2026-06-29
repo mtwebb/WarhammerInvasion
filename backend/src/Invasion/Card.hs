@@ -665,6 +665,7 @@ allCards =
       ("the-imperial-throne-120", QuestCardDef recruitingForWar),
       -- Bloodquest cycle — Rising Dawn (pack 1)
       ("rising-dawn-001", SupportCardDef dawnstarSword),
+      ("rising-dawn-003", SupportCardDef stoneVengeance),
       ("rising-dawn-004", TacticCardDef callingTheCouncil),
       ("rising-dawn-005", UnitCardDef orcBully),
       ("rising-dawn-007", UnitCardDef emperorsChosen),
@@ -680,6 +681,7 @@ allCards =
       ("rising-dawn-018", QuestCardDef newTradeRoute),
       -- Bloodquest cycle — Fragments of Power (pack 2)
       ("fragments-of-power-021", SupportCardDef starCrownFragments),
+      ("fragments-of-power-024", SupportCardDef bloodVengeance),
       ("fragments-of-power-026", TacticCardDef daGreatLeader),
       ("fragments-of-power-027", UnitCardDef averheimSoldiers),
       ("fragments-of-power-029", UnitCardDef ellyrianPatron),
@@ -690,6 +692,7 @@ allCards =
       ("fragments-of-power-038", QuestCardDef snotlingInvasion),
       -- Bloodquest cycle — The Accursed Dead (pack 3)
       ("the-accursed-dead-042", LegendCardDef kurtHelborg),
+      ("the-accursed-dead-044", SupportCardDef ancientVengeance),
       ("the-accursed-dead-043", UnitCardDef recklessEngineer),
       ("the-accursed-dead-057", TacticCardDef arcanePower),
       ("the-accursed-dead-045", UnitCardDef lionStandard),

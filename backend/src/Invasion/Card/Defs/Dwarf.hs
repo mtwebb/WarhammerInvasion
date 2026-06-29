@@ -748,6 +748,55 @@ callingTheCouncil = tacticCard "rising-dawn-004" "Calling the Council" do
           push (TakeCardsFromDeckToHand pk (map (.key) chosen))
       shuffleDeck pk
 
+stoneVengeance :: CardDef Support
+stoneVengeance = supportCard "rising-dawn-003" "Stone Vengeance" do
+  race Dwarf
+  cost 3
+  loyalty 3
+  grudge
+  body
+    "Grudge. When your capital is dealt combat damage, you may put this card \
+    \into play from your hand (in any zone). Each [Dwarf] unit in this zone \
+    \gains Toughness 1."
+  supportToughnessAura \_g s u ->
+    if u.zone == s.zone && Dwarf `elem` u.cardDef.races then 1 else 0
+
+-- Bloodquest: Fragments of Power ----------------------------------------
+
+bloodVengeance :: CardDef Support
+bloodVengeance = supportCard "fragments-of-power-024" "Blood Vengeance" do
+  race Dwarf
+  cost 3
+  loyalty 3
+  grudge
+  body
+    "Grudge. When your capital is dealt combat damage, you may put this card \
+    \into play from your hand (in any zone). Each [Dwarf] unit in this zone \
+    \deals +1 damage in combat."
+  supportCombat \_g s u ->
+    if u.zone == s.zone && Dwarf `elem` u.cardDef.races then 1 else 0
+
+-- Bloodquest: The Accursed Dead -----------------------------------------
+
+ancientVengeance :: CardDef Support
+ancientVengeance = supportCard "the-accursed-dead-044" "Ancient Vengeance" do
+  race Dwarf
+  cost 3
+  loyalty 3
+  grudge
+  body
+    "Grudge. When your capital is dealt combat damage, you may put this card \
+    \into play from your hand (in any zone). Lower the cost to play [Dwarf] \
+    \units into this zone by 1 (to a minimum of 1)."
+  -- Approximation: the engine's cost filter carries no target zone, so the
+  -- reduction applies to every [Dwarf] unit the controller plays (not only
+  -- those entering this card's zone); the "minimum of 1" floor is the
+  -- engine's default cost floor.
+  globalCostAdjust \_g s pk filt ->
+    if pk == s.controller && filt.cfKind == Unit && Dwarf `elem` filt.cfRaces
+      then -1
+      else 0
+
 -- Bloodquest: Shield of the Gods ----------------------------------------
 
 dwarfAdventurer :: CardDef Unit
