@@ -870,6 +870,38 @@ averheimSoldiers = unitCard "fragments-of-power-027" "Averheim Soldiers" do
       when (toks > 0) $ until EndOfTurn $ buffHP self.key toks
     _ -> pure ()
 
+-- Bloodquest: The Accursed Dead -----------------------------------------
+
+roamingShaman :: CardDef Unit
+roamingShaman = unitCard "the-accursed-dead-049" "Roaming Shaman" do
+  race Empire
+  cost 4
+  loyalty 2
+  power 1
+  hitPoints 3
+  trait Mage
+  body "Action: When this unit enters a zone, put 1 resource token on target quest you control."
+  -- Modelled on entering play (the principal "enters a zone" case); a
+  -- later move between zones does not re-trigger.
+  onEnterPlay \_owner self -> do
+    let pk = self.controller
+    g <- getGame
+    let myQuests = [mkCard q.key (QuestCardDef q.cardDef) | q <- g.quests, q.controller == pk]
+    chooseFromCards pk 0 1 myQuests
+      "Put a resource token on a quest you control." \chosen ->
+        for_ chosen \c -> addQuestToken c.key 1
+
+hiddenOperative :: CardDef Quest
+hiddenOperative = questCard "the-accursed-dead-059" "Hidden Operative" do
+  race Empire
+  cost 0
+  loyalty 3
+  body "Quest. Action: Move the unit questing here to one of your other zones."
+  action "Reposition" 0 \usage ->
+    withQuest usage.self.key \q ->
+      for_ q.questingUnit \quester ->
+        withTarget usage.user MyAnyZone \zk -> moveUnit quester zk
+
 -- Bloodquest: Shield of the Gods ----------------------------------------
 
 steelStandard :: CardDef Unit

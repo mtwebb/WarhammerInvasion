@@ -531,6 +531,18 @@ lionStandard = unitCard "the-accursed-dead-045" "Lion Standard" do
   action "Bolster" 1 \usage ->
     withTarget usage.user AnyUnit \k -> until EndOfTurn $ buffHP k 1
 
+purgedByFlame :: CardDef Tactic
+purgedByFlame = tacticCard "the-accursed-dead-046" "Purged By Flame" do
+  race HighElf
+  cost 1
+  loyalty 2
+  body "Action: Put up to 2 resource tokens on a non-quest card you control."
+  -- Partial: targets a unit you control (the common case). Putting the
+  -- tokens on a support card you control, or choosing fewer than 2, is
+  -- not modelled — the effect always adds 2.
+  whenResolved \self ->
+    withTarget self.controller ownUnit \k -> adjustUnitTokens k 2
+
 -- Bloodquest: Portent of Doom -------------------------------------------
 
 princeAlthran :: CardDef Unit

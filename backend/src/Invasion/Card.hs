@@ -692,6 +692,9 @@ allCards =
       ("the-accursed-dead-051", UnitCardDef strickenWarrior),
       ("the-accursed-dead-052", SupportCardDef riftOfBattle),
       ("the-accursed-dead-053", UnitCardDef treasureThieves),
+      ("the-accursed-dead-046", TacticCardDef purgedByFlame),
+      ("the-accursed-dead-049", UnitCardDef roamingShaman),
+      ("the-accursed-dead-059", QuestCardDef hiddenOperative),
       -- Bloodquest cycle — Vessel of the Winds (pack 4)
       ("vessel-of-the-winds-061", SupportCardDef windcatcherPrism),
       ("vessel-of-the-winds-062", LegendCardDef gorbadIronclaw),
@@ -720,6 +723,7 @@ allCards =
       ("shield-of-the-gods-112", TacticCardDef necrodomosProphecy),
       ("shield-of-the-gods-113", UnitCardDef blackGuards),
       ("shield-of-the-gods-114", SupportCardDef naggarondForge),
+      ("shield-of-the-gods-116", TacticCardDef deathInTheShadows),
       ("shield-of-the-gods-120", QuestCardDef guardiansOfTheGods),
       -- Legends (deluxe expansion)
       ("legends-001", LegendCardDef grombrindal),

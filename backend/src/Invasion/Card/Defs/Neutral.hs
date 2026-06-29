@@ -707,6 +707,30 @@ magePriestOfItza = unitCard "vessel-of-the-winds-076" "Mage-Priest of Itza" do
     \pile back into your deck."
   onEnterPlay \_owner self -> recycleDiscard self.controller 5
 
+-- Bloodquest: Shield of the Gods ----------------------------------------
+
+deathInTheShadows :: CardDef Tactic
+deathInTheShadows = tacticCard "shield-of-the-gods-116" "Death in the Shadows" do
+  cost 1
+  trait Skaven
+  destructionOnly
+  body
+    "Destruction only. Action: Corrupt a Skaven unit you control to deal 1 \
+    \damage to target unit. Then, if that unit has 1 remaining hit point, \
+    \destroy it."
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    let mySkaven = [u.key | u <- g.units, u.controller == pk, hasTrait Skaven u]
+    forcePickUnit pk mySkaven "Corrupt a Skaven unit you control." \sk -> do
+      corrupt sk
+      withTarget pk AnyUnit \k -> do
+        dealDamage k 1
+        g2 <- getGame
+        whenJust (findUnit k g2) \u -> do
+          let Damage d = u.damage
+          when (u.effectiveMaxHP - d - 1 == 1) $ destroyUnit k
+
 -- The Capital Cycle ----------------------------------------------------
 
 willpower :: CardDef Tactic
