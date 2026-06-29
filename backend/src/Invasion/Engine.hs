@@ -1682,6 +1682,10 @@ instance Run Game where
           afterRedirect <- applyCapitalRedirects targetPlayer zoneKind afterGrants
           amount <- applyCapitalShields targetPlayer zoneKind afterRedirect
           landZoneDamage targetPlayer zoneKind amount
+          -- Grudge: when this capital section is dealt combat damage, the
+          -- owner may put any Grudge support from hand into play.
+          when (amount > 0 && isJust g0.combat) $
+            offerGrudgeResponses targetPlayer zoneKind
     DealDamageToZoneUncancellable targetPlayer zoneKind raw -> do
       -- Like 'DealDamageToZone' but bypasses capital shields, redirects,
       -- and cancel-1 supports (Pigeon Bombs' uncancellable indirect
@@ -4191,6 +4195,26 @@ applyCapitalRedirects pk zoneKind = go
                 ]
               go (remaining - 1)
             _ -> pure remaining
+
+-- | Grudge: after combat damage lands on @pk@'s capital section, offer
+-- to put each Grudge support in @pk@'s hand into play. The card enters
+-- the damaged @zone@ (a simplification of the printed "in any zone").
+offerGrudgeResponses :: PlayerKey -> ZoneKind -> StateT Game GameT ()
+offerGrudgeResponses pk zone = do
+  g <- get
+  let grudges =
+        [ (c.key, T.pack cd.title)
+        | c <- (lookupPlayer pk g).hand
+        , SupportCardDef cd <- [c.def]
+        , Grudge `elem` cd.keywords
+        ]
+  for_ grudges \(k, title) -> do
+    g' <- get
+    -- Skip if an earlier offer this combat already played this copy.
+    when (any ((== k) . (.key)) (lookupPlayer pk g').hand) do
+      play <- askYesNo pk
+        ("Put '" <> title <> "' into play from your hand? (Grudge)")
+      when play $ send (PutSupportIntoPlayFromHand pk k zone)
 
 -- | Consume armed capital-shield grants (Flagellants, Gifts of
 -- Aenarion) against inbound capital damage, oldest grant first.
