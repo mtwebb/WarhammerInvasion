@@ -687,6 +687,7 @@ allCards =
       ("fragments-of-power-032", SupportCardDef stolenSkin),
       ("fragments-of-power-036", SupportCardDef descendantOfGods),
       ("fragments-of-power-033", UnitCardDef agentOfMalekith),
+      ("fragments-of-power-038", QuestCardDef snotlingInvasion),
       -- Bloodquest cycle — The Accursed Dead (pack 3)
       ("the-accursed-dead-042", LegendCardDef kurtHelborg),
       ("the-accursed-dead-043", UnitCardDef recklessEngineer),
@@ -698,6 +699,7 @@ allCards =
       ("the-accursed-dead-046", TacticCardDef purgedByFlame),
       ("the-accursed-dead-049", UnitCardDef roamingShaman),
       ("the-accursed-dead-059", QuestCardDef hiddenOperative),
+      ("the-accursed-dead-060", QuestCardDef beastmanIncursion),
       -- Bloodquest cycle — Vessel of the Winds (pack 4)
       ("vessel-of-the-winds-061", SupportCardDef windcatcherPrism),
       ("vessel-of-the-winds-062", LegendCardDef gorbadIronclaw),
@@ -709,6 +711,7 @@ allCards =
       ("vessel-of-the-winds-076", UnitCardDef magePriestOfItza),
       ("vessel-of-the-winds-068", UnitCardDef masterEngineer),
       ("vessel-of-the-winds-080", QuestCardDef secretCrypts),
+      ("vessel-of-the-winds-079", QuestCardDef pleasureCults),
       -- Bloodquest cycle — Portent of Doom (pack 5)
       ("portent-of-doom-089", UnitCardDef princeAlthran),
       ("portent-of-doom-091", UnitCardDef fleetingShade),

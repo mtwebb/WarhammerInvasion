@@ -185,6 +185,13 @@ orderOnly = keyword OrderOnly
 destructionOnly :: CardBuilder k ()
 destructionOnly = keyword DestructionOnly
 
+-- | "Invasion" quest meta-builder: adds the 'Invasion' trait and the
+-- 'PlayInOpponentControl' keyword, so the quest is played from your hand
+-- but enters under the opponent's control (controller = zoneOwner =
+-- opponent). Its Forced drawbacks then key off the opponent's turn.
+invasion :: CardBuilder Quest ()
+invasion = trait Invasion >> keyword PlayInOpponentControl
+
 -- | Limit one Hero per zone: while a player controls this Hero in a
 -- zone, neither player may put another Hero into that same zone.
 limitOneHeroPerZone :: CardBuilder Unit ()

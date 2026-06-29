@@ -1537,6 +1537,59 @@ daGreatLeader = tacticCard "fragments-of-power-026" "Da Great Leader" do
       [u | u <- g.units, u.controller == self.controller, Orc `elem` u.cardDef.races]
       \u -> until EndOfTurn $ buffPower u.key 2
 
+snotlingInvasion :: CardDef Quest
+snotlingInvasion = questCard "fragments-of-power-038" "Snotling Invasion" do
+  race Orc
+  cost 0
+  loyalty 2
+  invasion
+  body
+    "Play in any opponent's zone, under his control. Forced: At the end of \
+    \your turn, sacrifice a development in this zone or deal 2 damage to this \
+    \section of your capital, if able. Action: At the beginning of your turn, \
+    \if a unit is questing here, put X resource tokens on this card, where X is \
+    \the unit's power. Then, you may remove 3 resource tokens from this card to \
+    \destroy it."
+  -- Beginning of the controller's (the invaded opponent's) turn: a questing
+  -- unit fuels the tokens that let the controller clear the quest.
+  onMyTurnBegin \_owner self -> do
+    g <- getGame
+    whenJust (findQuest self.key g) \me ->
+      whenJust me.questingUnit \uk ->
+        whenJust (findUnit uk g) \u ->
+          when (u.effectivePower > 0) $ addQuestToken self.key u.effectivePower
+    g2 <- getGame
+    whenJust (findQuest self.key g2) \me2 ->
+      when (me2.tokens >= 3) do
+        yes <- askYesNo self.controller "Remove 3 resource tokens to destroy Snotling Invasion?"
+        when yes do
+          addQuestToken self.key (-3)
+          destroyQuest self.key
+  -- End of the controller's turn: sacrifice a development or take 2 damage.
+  -- "This section" has no per-quest zone in the engine, so the damage falls
+  -- on the controller's quest section as a proxy.
+  onMyTurnEnd \_owner self -> do
+    g <- getGame
+    let pk = self.controller
+        p = playerOf pk g
+        devZones =
+          [ zk
+          | (zk, Developments n) <-
+              [ (KingdomZone, p.capital.kingdom.developments)
+              , (QuestZone, p.capital.quest.developments)
+              , (BattlefieldZone, p.capital.battlefield.developments)
+              ]
+          , n > 0
+          ]
+    case devZones of
+      [] -> dealZoneDamage pk QuestZone 2
+      _ -> do
+        sac <- askYesNo pk "Sacrifice a development instead of taking 2 damage to your capital?"
+        if sac
+          then withTarget pk (CapitalMatching \_ (o, zk) -> o == pk && zk `elem` devZones) \(o, zk) ->
+            destroyDevelopment o zk
+          else dealZoneDamage pk QuestZone 2
+
 -- Bloodquest cycle — Vessel of the Winds -------------------------------
 
 morglorTheMangler :: CardDef Support

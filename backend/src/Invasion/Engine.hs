@@ -1273,12 +1273,13 @@ instance Run Game where
       gNow <- get
       withPaidPlay pk (takeForPlay asQuest pk cardKey gNow) (\g cd -> effectiveTotalCost g pk cd)
         \cardDef paidPlayer n -> do
-          let hostPlayer
-                | PlayInOpponentArea `elem` cardDef.keywords = pk.next
+          let underOpponent = PlayInOpponentControl `elem` cardDef.keywords
+              hostPlayer
+                | underOpponent || PlayInOpponentArea `elem` cardDef.keywords = pk.next
                 | otherwise = pk
               quest = QuestDetails
                 { key = cardKey
-                , controller = pk
+                , controller = if underOpponent then pk.next else pk
                 , zoneOwner = hostPlayer
                 , cardDef
                 , tokens = 0
@@ -1294,12 +1295,13 @@ instance Run Game where
     PutQuestIntoPlayFromDeck pk cardKey -> do
       player <- getPlayerS pk
       whenJust (takeQuestFromDeck cardKey player) \(cardDef, playerWithoutCard) -> do
-        let hostPlayer
-              | PlayInOpponentArea `elem` cardDef.keywords = pk.next
+        let underOpponent = PlayInOpponentControl `elem` cardDef.keywords
+            hostPlayer
+              | underOpponent || PlayInOpponentArea `elem` cardDef.keywords = pk.next
               | otherwise = pk
             quest = QuestDetails
               { key = cardKey
-              , controller = pk
+              , controller = if underOpponent then pk.next else pk
               , zoneOwner = hostPlayer
               , cardDef
               , tokens = 0

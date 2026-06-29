@@ -37,6 +37,12 @@ data Keyword
   | PlayInOpponentArea
     -- ^ Quest enters play in the opponent's play area while remaining
     -- under the playing player's control. Used by Dominion of Chaos.
+  | PlayInOpponentControl
+    -- ^ "Invasion" quests: the card is played from your hand but enters
+    -- play in an opponent's area AND under that opponent's control
+    -- (controller = zoneOwner = opponent). Its Forced drawbacks then key
+    -- off the controller's (opponent's) turn. Used by Snotling Invasion,
+    -- Beastman Incursion, Pleasure Cults.
   | Ambush Int
     -- ^ Ambush X (Hidden Kingdoms): the card may be played facedown as a
     -- development, then flipped faceup for X resources during the combat
@@ -206,6 +212,11 @@ data Trait
     -- ^ Enchantress trait (Blessed Enchantress).
   | Sorceress
     -- ^ Sorceress trait (Hidden Sorceress).
+  | Invasion
+    -- ^ Invasion quest trait (Snotling Invasion, Beastman Incursion,
+    -- Pleasure Cults) — played into an opponent's area under their
+    -- control. The mechanic itself rides the 'PlayInOpponentControl'
+    -- keyword.
   deriving stock (Show, Eq)
 
 mconcat

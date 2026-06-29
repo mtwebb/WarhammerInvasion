@@ -1316,6 +1316,41 @@ strickenWarrior = unitCard "the-accursed-dead-051" "Stricken Warrior" do
         _ -> pure ()
     _ -> pure ()
 
+beastmanIncursion :: CardDef Quest
+beastmanIncursion = questCard "the-accursed-dead-060" "Beastman Incursion" do
+  race Chaos
+  cost 2
+  loyalty 2
+  invasion
+  body
+    "Play in any opponent's zone, under his control. Forced: At the beginning \
+    \of your turn, you must sacrifice a non-development, non-quest card in this \
+    \zone, if able. Action: At the beginning of your battlefield phase, skip \
+    \the rest of your battlefield phase to destroy this card if a unit is \
+    \questing here."
+  -- Beginning of the controller's (invaded opponent's) turn: forced sacrifice
+  -- of one of their units or supports. "This zone" has no per-quest section,
+  -- so any non-development, non-quest card they control is eligible.
+  onMyTurnBegin \_owner self -> do
+    let pk = self.controller
+    g <- getGame
+    let unitKeys = [u.key | u <- g.units, u.controller == pk]
+        eligible =
+          [mkCard u.key (UnitCardDef u.cardDef) | u <- g.units, u.controller == pk]
+            <> [mkCard s.key (SupportCardDef s.cardDef) | s <- g.supports, s.controller == pk]
+    unless (null eligible) $
+      chooseFromCards pk 1 1 eligible
+        "Sacrifice a unit or support (Beastman Incursion)." \chosen ->
+          for_ chosen \c ->
+            if c.key `elem` unitKeys then destroyUnit c.key else destroySupport c.key
+  -- The controller's relief valve. Approximation: modelled as a plain Action
+  -- gated on a unit questing here; the "skip the rest of your battlefield
+  -- phase" cost and battlefield-phase timing are not enforced.
+  action "Drive off the herd" 0 \usage -> do
+    g <- getGame
+    whenJust (findQuest usage.self.key g) \me ->
+      when (isJust me.questingUnit) $ destroyQuest usage.self.key
+
 -- Bloodquest: Shield of the Gods ----------------------------------------
 
 necrodomosProphecy :: CardDef Tactic

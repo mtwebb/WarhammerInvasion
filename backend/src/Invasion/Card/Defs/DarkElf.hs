@@ -608,6 +608,34 @@ treasureThieves = unitCard "the-accursed-dead-053" "Treasure Thieves" do
 
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
+pleasureCults :: CardDef Quest
+pleasureCults = questCard "vessel-of-the-winds-079" "Pleasure Cults" do
+  race DarkElf
+  cost 1
+  loyalty 3
+  invasion
+  body
+    "Play in any opponent's zone, under his control. Units enter this zone \
+    \corrupted. Forced: Put 1 resource token on this card at the beginning of \
+    \your turn if a unit is questing here. Then, you may remove 2 resource \
+    \tokens from this card to destroy this card."
+  -- "Units enter this zone corrupted." With no per-quest section, this is
+  -- approximated as: units entering play under the controller (the invaded
+  -- opponent) enter corrupted while Pleasure Cults is in play.
+  onFriendlyUnitEnterPlay \_owner self uk -> do
+    g <- getGame
+    whenJust (findUnit uk g) \_ -> corrupt uk
+  onMyTurnBegin \_owner self -> do
+    withQuest self.key \q ->
+      when (isJust q.questingUnit) $ addQuestToken self.key 1
+    g <- getGame
+    whenJust (findQuest self.key g) \me ->
+      when (me.tokens >= 2) do
+        yes <- askYesNo self.controller "Remove 2 resource tokens to destroy Pleasure Cults?"
+        when yes do
+          addQuestToken self.key (-2)
+          destroyQuest self.key
+
 elkana :: CardDef Unit
 elkana = unitCard "vessel-of-the-winds-074" "Elkana" do
   race DarkElf
