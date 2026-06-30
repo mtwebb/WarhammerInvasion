@@ -866,6 +866,31 @@ rebuildTheHold = questCard "the-accursed-dead-058" "Rebuild the Hold" do
 
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
+aleHall :: CardDef Support
+aleHall = supportCard "vessel-of-the-winds-064" "Ale Hall" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  power 1
+  trait Building
+  body
+    "Action: Discard a quest or Grudge support card from your hand to have \
+    \this card gain {power} until the end of the turn."
+  action "Rally the hold" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    let isQuestOrGrudge sd = case sd of
+          QuestCardDef _ -> True
+          SupportCardDef cd -> Grudge `elem` cd.keywords
+          _ -> False
+        fodder = [c | c <- (playerOf pk g).hand, isQuestOrGrudge c.def]
+    unless (null fodder) $
+      chooseFromCards pk 1 1 fodder
+        "Discard a quest or Grudge support to boost Ale Hall." \chosen ->
+          for_ chosen \c -> do
+            push (DiscardCardsFromHand pk [c.key])
+            until EndOfTurn $ buffPower usage.self.key 1
+
 honouringTheAncestors :: CardDef Tactic
 honouringTheAncestors = tacticCard "vessel-of-the-winds-065" "Honouring the Ancestors" do
   race Dwarf
