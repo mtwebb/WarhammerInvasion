@@ -767,6 +767,43 @@ danceToLoec = tacticCard "fragments-of-power-037" "Dance to Loec" do
     let pk = self.controller
     withTarget pk MyDevZone \zone -> addDevelopment pk zone
 
+weHatesThemAll :: CardDef Quest
+weHatesThemAll = questCard "fragments-of-power-040" "We Hates Them All" do
+  cost 1
+  loyalty 0
+  trait Skaven
+  destructionOnly
+  body
+    "Destruction only. Quest. Action: When a Skaven unit enters play under \
+    \your control, put 1 resource token on this card if a unit is questing \
+    \here. Quest. Action: Remove 1 resource token from this card to have \
+    \target attacking Skaven unit gain {power} for each resource token on \
+    \this card."
+  onFriendlyUnitEnterPlay \_owner self uk -> do
+    g <- getGame
+    case findUnit uk g of
+      Just u
+        | Skaven `elem` u.cardDef.traits ->
+            withQuest self.key \q ->
+              when (isJust q.questingUnit) $ addQuestToken self.key 1
+      _ -> pure ()
+  action "Stir the swarm" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    whenJust (findQuest usage.self.key g) \me ->
+      when (me.tokens >= 1) do
+        addQuestToken usage.self.key (-1)
+        -- "gain {power} for each resource token on this card" — the
+        -- tokens remaining after the one just spent.
+        g2 <- getGame
+        whenJust (findQuest usage.self.key g2) \me2 ->
+          withTarget pk
+            ( UnitMatching \_p gg u -> case gg.combat of
+                Just cs -> u.key `elem` cs.attackers && Skaven `elem` u.cardDef.traits
+                Nothing -> False
+            )
+            \k -> until EndOfTurn $ buffPower k me2.tokens
+
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
 secretCrypts :: CardDef Quest

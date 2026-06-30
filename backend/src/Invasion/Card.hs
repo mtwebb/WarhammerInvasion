@@ -693,6 +693,7 @@ allCards =
       ("fragments-of-power-036", SupportCardDef descendantOfGods),
       ("fragments-of-power-037", TacticCardDef danceToLoec),
       ("fragments-of-power-039", QuestCardDef summonTheReserves),
+      ("fragments-of-power-040", QuestCardDef weHatesThemAll),
       ("fragments-of-power-033", UnitCardDef agentOfMalekith),
       ("fragments-of-power-038", QuestCardDef snotlingInvasion),
       -- Bloodquest cycle — The Accursed Dead (pack 3)
@@ -706,6 +707,7 @@ allCards =
       ("the-accursed-dead-053", UnitCardDef treasureThieves),
       ("the-accursed-dead-046", TacticCardDef purgedByFlame),
       ("the-accursed-dead-049", UnitCardDef roamingShaman),
+      ("the-accursed-dead-058", QuestCardDef rebuildTheHold),
       ("the-accursed-dead-059", QuestCardDef hiddenOperative),
       ("the-accursed-dead-060", QuestCardDef beastmanIncursion),
       -- Bloodquest cycle — Vessel of the Winds (pack 4)

@@ -814,6 +814,56 @@ ancientVengeance = supportCard "the-accursed-dead-044" "Ancient Vengeance" do
       then -1
       else 0
 
+rebuildTheHold :: CardDef Quest
+rebuildTheHold = questCard "the-accursed-dead-058" "Rebuild the Hold" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  trait Epic
+  body
+    "Quest. Action: Sacrifice a development to put 1 resource token on this \
+    \card if a unit is questing here. Quest. Action: Remove 8 resource tokens \
+    \from this card to remove a burn token from your capital. Then, sacrifice \
+    \this card."
+  action "Lay the foundations" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    let p = playerOf pk g
+        devZones =
+          [ zk
+          | (zk, Developments n) <-
+              [ (KingdomZone, p.capital.kingdom.developments)
+              , (QuestZone, p.capital.quest.developments)
+              , (BattlefieldZone, p.capital.battlefield.developments)
+              ]
+          , n > 0
+          ]
+    unless (null devZones) $
+      withTarget pk (CapitalMatching \_ (o, zk) -> o == pk && zk `elem` devZones) \(o, zk) -> do
+        destroyDevelopment o zk
+        whenJust (findQuest usage.self.key g) \me ->
+          when (isJust me.questingUnit) $ addQuestToken usage.self.key 1
+  action "Remove a burn token" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    whenJust (findQuest usage.self.key g) \me ->
+      when (me.tokens >= 8) do
+        let p = playerOf pk g
+            burnedZones =
+              [ zk
+              | (zk, z) <-
+                  [ (KingdomZone, p.capital.kingdom)
+                  , (QuestZone, p.capital.quest)
+                  , (BattlefieldZone, p.capital.battlefield)
+                  ]
+              , z.burned
+              ]
+        unless (null burnedZones) $
+          withTarget pk (CapitalMatching \_ (o, zk) -> o == pk && zk `elem` burnedZones) \(o, zk) -> do
+            addQuestToken usage.self.key (-8)
+            removeBurnToken o zk
+            destroyQuest usage.self.key
+
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
 honouringTheAncestors :: CardDef Tactic

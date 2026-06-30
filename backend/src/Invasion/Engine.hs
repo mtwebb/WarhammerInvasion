@@ -1753,6 +1753,17 @@ instance Run Game where
             , ("zone", zoneParam zone)
             , ("amount", tshow taken)
             ]
+    RemoveBurnToken pk zone -> do
+      g <- get
+      let player = lookupPlayer pk g
+          zoneL = getZone zone player
+      when zoneL.burned $ do
+        let zoneL' = (zoneL {burned = False, damage = Damage 0}) :: Zone
+            player' = setZone zone zoneL' player
+        modify (setPlayer pk player')
+        logIt LogSystem
+          "log.zone.unburned"
+          [("player", playerParam pk), ("zone", zoneParam zone)]
     AddDevelopment pk zone -> do
       g <- get
       let player = lookupPlayer pk g

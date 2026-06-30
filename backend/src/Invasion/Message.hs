@@ -511,6 +511,10 @@ data Message where
     -- zones are not healed.
   HealZone :: PlayerKey -> ZoneKind -> Int -> Message
     -- ^ Remove up to N damage tokens from one specific zone.
+  RemoveBurnToken :: PlayerKey -> ZoneKind -> Message
+    -- ^ "Remove a burn token from your capital." Restores a burned
+    -- zone to play (clears 'burned' and its damage). No-op if the
+    -- named zone isn't burned (Rebuild the Hold).
   AddDevelopment :: PlayerKey -> ZoneKind -> Message
     -- ^ Place a facedown development in the named zone. Bypasses the
     -- once-per-turn limit (used by Dwarf Masons, Wake the Mountain).

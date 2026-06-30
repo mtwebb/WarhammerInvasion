@@ -107,6 +107,11 @@ dealZoneDamage pk zone n = push (DealDamageToZone pk zone n)
 healCapital :: HasQueue Message m => PlayerKey -> Int -> m ()
 healCapital pk n = push (HealCapital pk n)
 
+-- | "Remove a burn token from your capital." Restores the named burned
+-- zone to play (Rebuild the Hold). No-op if the zone isn't burned.
+removeBurnToken :: HasQueue Message m => PlayerKey -> ZoneKind -> m ()
+removeBurnToken pk zone = push (RemoveBurnToken pk zone)
+
 -- | "Heal N damage from a unit." (Trolls regenerate, Bloodsworn.)
 healUnit :: HasQueue Message m => UnitKey -> Int -> m ()
 healUnit k n = push (HealUnit k n)
