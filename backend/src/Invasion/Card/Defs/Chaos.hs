@@ -1351,6 +1351,40 @@ beastmanIncursion = questCard "the-accursed-dead-060" "Beastman Incursion" do
     whenJust (findQuest usage.self.key g) \me ->
       when (isJust me.questingUnit) $ destroyQuest usage.self.key
 
+-- Bloodquest: Portent of Doom -------------------------------------------
+
+unstableFlux :: CardDef Quest
+unstableFlux = questCard "portent-of-doom-099" "Unstable Flux" do
+  race Chaos
+  cost 1
+  loyalty 1
+  trait Epic
+  body
+    "Quest. Forced: When a Spell card is played, put 1 resource token on this \
+    \card if a unit is questing here. Quest. Action: Remove 2 resource tokens \
+    \from this card to discard the top card of each player's deck. Each player \
+    \must deal X uncancellable damage to 1 section of his capital, where X is \
+    \the printed cost of his discarded card."
+  onMySpellPlayed \_owner self -> do
+    g <- getGame
+    whenJust (findQuest self.key g) \me ->
+      when (isJust me.questingUnit) $ addQuestToken self.key 1
+  action "Unleash the flux" 0 \usage -> do
+    g <- getGame
+    whenJust (findQuest usage.self.key g) \me ->
+      when (me.tokens >= 2) do
+        addQuestToken usage.self.key (-2)
+        eachPlayer \pl -> do
+          g2 <- getGame
+          case (playerOf pl g2).deck of
+            [] -> pure ()
+            (top : _) -> do
+              let x = someCardCost top.def
+              millFromDeck pl 1
+              when (x > 0) $
+                withTarget pl (CapitalMatching \_ (o, _) -> o == pl) \(o, zk) ->
+                  push (DealDamageToZoneUncancellable o zk x)
+
 -- Bloodquest: Shield of the Gods ----------------------------------------
 
 necrodomosProphecy :: CardDef Tactic

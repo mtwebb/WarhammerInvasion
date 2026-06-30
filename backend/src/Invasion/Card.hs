@@ -733,6 +733,7 @@ allCards =
       ("portent-of-doom-087", UnitCardDef carroburgCutthroats),
       ("portent-of-doom-093", TacticCardDef murderlust),
       ("portent-of-doom-094", UnitCardDef swordsOfChaos),
+      ("portent-of-doom-099", QuestCardDef unstableFlux),
       ("shield-of-the-gods-111", UnitCardDef slaaneshCultist),
       ("shield-of-the-gods-110", TacticCardDef valourOfAges),
       ("portent-of-doom-097", TacticCardDef ghostlyApparition),

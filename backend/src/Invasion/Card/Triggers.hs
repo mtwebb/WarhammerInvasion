@@ -431,6 +431,26 @@ onResolve handler = onReceive $ Receive \msg owner self -> case msg of
         handler owner self target
   _ -> pure ()
 
+-- | "When you play a Spell card, …" Fires for any in-play card
+-- (quest/support/unit) when its controller resolves a tactic carrying
+-- the Spell trait. Spell-ness is read off the turn's play history
+-- ('cardsPlayedThisTurn' carries each play's traits), so no card
+-- registry lookup is needed at the trigger site. Backs Gathering the
+-- Winds and Unstable Flux.
+onMySpellPlayed
+  :: forall k
+   . HasField "controller" (InPlay k) PlayerKey
+  => (forall m. TriggerM m => Player -> InPlay k -> m ())
+  -> CardBuilder k ()
+onMySpellPlayed handler = onReceive $ Receive \msg owner self -> case msg of
+  TacticResolved pk _code _target _x
+    | pk == self.controller -> do
+        g <- getGame
+        case cardsPlayedThisTurn g pk of
+          (cf : _) | Spell `elem` cf.cfTraits -> handler owner self
+          _ -> pure ()
+  _ -> pure ()
+
 -- | "When this tactic resolves." Slim version that only exposes
 -- 'self' — preferred for tactics that don't pre-declare a target via
 -- 'tacticTargets' and don't need the 'owner' record. Use 'withTarget'
