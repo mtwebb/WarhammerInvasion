@@ -485,6 +485,13 @@ data UnitExtras = UnitExtras
     -- ^ "When this unit defends, it deals its combat damage to all
     -- attacking units." (Juvenile Wyvern.) The assign step gives each
     -- attacker the unit's full combat damage instead of pooling it.
+  , defenderFromHandWhen :: Maybe (Game -> PlayerKey -> ZoneKind -> Bool)
+    -- ^ "Action: When one of your zones [matching the predicate] is
+    -- attacked, put this unit into play in that zone from your hand,
+    -- declared as a defender." (Bladesinger.) When 'Just pred', the
+    -- engine offers this unit from the defending player's hand at
+    -- 'BeginCombat' for any attacked @zone@ where @pred g pk zone@
+    -- holds, then compels it via 'MustDefend'.
   }
 
 -- | Card-supplied redirect plan returned from 'preDamageRedirect'.
@@ -788,6 +795,7 @@ instance HasDefaultExtras Unit where
     , bodyguardLegendRace = Nothing
     , destroyedToZone = \_ _ -> Nothing
     , defenderDamageToAllAttackers = False
+    , defenderFromHandWhen = Nothing
     }
 
 instance HasDefaultExtras Support where

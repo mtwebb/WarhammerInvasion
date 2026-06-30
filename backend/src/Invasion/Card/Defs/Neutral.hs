@@ -2302,6 +2302,32 @@ arcanePower = tacticCard "the-accursed-dead-057" "Arcane Power" do
         "Choose a card to return from your discard pile to your hand." \chosen ->
           for_ chosen \c -> returnFromDiscardToHand pk [c.key]
 
+bladesinger :: CardDef Unit
+bladesinger = unitCard "the-accursed-dead-055" "Bladesinger" do
+  cost 5
+  loyalty 0
+  power 3
+  hitPoints 2
+  traits [WoodElf, Elite]
+  orderOnly
+  body
+    "Wood Elf. Order only. Action: When one of your zones with at least 3 \
+    \developments is attacked, put this unit into play in that zone from your \
+    \hand, declared as a defender. Action: If this unit has 2 or less damage \
+    \on it or assigned to it, return this unit to the top of its owner's deck."
+  defenderFromHandWhen \g pk zone ->
+    let p = playerOf pk g
+        Developments n = case zone of
+          KingdomZone -> p.capital.kingdom.developments
+          QuestZone -> p.capital.quest.developments
+          BattlefieldZone -> p.capital.battlefield.developments
+     in n >= 3
+  action "Slip away" 0 \usage -> do
+    g <- getGame
+    whenJust (findUnit usage.self.key g) \u -> do
+      let Damage d = u.damage
+      when (d <= 2) $ returnUnitToTopOfDeck u.key
+
 shieldOfAeons :: CardDef Support
 shieldOfAeons = supportCard "shield-of-the-gods-101" "Shield of Aeons" do
   cost 4

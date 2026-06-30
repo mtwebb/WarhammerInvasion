@@ -2156,6 +2156,9 @@ instance Run Game where
                     [("attacker", playerParam attacker)]
                 _ -> pure ()
             Nothing -> pure ()
+          -- Bladesinger and kin: offer from-hand defenders for the
+          -- attacked zone before defenders are declared.
+          offerDefenderAmbushFromHand defender zone
           openAutoCombatWindow AfterDeclareCombatTarget
     AdvanceCombatToAttackers ->
       openAutoCombatWindow AfterDeclareAttackers
@@ -2663,6 +2666,28 @@ instance Run Game where
                 , ("card", T.pack u.cardDef.title)
                 , ("zone", zoneParam newZone)
                 ]
+    ReturnUnitToTopOfDeck ukey -> do
+      g <- get
+      whenJust (findUnit ukey g) \u -> do
+        -- Like 'ReturnUnitToHand' but the card lands on top of the deck.
+        let player = lookupPlayer u.controller g
+            deckCard = mkCard u.key (UnitCardDef u.cardDef)
+            player' = player {deck = deckCard : player.deck}
+        modify (setPlayer u.controller player')
+        for_ u.attachments discardAttachment
+        modify \gx -> gx {units = removeById ukey gx.units}
+        recordEvent \h -> h {unitsDiscarded = h.unitsDiscarded + 1}
+        logIt LogSystem
+          "log.unit.returned"
+          [ ("player", playerParam u.controller)
+          , ("card", T.pack u.cardDef.title)
+          ]
+        send $ UnitLeftPlay DepartedUnit
+          { key = ukey
+          , controller = u.controller
+          , zone = u.zone
+          , cardDef = u.cardDef
+          }
     ReturnUnitToHand ukey -> do
       g <- get
       whenJust (findUnit ukey g) \u -> do
@@ -4247,6 +4272,30 @@ offerGrudgeResponses pk zone = do
       play <- askYesNo pk
         ("Put '" <> title <> "' into play from your hand? (Grudge)")
       when play $ send (PutSupportIntoPlayFromHand pk k zone)
+
+-- | Bladesinger: when @pk@'s @zone@ is attacked, offer each unit in
+-- @pk@'s hand carrying a 'defenderFromHandWhen' predicate that holds for
+-- this zone to be put into play there, declared as a defender (a
+-- turn-scoped 'MustDefend' marker compels it at the Declare Defenders
+-- step). Mirrors 'offerGrudgeResponses'.
+offerDefenderAmbushFromHand :: PlayerKey -> ZoneKind -> StateT Game GameT ()
+offerDefenderAmbushFromHand pk zone = do
+  g <- get
+  let candidates =
+        [ (c.key, T.pack cd.title)
+        | c <- (lookupPlayer pk g).hand
+        , UnitCardDef cd <- [c.def]
+        , Just predicate <- [cd.extras.defenderFromHandWhen]
+        , predicate g pk zone
+        ]
+  for_ candidates \(k, title) -> do
+    g' <- get
+    when (any ((== k) . (.key)) (lookupPlayer pk g').hand) do
+      play <- askYesNo pk
+        ("Put '" <> title <> "' into play as a defender from your hand?")
+      when play $ do
+        send (PutUnitIntoPlay pk k zone)
+        send (InstallModifier (UnitRef k) (Modifier MustDefend EndOfTurn))
 
 -- | Consume armed capital-shield grants (Flagellants, Gifts of
 -- Aenarion) against inbound capital damage, oldest grant first.

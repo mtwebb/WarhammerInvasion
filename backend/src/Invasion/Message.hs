@@ -296,6 +296,10 @@ data Message where
     -- the SAME player. No-op if the destination equals the unit's
     -- current zone. Used by Pistoliers, Forced March, Temple of
     -- Shallya, Johannes Broheim.
+  ReturnUnitToTopOfDeck :: UnitKey -> Message
+    -- ^ Bounce an in-play unit onto the top of its owner's deck
+    -- (Bladesinger). Like 'ReturnUnitToHand' but the card lands on the
+    -- deck rather than in hand; attachments still leave play.
   ReturnUnitToHand :: UnitKey -> Message
     -- ^ Remove a unit from play and put its card into its owner's
     -- hand (not discard). Triggers 'UnitLeftPlay' the same way

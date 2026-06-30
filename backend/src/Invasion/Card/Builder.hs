@@ -372,6 +372,14 @@ canDefend f = modifyUnitExtras \e -> e {canDefendZone = f}
 cannotBeRestored :: CardBuilder Unit ()
 cannotBeRestored = modifyUnitExtras \e -> e {cannotBeRestored = True}
 
+-- | "Action: When one of your zones [matching @pred@] is attacked, put
+-- this unit into play in that zone from your hand, declared as a
+-- defender." (Bladesinger.) The engine offers it at 'BeginCombat' and
+-- compels it with 'MustDefend'.
+defenderFromHandWhen
+  :: (Game -> PlayerKey -> ZoneKind -> Bool) -> CardBuilder Unit ()
+defenderFromHandWhen f = modifyUnitExtras \e -> e {defenderFromHandWhen = Just f}
+
 -- | Per-turn damage cap (Daemonettes of Slaanesh).
 perTurnDamageCap :: Int -> CardBuilder Unit ()
 perTurnDamageCap n = modifyUnitExtras \e -> e {damageCap = Just n}

@@ -232,6 +232,10 @@ moveUnit ukey zk = push (MoveUnit ukey zk)
 returnUnitToHand :: HasQueue Message m => UnitKey -> m ()
 returnUnitToHand ukey = push (ReturnUnitToHand ukey)
 
+-- | "Return this unit to the top of its owner's deck." (Bladesinger.)
+returnUnitToTopOfDeck :: HasQueue Message m => UnitKey -> m ()
+returnUnitToTopOfDeck ukey = push (ReturnUnitToTopOfDeck ukey)
+
 -- | Send the top N cards of the named player's deck to their
 -- discard pile (the canonical "mill" effect — Infiltrate!).
 millFromDeck :: HasQueue Message m => PlayerKey -> Int -> m ()
