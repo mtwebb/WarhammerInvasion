@@ -776,6 +776,23 @@ bloodVengeance = supportCard "fragments-of-power-024" "Blood Vengeance" do
   supportCombat \_g s u ->
     if u.zone == s.zone && Dwarf `elem` u.cardDef.races then 1 else 0
 
+ungrimBaragor :: CardDef Legend
+ungrimBaragor = legendCard "fragments-of-power-022" "Ungrim Baragor" do
+  race Dwarf
+  cost 7
+  loyalty 4
+  legendPower 3 3 3
+  hitPoints 5
+  body
+    "Action: When this legend attacks or defends, choose a Trait. All units \
+    \with that Trait lose {power}{power} until the end of the turn."
+  onMyAttackOrDefend \_owner self -> do
+    g <- getGame
+    chooseTrait self.controller (traitsInPlay g) "Choose a Trait." \tr -> do
+      g2 <- getGame
+      for_ [u | u <- g2.units, tr `elem` u.cardDef.traits] \u ->
+        until EndOfTurn (buffPower u.key (-2))
+
 -- Bloodquest: The Accursed Dead -----------------------------------------
 
 ancientVengeance :: CardDef Support
@@ -830,6 +847,26 @@ honouringTheAncestors = tacticCard "vessel-of-the-winds-065" "Honouring the Ance
               summonDefender pk FromHand c.key cs.targetZone
               queueEoTSacrifice c.key
       _ -> pure ()
+
+-- Bloodquest: Portent of Doom -------------------------------------------
+
+spiritSlayer :: CardDef Unit
+spiritSlayer = unitCard "portent-of-doom-083" "Spirit Slayer" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Slayer
+  body
+    "Action: When this unit attacks, choose a Trait. All units with that trait \
+    \must defend this turn, if able."
+  onMyAttackDeclared \_owner self _zone _attackers -> do
+    g <- getGame
+    chooseTrait self.controller (traitsInPlay g) "Choose a Trait." \tr -> do
+      g2 <- getGame
+      for_ [u | u <- g2.units, tr `elem` u.cardDef.traits] \u ->
+        until EndOfTurn (mustDefend u.key)
 
 -- Bloodquest: Shield of the Gods ----------------------------------------
 

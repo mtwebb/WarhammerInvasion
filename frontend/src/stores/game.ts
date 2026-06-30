@@ -191,6 +191,13 @@ function resolvePromptTargetOption(option: TargetOption) {
   })
 }
 
+function resolvePromptTrait(trait: string) {
+  socket?.send({
+    tag: 'GameResolvePrompt',
+    result: { tag: 'PromptTraitWire', trait },
+  })
+}
+
 function declareAttack(attackZone: ZoneKind, attackerKeys: number[]) {
   socket?.send({ tag: 'GameDeclareAttack', attackZone, attackerKeys })
 }
@@ -224,6 +231,7 @@ export const game = {
   resolvePromptNone,
   resolvePromptAmount,
   resolvePromptTargetOption,
+  resolvePromptTrait,
   declareAttack,
   playDevelopment,
   leaveGame,

@@ -465,6 +465,12 @@ export type PromptKind =
       maxAmount: number
       description: string
     }
+  | {
+      tag: 'ChooseTrait'
+      // Traits serialize as bare strings (Aeson allNullaryToStringTag).
+      traitOptions: string[]
+      description: string
+    }
 
 export type TargetOption =
   | { tag: 'TargetUnitOption'; contents: number }
@@ -486,6 +492,7 @@ export type PromptResultWire =
   | { tag: 'PromptBoolWire'; yes: boolean }
   | { tag: 'PromptTargetOptionWire'; option: TargetOption }
   | { tag: 'PromptAmountWire'; amount: number }
+  | { tag: 'PromptTraitWire'; trait: string }
   | { tag: 'PromptNoneWire' }
 
 // Derived helpers — keep alongside the wire types so they stay in sync.

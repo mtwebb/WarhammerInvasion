@@ -14,7 +14,7 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import {-# SOURCE #-} Invasion.Card.Types (Card)
 import Invasion.Capital
-import Invasion.CardDef (ActionTarget, CardCodeFilter)
+import Invasion.CardDef (ActionTarget, CardCodeFilter, Trait)
 import Invasion.Entity (LegendDetails, QuestDetails, SupportDetails, UnitDetails)
 import Invasion.Modifier
 import Invasion.Player
@@ -176,6 +176,14 @@ data PromptKind
     -- ^ Pick an integer in @[minAmount, maxAmount]@. Used by
     -- variable-cost cards (Smash-Go-Boom!, Flames of Tzeentch) to
     -- ask the player how much X to pay; response is the chosen X.
+  | ChooseTrait
+      { traitOptions :: [Trait]
+      , description :: Text
+      }
+    -- ^ Pick one Trait from the offered list. Used by "choose a Trait,
+    -- then …" cards (Spirit Slayer, Ungrim Baragor); the options are
+    -- the Traits currently present among in-play units so the choice
+    -- is always meaningful. Response is the chosen 'Trait'.
   deriving stock Show
 
 -- | A single tagged target option offered to the player by
@@ -628,6 +636,8 @@ data PromptResult
     -- ^ The chosen tagged option from a 'ChooseTargetOption' prompt.
   | PickAmount Int
     -- ^ Integer answer to a 'ChooseAmount' prompt.
+  | PickTrait Trait
+    -- ^ The chosen Trait from a 'ChooseTrait' prompt.
   | PickNone
     -- ^ Player declined / no eligible target.
   deriving stock Show

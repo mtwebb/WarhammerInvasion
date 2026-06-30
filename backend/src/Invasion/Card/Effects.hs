@@ -599,6 +599,35 @@ chooseFromCards pk minN maxN cards desc k = do
         _ -> []
   k chosen
 
+-- | "Choose a Trait, then …" Prompts @pk@ to pick one Trait from
+-- @options@ and runs the continuation with it. With no options the
+-- continuation is skipped (the card simply does nothing). Backs Spirit
+-- Slayer and Ungrim Baragor; pass 'traitsInPlay' for the usual "any
+-- Trait currently on a unit" option set.
+--
+-- > chooseTrait pk (traitsInPlay g) "Choose a Trait." \tr -> ...
+chooseTrait
+  :: HasPromptIO m
+  => PlayerKey -> [Trait] -> Text -> (Trait -> m ()) -> m ()
+chooseTrait _ [] _ _ = pure ()
+chooseTrait pk options desc k = do
+  answer <- askPrompt Prompt
+    { player = pk
+    , kind = ChooseTrait {traitOptions = options, description = desc}
+    , callback = CallbackInlinePrompt
+    }
+  case answer of
+    PickTrait tr | tr `elem` options -> k tr
+    _ -> pure ()
+
+-- | Distinct Traits currently carried by any in-play unit (either
+-- player's). The natural option set for 'chooseTrait' — a "choose a
+-- Trait" card only matters for Traits actually on the board.
+traitsInPlay :: Game -> [Trait]
+traitsInPlay g =
+  foldr (\tr acc -> if tr `elem` acc then acc else tr : acc) []
+    [tr | u <- g.units, tr <- u.cardDef.traits]
+
 -- | "Discard a card from your hand with X loyalty to …" Prompts the
 -- player to discard exactly one card from hand, then runs the body
 -- with that card's printed loyalty as X. The whole-line idiom shared

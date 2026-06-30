@@ -682,6 +682,7 @@ allCards =
       -- Bloodquest cycle — Fragments of Power (pack 2)
       ("fragments-of-power-021", SupportCardDef starCrownFragments),
       ("fragments-of-power-024", SupportCardDef bloodVengeance),
+      ("fragments-of-power-022", LegendCardDef ungrimBaragor),
       ("fragments-of-power-025", UnitCardDef arachnarokSpider),
       ("fragments-of-power-026", TacticCardDef daGreatLeader),
       ("fragments-of-power-027", UnitCardDef averheimSoldiers),
@@ -723,6 +724,7 @@ allCards =
       ("vessel-of-the-winds-079", QuestCardDef pleasureCults),
       ("vessel-of-the-winds-078", QuestCardDef gatheringTheHorde),
       -- Bloodquest cycle — Portent of Doom (pack 5)
+      ("portent-of-doom-083", UnitCardDef spiritSlayer),
       ("portent-of-doom-089", UnitCardDef princeAlthran),
       ("portent-of-doom-091", UnitCardDef fleetingShade),
       ("portent-of-doom-086", TacticCardDef progressInNumbers),

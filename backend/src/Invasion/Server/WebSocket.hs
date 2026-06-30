@@ -620,6 +620,7 @@ handleGameIn env slot user = \case
                       PromptBoolWire {yes = b} -> PickBool b
                       PromptTargetOptionWire {option = o} -> PickTargetOption o
                       PromptAmountWire {amount = n} -> PickAmount n
+                      PromptTraitWire {trait = t} -> PickTrait t
                       PromptNoneWire -> PickNone
                 ok <- postToEngine slot (Engine.EnginePromptAnswer engineResult)
                 unless ok $ sendGameError slot user "game_not_started"

@@ -233,7 +233,9 @@ data Trait
 
 mconcat
   [ deriveToJSON defaultOptions ''Keyword
-  , deriveToJSON defaultOptions ''Trait
+  , -- Trait needs FromJSON too: it rides the wire back inside the
+    -- trait-picker prompt result (PickTrait / PromptTraitWire).
+    deriveJSON defaultOptions ''Trait
   ]
 
 -- | Open type family of in-play self-references, indexed by card kind.
