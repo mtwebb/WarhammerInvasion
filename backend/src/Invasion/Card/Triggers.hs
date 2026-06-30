@@ -564,6 +564,22 @@ onMyZoneAttacked handler = onReceive $ Receive \msg owner self -> case msg of
         handler owner self cs
   _ -> pure ()
 
+-- | "When one of your zones is attacked." Fires off 'BeginCombat' for
+-- this quest's controller whenever an opponent attacks any of their
+-- zones (not just the quest's own zone), handing the attacked
+-- 'ZoneKind' to the body. Backs the reactive defender-summon quests
+-- (Summon the Reserves).
+onMyAnyZoneAttacked
+  :: ( forall m
+      . TriggerM m
+     => Player -> QuestDetails -> ZoneKind -> m ()
+     )
+  -> CardBuilder Quest ()
+onMyAnyZoneAttacked handler = onReceive $ Receive \msg owner self -> case msg of
+  BeginCombat attacker zone _attackers
+    | attacker /= self.controller -> handler owner self zone
+  _ -> pure ()
+
 -- | "When the given action window opens." Used by cards (Vicious
 -- Marauder) that force their controller's action choice at a specific
 -- phase boundary.

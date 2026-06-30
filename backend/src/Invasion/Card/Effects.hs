@@ -162,6 +162,23 @@ putUnitIntoPlay pk origin uk z = push $ case origin of
   FromDiscard -> PutUnitIntoPlayFromDiscard pk uk z
   FromDeck -> PutUnitIntoPlayFromDeck pk uk z
 
+-- | "Put a unit into play in @zone@, declared as a defender." Backs the
+-- summon-a-defender effects (Summon the Reserves, Honouring the
+-- Ancestors). The unit enters via the normal play path, then gains a
+-- turn-scoped 'MustDefend' marker so the defender-declaration step
+-- force-includes it (the same compelled-defender path Animosity uses).
+--
+-- This is effective only while defenders have not yet been locked in —
+-- i.e. the unit is summoned during the attack / 'AfterDeclareAttackers'
+-- window, before the 'DeclareDefenders' prompt. A unit summoned after
+-- defenders are declared cannot retro-join the current combat.
+summonDefender
+  :: HasQueue Message m
+  => PlayerKey -> PlayUnitOrigin -> UnitKey -> ZoneKind -> m ()
+summonDefender pk origin uk z = do
+  putUnitIntoPlay pk origin uk z
+  until EndOfTurn (mustDefend uk)
+
 -- | "Use the Necromancy ability on a card in your discard pile without
 -- paying its cost." (Lord of the Dead.) Puts the unit into play for
 -- free; it returns to the deck bottom at end of turn.

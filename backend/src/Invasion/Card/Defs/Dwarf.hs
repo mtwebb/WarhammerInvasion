@@ -797,6 +797,40 @@ ancientVengeance = supportCard "the-accursed-dead-044" "Ancient Vengeance" do
       then -1
       else 0
 
+-- Bloodquest: Vessel of the Winds ---------------------------------------
+
+honouringTheAncestors :: CardDef Tactic
+honouringTheAncestors = tacticCard "vessel-of-the-winds-065" "Honouring the Ancestors" do
+  race Dwarf
+  cost 1
+  loyalty 1
+  body
+    "Action: Put a [Dwarf] unit into play in one of your attacked zones from \
+    \your hand, declared as a defender. Sacrifice it at the end of the turn."
+  -- Only playable while one of your zones is under attack, so there is an
+  -- attacked zone to summon the defender into.
+  playableWhen \g pk -> case g.combat of
+    Just cs -> cs.defendingPlayer == pk
+    Nothing -> False
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    case g.combat of
+      Just cs | cs.defendingPlayer == pk -> do
+        me <- playerOf pk <$> getGame
+        let dwarves =
+              [ c
+              | c <- me.hand
+              , Just cd <- [asUnit c.def]
+              , Dwarf `elem` cd.races
+              ]
+        chooseFromCards pk 0 1 dwarves
+          "Choose a Dwarf unit to summon as a defender." \chosen ->
+            for_ chosen \c -> do
+              summonDefender pk FromHand c.key cs.targetZone
+              queueEoTSacrifice c.key
+      _ -> pure ()
+
 -- Bloodquest: Shield of the Gods ----------------------------------------
 
 dwarfAdventurer :: CardDef Unit

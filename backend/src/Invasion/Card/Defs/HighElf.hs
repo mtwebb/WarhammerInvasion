@@ -518,6 +518,29 @@ ellyrianPatron = unitCard "fragments-of-power-029" "Ellyrian Patron" do
           for_ chosen \c -> putQuestIntoPlayFromDeck pk c.key
       shuffleDeck pk
 
+summonTheReserves :: CardDef Quest
+summonTheReserves = questCard "fragments-of-power-039" "Summon the Reserves" do
+  race HighElf
+  cost 1
+  loyalty 2
+  trait Epic
+  body
+    "Quest. Action: If a unit is questing here when one of your zones is \
+    \attacked, reveal the top card of your deck. If the revealed card is a \
+    \non-Dragon [High Elf] unit, put it into play in the attacked zone. That \
+    \unit must defend this turn if able."
+  onMyAnyZoneAttacked \_owner self zone ->
+    when (isJust self.questingUnit) do
+      let pk = self.controller
+      revealTopOfDeck pk 1 \r ->
+        case r.cards of
+          (c : _)
+            | Just cd <- asUnit c.def
+            , HighElf `elem` cd.races
+            , Dragon `notElem` cd.traits ->
+                summonDefender pk FromDeck c.key zone
+          _ -> pure ()
+
 -- Bloodquest: The Accursed Dead -----------------------------------------
 
 lionStandard :: CardDef Unit

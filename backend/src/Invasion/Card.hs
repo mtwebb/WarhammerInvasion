@@ -691,6 +691,7 @@ allCards =
       ("fragments-of-power-035", UnitCardDef arkayneVampire),
       ("fragments-of-power-036", SupportCardDef descendantOfGods),
       ("fragments-of-power-037", TacticCardDef danceToLoec),
+      ("fragments-of-power-039", QuestCardDef summonTheReserves),
       ("fragments-of-power-033", UnitCardDef agentOfMalekith),
       ("fragments-of-power-038", QuestCardDef snotlingInvasion),
       -- Bloodquest cycle — The Accursed Dead (pack 3)
@@ -716,6 +717,7 @@ allCards =
       ("vessel-of-the-winds-075", SupportCardDef templeOfSpite),
       ("vessel-of-the-winds-076", UnitCardDef magePriestOfItza),
       ("vessel-of-the-winds-077", UnitCardDef clanEshinMutant),
+      ("vessel-of-the-winds-065", TacticCardDef honouringTheAncestors),
       ("vessel-of-the-winds-068", UnitCardDef masterEngineer),
       ("vessel-of-the-winds-080", QuestCardDef secretCrypts),
       ("vessel-of-the-winds-079", QuestCardDef pleasureCults),
