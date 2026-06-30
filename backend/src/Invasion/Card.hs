@@ -671,6 +671,7 @@ allCards =
       ("rising-dawn-007", UnitCardDef emperorsChosen),
       ("rising-dawn-008", TacticCardDef rageOfTheBear),
       ("rising-dawn-009", UnitCardDef lothernSeaMaster),
+      ("rising-dawn-010", SupportCardDef gatheringTheWinds),
       ("rising-dawn-011", SupportCardDef helmOfFortune),
       ("rising-dawn-012", UnitCardDef mountedMarauders),
       ("rising-dawn-013", TacticCardDef boonOfTzeentch),

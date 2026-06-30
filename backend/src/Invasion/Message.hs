@@ -218,6 +218,11 @@ data Message where
     -- via its schema, discards it, and resolves it at cost 0 — bypassing
     -- the play-timing / payment gates of 'PlayTactic'. No-op if the card
     -- isn't a tactic in hand or no legal target is chosen.
+  PlayTacticFreeFromDiscard :: PlayerKey -> UnitKey -> Message
+    -- ^ Like 'PlayTacticFree' but the tactic is played from the
+    -- player's discard pile (Gathering the Winds). It resolves at cost
+    -- 0 and stays in the discard afterwards. No-op if the card isn't a
+    -- tactic in discard or no legal target is chosen.
   TacticResolved :: PlayerKey -> CardCode -> ActionTarget -> Int -> Message
     -- ^ Dispatch hook fired exactly once when a tactic resolves. The
     -- tactic's CardDef.receive is invoked with this message; cards
