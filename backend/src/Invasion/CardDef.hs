@@ -222,6 +222,13 @@ data Trait
     -- Pleasure Cults) — played into an opponent's area under their
     -- control. The mechanic itself rides the 'PlayInOpponentControl'
     -- keyword.
+  | Treasure
+    -- ^ Treasure attachment trait (Trinkets of Gold) — counted
+    -- alongside Artefact cards for draw payoffs.
+  | Mutant
+    -- ^ Mutant trait (Clan Eshin Mutant).
+  | Assassin
+    -- ^ Assassin trait (Clan Eshin Mutant).
   deriving stock (Show, Eq)
 
 mconcat

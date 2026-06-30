@@ -813,6 +813,38 @@ magePriestOfItza = unitCard "vessel-of-the-winds-076" "Mage-Priest of Itza" do
     \pile back into your deck."
   onEnterPlay \_owner self -> recycleDiscard self.controller 5
 
+clanEshinMutant :: CardDef Unit
+clanEshinMutant = unitCard "vessel-of-the-winds-077" "Clan Eshin Mutant" do
+  cost 6
+  loyalty 0
+  power 2
+  hitPoints 4
+  traits [Skaven, Mutant, Assassin]
+  destructionOnly
+  battlefieldOnly
+  body
+    "Destruction only. Battlefield only. This unit enters play corrupted. \
+    \Action: When this unit enters or leaves play, deal 2 damage to target \
+    \unit. Then, destroy that unit if it has 1 remaining hit point."
+  onEnterPlay \_owner self -> do
+    corrupt self.key
+    -- "deal 2 damage to target unit; destroy if 1 remaining hit point".
+    -- 'dealDamage' is queued, so the re-fetched snapshot still shows the
+    -- pre-damage total: 1 remaining after this strike is maxHP - d - 2.
+    withTarget self.controller AnyUnit \k -> do
+      dealDamage k 2
+      g <- getGame
+      whenJust (findUnit k g) \u -> do
+        let Damage d = u.damage
+        when (u.effectiveMaxHP - d - 2 == 1) $ destroyUnit k
+  onSelfLeavesPlay \_owner self ->
+    withTarget self.controller AnyUnit \k -> do
+      dealDamage k 2
+      g <- getGame
+      whenJust (findUnit k g) \u -> do
+        let Damage d = u.damage
+        when (u.effectiveMaxHP - d - 2 == 1) $ destroyUnit k
+
 -- Bloodquest: Shield of the Gods ----------------------------------------
 
 deathInTheShadows :: CardDef Tactic
@@ -836,6 +868,40 @@ deathInTheShadows = tacticCard "shield-of-the-gods-116" "Death in the Shadows" d
         whenJust (findUnit k g2) \u -> do
           let Damage d = u.damage
           when (u.effectiveMaxHP - d - 1 == 1) $ destroyUnit k
+
+talismanicTatoos :: CardDef Support
+talismanicTatoos = supportCard "shield-of-the-gods-117" "Talismanic Tatoos" do
+  cost 2
+  loyalty 0
+  traits [WoodElf, Attachment]
+  orderOnly
+  body
+    "Wood Elf. Order only. Attach to a target Wood Elf unit. Attached unit \
+    \gains {power} for each development in this zone."
+  supportAura \g s u ->
+    if s.attachedTo == Just u.key then devsInZone g u else 0
+
+trinketsOfGold :: CardDef Support
+trinketsOfGold = supportCard "shield-of-the-gods-115" "Trinkets of Gold" do
+  cost 1
+  loyalty 0
+  traits [Lizardmen, Treasure, Attachment]
+  orderOnly
+  body
+    "Lizardmen. Order only. Attach to a target Lizardmen unit you control. \
+    \Action: When attached unit attacks or defends, draw cards equal to the \
+    \number of Treasure and Artefact cards you control."
+  onAttachedHostAttackOrDefend \_owner self _host -> do
+    g <- getGame
+    let pk = self.controller
+        n =
+          length
+            [ s
+            | s <- allInPlaySupports g
+            , s.controller == pk
+            , Treasure `elem` s.cardDef.traits || Artefact `elem` s.cardDef.traits
+            ]
+    when (n > 0) $ drawCards pk n
 
 -- The Capital Cycle ----------------------------------------------------
 
