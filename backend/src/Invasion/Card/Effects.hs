@@ -895,6 +895,11 @@ buffSavage target n = PendingBuff target (GainSavage n)
 mustDefend :: UnitKey -> PendingBuff
 mustDefend target = PendingBuff target MustDefend
 
+-- | "This unit gains [keyword]." Pair with 'until' for the duration
+-- (Swift-moving Storm: @until EndOfTurn $ gainKeyword Scout k@).
+gainKeyword :: Keyword -> UnitKey -> PendingBuff
+gainKeyword kw target = PendingBuff target (GainKeyword kw)
+
 -- | "This card cannot be targeted by card effects." @opponentOnly@ True
 -- blocks only the opponent (Shield of Saphery, Ghostly Apparition);
 -- False blocks every player (the self-protecting attachments). Wrap with

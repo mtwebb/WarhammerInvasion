@@ -690,6 +690,7 @@ allCards =
       ("fragments-of-power-029", UnitCardDef ellyrianPatron),
       ("fragments-of-power-031", UnitCardDef swornOfKhorne),
       ("fragments-of-power-032", SupportCardDef stolenSkin),
+      ("fragments-of-power-034", TacticCardDef swiftMovingStorm),
       ("fragments-of-power-035", UnitCardDef arkayneVampire),
       ("fragments-of-power-036", SupportCardDef descendantOfGods),
       ("fragments-of-power-037", TacticCardDef danceToLoec),

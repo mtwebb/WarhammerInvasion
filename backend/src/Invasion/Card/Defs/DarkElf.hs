@@ -580,6 +580,19 @@ removeTokenFromTargetCard pk = do
               then adjustSupportTokens c.key (-1)
               else addQuestToken c.key (-1)
 
+swiftMovingStorm :: CardDef Tactic
+swiftMovingStorm = tacticCard "fragments-of-power-034" "Swift-moving Storm" do
+  race DarkElf
+  cost 4
+  loyalty 3
+  trait Spell
+  body "Spell. Action: Units you control gain Scout until the end of the turn."
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    for_ [u | u <- g.units, u.controller == pk] \u ->
+      until EndOfTurn $ gainKeyword Scout u.key
+
 -- Bloodquest: The Accursed Dead -----------------------------------------
 
 treasureThieves :: CardDef Unit

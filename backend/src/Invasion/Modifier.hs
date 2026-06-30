@@ -4,7 +4,7 @@ module Invasion.Modifier (module Invasion.Modifier) where
 
 import Data.Aeson.TH
 import Invasion.Prelude
-import Invasion.Types (UnitKey)
+import Invasion.Types (Keyword, UnitKey)
 
 -- | Atomic effect a 'Modifier' carries on its target. Each constructor
 -- is interpreted in one specific place in the engine — see
@@ -93,6 +93,10 @@ data ModifierDetails
     -- ^ "Target unit must defend this turn, if able." (Animosity,
     -- Alluring Daemonettes.) The defender-declaration step force-
     -- includes eligible units carrying this marker.
+  | GainKeyword Keyword
+    -- ^ "This unit gains [keyword] until the scope expires."
+    -- (Swift-moving Storm grants Scout.) Folded into 'unitKeywords'
+    -- via the unit's cached 'grantedKeywords' during recompute.
   deriving stock (Show, Eq)
 
 -- TODO: add an 'EndOfPhase' scope. Many cards read "until the end of

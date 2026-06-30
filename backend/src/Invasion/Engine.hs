@@ -3605,6 +3605,7 @@ freshUnit key controller zone cardDef = UnitDetails
   , defending = False
   , tokens = 0
   , blanked = False
+  , grantedKeywords = []
   }
 
 -- | The unit's extras with Witch Hag's Curse blanking applied: a
@@ -3619,7 +3620,7 @@ unitExtrasOf u
 
 -- | The unit's printed keywords, blank while text-boxed-out.
 unitKeywords :: UnitDetails -> [Keyword]
-unitKeywords u = if u.blanked then [] else u.cardDef.keywords
+unitKeywords u = if u.blanked then [] else u.cardDef.keywords <> u.grantedKeywords
 
 -- | The unit's printed action abilities, blank while text-boxed-out.
 unitActions :: UnitDetails -> [ActionDef 'Unit]
@@ -5741,6 +5742,11 @@ recomputeUnitStats g = g {units = map update g.units}
             , effectiveMaxHP = computeMaxHP u
             , attacking = u.key `elem` combatAttackers
             , defending = u.key `elem` combatDefenders
+            , grantedKeywords =
+                [ k
+                | Modifier (GainKeyword k) _ <-
+                    fromMaybe [] (Map.lookup (UnitRef u.key) g.modifiers)
+                ]
             }
             :: UnitDetails
     computePower u

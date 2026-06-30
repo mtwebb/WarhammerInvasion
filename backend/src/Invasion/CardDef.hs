@@ -18,73 +18,6 @@ import {-# SOURCE #-} Invasion.Engine (HasPromptIO)
 import {-# SOURCE #-} Invasion.Game (Game, HasGame)
 import {-# SOURCE #-} Invasion.Message (Message)
 
-data Keyword
-  = Toughness Number
-  | BattlefieldOnly
-  | KingdomOnly
-  | QuestOnly
-  | Scout
-  | Limited
-  | DamageCannotBeCancelled
-  | Counterstrike Int
-  | Raider Int
-    -- ^ Raider X (Eternal War cycle): after combat damage is applied,
-    -- the attacking player gains resources equal to the combined
-    -- Raider X of all his attacking units that survived combat.
-    -- Multiple instances on one unit (e.g. printed + an attachment)
-    -- add together. Handled centrally by the combat pipeline
-    -- ('FireRaiderResources'), mirroring 'Scout'.
-  | PlayInOpponentArea
-    -- ^ Quest enters play in the opponent's play area while remaining
-    -- under the playing player's control. Used by Dominion of Chaos.
-  | PlayInOpponentControl
-    -- ^ "Invasion" quests: the card is played from your hand but enters
-    -- play in an opponent's area AND under that opponent's control
-    -- (controller = zoneOwner = opponent). Its Forced drawbacks then key
-    -- off the controller's (opponent's) turn. Used by Snotling Invasion,
-    -- Beastman Incursion, Pleasure Cults.
-  | Ambush Int
-    -- ^ Ambush X (Hidden Kingdoms): the card may be played facedown as a
-    -- development, then flipped faceup for X resources during the combat
-    -- Ambush step (after Declare Attackers, before Declare Defenders) on
-    -- a development in the defending zone. The card becomes its printed
-    -- type; a flipped unit must be declared as a defender that step.
-  | Savage Int
-    -- ^ Savage X (Lizardmen): after this unit is dealt damage and
-    -- survives, its controller may deal X damage to a target unit in a
-    -- corresponding zone (any unit sharing this unit's zone kind). The
-    -- engine dispatches this generically off 'totalSavage', so the value
-    -- can be granted dynamically (Savage Rush, Cloak of Feathers).
-  | OrderOnly
-    -- ^ Neutral-card restriction: cannot be included in a Destruction
-    -- (Chaos / Orc / Dark Elf) deck.
-  | DestructionOnly
-    -- ^ Neutral-card restriction: cannot be included in an Order
-    -- (Empire / Dwarf / High Elf) deck.
-  | LimitOneHeroPerZone
-    -- ^ Hero restriction. While a player controls a Hero in a given
-    -- zone, neither player may put, play, or move another Hero into
-    -- that same zone (FAQ 2.2 clarification).
-  | PlayAnytime
-    -- ^ "You may play this unit from your hand any time you could
-    -- take an action." (Nordland Halberdiers.) The engine relaxes the
-    -- capital-window gate to tactic timing for cards carrying this.
-  | Necromancy
-    -- ^ "You may play this card from your discard pile. If you do, put
-    -- it on the bottom of your deck at the end of the turn." (March of
-    -- the Damned Undead.) Adds a discard-pile play path that pays the
-    -- printed cost and schedules an end-of-turn return to the deck.
-  | Feared Int
-    -- ^ "Feared X (while this unit is attacking, blank the text box of X
-    -- target units except for Traits)." (Zombie Dragon, Spawn of
-    -- Kintearer.) Implemented per-card via an attack-declared trigger.
-  | Grudge
-    -- ^ "Grudge" supports (Stone / Blood / Ancient Vengeance): "When
-    -- your capital is dealt combat damage, you may put this card into
-    -- play from your hand." The engine offers each Grudge support in the
-    -- damaged player's hand after combat damage lands on a capital zone.
-  deriving stock (Show, Eq)
-
 data Cost = PayResources Number | NoCost
 
 data Trait
@@ -232,8 +165,7 @@ data Trait
   deriving stock (Show, Eq)
 
 mconcat
-  [ deriveToJSON defaultOptions ''Keyword
-  , -- Trait needs FromJSON too: it rides the wire back inside the
+  [ -- Trait needs FromJSON too: it rides the wire back inside the
     -- trait-picker prompt result (PickTrait / PromptTraitWire).
     deriveJSON defaultOptions ''Trait
   ]

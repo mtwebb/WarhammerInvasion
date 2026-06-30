@@ -77,6 +77,7 @@ import Invasion.Server.Protocol
 import Invasion.Server.Protocol qualified as Proto
 import Invasion.Types
   ( CardCode (..)
+  , Keyword (Necromancy)
   , Phase (BattlefieldPhase)
   , PlayerKey (..)
   , Race (..)
@@ -707,7 +708,7 @@ isNecromancyDiscardCard pk k g =
    in case find ((== k) . (.key)) player.discard of
         Just c
           | Just cd <- asUnit c.def ->
-              CardDef.Necromancy `elem` cd.keywords || k `elem` g.grantedNecromancy
+              Necromancy `elem` cd.keywords || k `elem` g.grantedNecromancy
         _ -> False
 
 -- | Is there a unit with this key in the OPPONENT's discard pile while

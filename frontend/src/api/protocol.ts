@@ -170,6 +170,9 @@ export interface EngineUnit {
   // True while an attached support blanks the unit's printed text box
   // (Witch Hag's Curse). Traits are unaffected.
   blanked: boolean
+  // Keywords granted by modifiers (Swift-moving Storm: Scout until end
+  // of turn), folded in alongside the printed keywords.
+  grantedKeywords: string[]
 }
 
 export interface EngineSupport {

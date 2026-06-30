@@ -22,6 +22,56 @@ instance HasField "next" PlayerKey PlayerKey where
 data Number = Fixed Int | Variable
   deriving stock (Show, Eq)
 
+-- | Printed keyword abilities. Lives here (rather than 'Invasion.CardDef')
+-- so 'Invasion.Modifier' can reference it without a module cycle — the
+-- 'GainKeyword' modifier grants keywords (Swift-moving Storm: Scout).
+data Keyword
+  = Toughness Number
+  | BattlefieldOnly
+  | KingdomOnly
+  | QuestOnly
+  | Scout
+  | Limited
+  | DamageCannotBeCancelled
+  | Counterstrike Int
+  | Raider Int
+    -- ^ Raider X (Eternal War cycle): after combat damage is applied,
+    -- the attacking player gains resources equal to the combined
+    -- Raider X of all his attacking units that survived combat.
+  | PlayInOpponentArea
+    -- ^ Quest enters play in the opponent's play area while remaining
+    -- under the playing player's control. Used by Dominion of Chaos.
+  | PlayInOpponentControl
+    -- ^ "Invasion" quests: played from your hand but enters play in an
+    -- opponent's area AND under that opponent's control.
+  | Ambush Int
+    -- ^ Ambush X (Hidden Kingdoms): may be played facedown as a
+    -- development, then flipped faceup for X resources during the
+    -- combat Ambush step.
+  | Savage Int
+    -- ^ Savage X (Lizardmen): after this unit is dealt damage and
+    -- survives, its controller may deal X damage to a target unit in a
+    -- corresponding zone.
+  | OrderOnly
+    -- ^ Neutral-card restriction: cannot be included in a Destruction deck.
+  | DestructionOnly
+    -- ^ Neutral-card restriction: cannot be included in an Order deck.
+  | LimitOneHeroPerZone
+    -- ^ Hero restriction: only one Hero per zone across both players.
+  | PlayAnytime
+    -- ^ "You may play this unit from your hand any time you could take
+    -- an action." (Nordland Halberdiers.)
+  | Necromancy
+    -- ^ "You may play this card from your discard pile…" (March of the
+    -- Damned Undead.)
+  | Feared Int
+    -- ^ "Feared X (while attacking, blank the text box of X target
+    -- units except for Traits)."
+  | Grudge
+    -- ^ "Grudge" supports: "When your capital is dealt combat damage,
+    -- you may put this card into play from your hand."
+  deriving stock (Show, Eq)
+
 data CardKind = Unit | Support | Quest | Tactic | Legend | DraftFormat
   deriving stock (Eq, Show)
 
@@ -60,6 +110,7 @@ data Race = Dwarf | Empire | HighElf | Chaos | Orc | DarkElf
 
 mconcat
   [ deriveToJSON defaultOptions ''Ref
+  , deriveToJSON defaultOptions ''Keyword
   , deriveJSON defaultOptions ''UnitKey
   , deriveJSON defaultOptions ''PlayerKey
   , deriveToJSON defaultOptions ''Number
