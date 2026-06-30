@@ -727,6 +727,46 @@ hiddenSorceress = unitCard "rising-dawn-017" "Hidden Sorceress" do
     when (qController == self.controller.next) $
       addQuestToken qkey (-1)
 
+-- Bloodquest: Fragments of Power ----------------------------------------
+
+arkayneVampire :: CardDef Unit
+arkayneVampire = unitCard "fragments-of-power-035" "Arkayne Vampire" do
+  cost 3
+  loyalty 0
+  power 0
+  hitPoints 2
+  traits [Undead, Vampire]
+  destructionOnly
+  body
+    "Destruction only. This unit gains +1 hit point for each damage on it. \
+    \Action: At the beginning of your turn, move 1 damage from target unit to \
+    \this unit. That unit gets -1 hit point until the end of the turn."
+  -- Each point of damage on the Vampire raises its own max HP by 1, so
+  -- siphoning damage onto it never kills it on its own.
+  selfHP \_g u -> case u.damage of Damage d -> d
+  onMyTurnBegin \_owner self -> do
+    let pk = self.controller
+    withTarget pk AnyUnit \k -> do
+      moveDamage k self.key 1
+      until EndOfTurn $ debuffHP k 1
+
+danceToLoec :: CardDef Tactic
+danceToLoec = tacticCard "fragments-of-power-037" "Dance to Loec" do
+  cost 0
+  loyalty 0
+  trait WoodElf
+  orderOnly
+  body
+    "Wood Elf. Order only. Action: Play this card as a development (it does \
+    \not count against your development limit)."
+  -- Modelled as adding a facedown development to a chosen zone; the
+  -- engine's per-turn develop limit doesn't apply to effect-driven
+  -- developments, matching "does not count against your limit."
+  playableWhen \g pk -> canDevelop g pk
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk MyDevZone \zone -> addDevelopment pk zone
+
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
 secretCrypts :: CardDef Quest

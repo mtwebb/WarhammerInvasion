@@ -682,12 +682,15 @@ allCards =
       -- Bloodquest cycle — Fragments of Power (pack 2)
       ("fragments-of-power-021", SupportCardDef starCrownFragments),
       ("fragments-of-power-024", SupportCardDef bloodVengeance),
+      ("fragments-of-power-025", UnitCardDef arachnarokSpider),
       ("fragments-of-power-026", TacticCardDef daGreatLeader),
       ("fragments-of-power-027", UnitCardDef averheimSoldiers),
       ("fragments-of-power-029", UnitCardDef ellyrianPatron),
       ("fragments-of-power-031", UnitCardDef swornOfKhorne),
       ("fragments-of-power-032", SupportCardDef stolenSkin),
+      ("fragments-of-power-035", UnitCardDef arkayneVampire),
       ("fragments-of-power-036", SupportCardDef descendantOfGods),
+      ("fragments-of-power-037", TacticCardDef danceToLoec),
       ("fragments-of-power-033", UnitCardDef agentOfMalekith),
       ("fragments-of-power-038", QuestCardDef snotlingInvasion),
       -- Bloodquest cycle — The Accursed Dead (pack 3)
