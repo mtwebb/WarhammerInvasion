@@ -1554,6 +1554,27 @@ instance Run Game where
                 "log.tactic.played"
                 [("player", playerParam pk), ("card", T.pack cd.title), ("cost", "0")]
               send (TacticResolved pk cd.code tgt 0)
+    PlayTacticFreeFromDeck pk cardKey -> do
+      g <- get
+      let mcardDef =
+            find ((== cardKey) . (.key)) (lookupPlayer pk g).deck >>= (asTactic . (.def))
+      whenJust mcardDef \cardDef -> do
+        let schema = tacticTargetSchema cardDef
+        mtgt <- promptSchemaTarget pk schema
+        whenJust mtgt \tgt -> do
+          g' <- get
+          when (validateTarget pk schema tgt g') $
+            whenJust (takeTacticFromDeck cardKey (lookupPlayer pk g')) \(cd, playerWithoutCard) -> do
+              let paidPlayer =
+                    playerWithoutCard
+                      {discard = mkCard cardKey (TacticCardDef cd) : playerWithoutCard.discard}
+              modify (setPlayer pk paidPlayer)
+              recordEvent \h -> h
+                {playedBy = Map.insertWith (<>) pk [cardCodeFilter cd] h.playedBy}
+              logIt LogPlayerAction
+                "log.tactic.played"
+                [("player", playerParam pk), ("card", T.pack cd.title), ("cost", "0")]
+              send (TacticResolved pk cd.code tgt 0)
     TacticResolved pk code target xVal -> do
       g <- get
       case Map.lookup code allCards of
@@ -5866,6 +5887,9 @@ takeTacticFromHand = takeFromPile handPile asTactic
 
 takeTacticFromDiscard :: UnitKey -> Player -> Maybe (CardDef Tactic, Player)
 takeTacticFromDiscard = takeFromPile discardPile asTactic
+
+takeTacticFromDeck :: UnitKey -> Player -> Maybe (CardDef Tactic, Player)
+takeTacticFromDeck = takeFromPile deckPile asTactic
 
 takeLegendFromHand :: UnitKey -> Player -> Maybe (CardDef Legend, Player)
 takeLegendFromHand = takeFromPile handPile asLegend

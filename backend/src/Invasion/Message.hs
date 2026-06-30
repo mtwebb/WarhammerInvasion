@@ -223,6 +223,11 @@ data Message where
     -- player's discard pile (Gathering the Winds). It resolves at cost
     -- 0 and stays in the discard afterwards. No-op if the card isn't a
     -- tactic in discard or no legal target is chosen.
+  PlayTacticFreeFromDeck :: PlayerKey -> UnitKey -> Message
+    -- ^ Like 'PlayTacticFree' but the tactic is played from the
+    -- player's deck (Xirat'p reveals the top card). It resolves at cost
+    -- 0 — the caller charges any separate price first — and lands in the
+    -- discard. No-op if the card isn't a tactic in the deck.
   TacticResolved :: PlayerKey -> CardCode -> ActionTarget -> Int -> Message
     -- ^ Dispatch hook fired exactly once when a tactic resolves. The
     -- tactic's CardDef.receive is invoked with this message; cards

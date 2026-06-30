@@ -1353,6 +1353,42 @@ beastmanIncursion = questCard "the-accursed-dead-060" "Beastman Incursion" do
 
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
+xiratp :: CardDef Unit
+xiratp = unitCard "vessel-of-the-winds-072" "Xirat'p" do
+  race Chaos
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Daemon
+  body
+    "Action: Corrupt this unit to reveal the top card of your deck. If the \
+    \revealed card is a Spell or Epic Spell tactic, you may play it by spending \
+    \resources equal to its loyalty. Otherwise, discard it."
+  action "Glimpse beyond" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    case (playerOf pk g).deck of
+      [] -> pure ()
+      (top : _) -> do
+        corrupt usage.self.key
+        push (RevealCards pk [top])
+        case asTactic top.def of
+          Just cd
+            | Spell `elem` cd.traits -> do
+                let loy = someCardLoyalty top.def
+                    Resources have = (playerOf pk g).resources
+                if have >= loy
+                  then do
+                    yes <- askYesNo pk
+                      "Play the revealed Spell by spending its loyalty in resources?"
+                    when yes do
+                      payResources pk loy
+                      push (PlayTacticFreeFromDeck pk top.key)
+                  else pure ()
+          -- Not a Spell/Epic Spell tactic: discard it.
+          _ -> millFromDeck pk 1
+
 ptarix :: CardDef Unit
 ptarix = unitCard "vessel-of-the-winds-073" "P'tarix" do
   race Chaos

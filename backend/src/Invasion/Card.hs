@@ -721,6 +721,7 @@ allCards =
       ("vessel-of-the-winds-070", UnitCardDef learnedMage),
       ("vessel-of-the-winds-074", UnitCardDef elkana),
       ("vessel-of-the-winds-075", SupportCardDef templeOfSpite),
+      ("vessel-of-the-winds-072", UnitCardDef xiratp),
       ("vessel-of-the-winds-073", UnitCardDef ptarix),
       ("vessel-of-the-winds-076", UnitCardDef magePriestOfItza),
       ("vessel-of-the-winds-077", UnitCardDef clanEshinMutant),
