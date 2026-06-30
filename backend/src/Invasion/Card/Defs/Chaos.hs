@@ -1351,6 +1351,36 @@ beastmanIncursion = questCard "the-accursed-dead-060" "Beastman Incursion" do
     whenJust (findQuest usage.self.key g) \me ->
       when (isJust me.questingUnit) $ destroyQuest usage.self.key
 
+-- Bloodquest: Vessel of the Winds ---------------------------------------
+
+ptarix :: CardDef Unit
+ptarix = unitCard "vessel-of-the-winds-073" "P'tarix" do
+  race Chaos
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Daemon
+  body
+    "Action: Corrupt this unit to reveal a Spell or Epic Spell tactic from \
+    \your hand and put it on top of your deck."
+  action "Whisper of fate" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    let spells =
+          [ c
+          | c <- (playerOf pk g).hand
+          , Just cd <- [asTactic c.def]
+          , Spell `elem` cd.traits
+          ]
+    unless (null spells) do
+      corrupt usage.self.key
+      chooseFromCards pk 1 1 spells
+        "Reveal a Spell tactic to put on top of your deck." \chosen ->
+          for_ chosen \c -> do
+            push (RevealCards pk [c])
+            putHandCardOnTopOfDeck pk c.key
+
 -- Bloodquest: Portent of Doom -------------------------------------------
 
 unstableFlux :: CardDef Quest

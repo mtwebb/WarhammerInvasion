@@ -2666,6 +2666,16 @@ instance Run Game where
                 , ("card", T.pack u.cardDef.title)
                 , ("zone", zoneParam newZone)
                 ]
+    PutHandCardOnTopOfDeck pk cardKey -> do
+      g <- get
+      let player = lookupPlayer pk g
+      case partition ((== cardKey) . (.key)) player.hand of
+        ([card], rest) -> do
+          modify (setPlayer pk (player {hand = rest, deck = card : player.deck}))
+          logIt LogSystem
+            "log.card.to_deck_top"
+            [("player", playerParam pk), ("card", T.pack (someCardTitle card.def))]
+        _ -> pure ()
     ReturnUnitToTopOfDeck ukey -> do
       g <- get
       whenJust (findUnit ukey g) \u -> do

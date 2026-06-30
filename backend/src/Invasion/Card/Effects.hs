@@ -236,6 +236,10 @@ returnUnitToHand ukey = push (ReturnUnitToHand ukey)
 returnUnitToTopOfDeck :: HasQueue Message m => UnitKey -> m ()
 returnUnitToTopOfDeck ukey = push (ReturnUnitToTopOfDeck ukey)
 
+-- | "Put a card from your hand on top of your deck." (P'tarix.)
+putHandCardOnTopOfDeck :: HasQueue Message m => PlayerKey -> UnitKey -> m ()
+putHandCardOnTopOfDeck pk cardKey = push (PutHandCardOnTopOfDeck pk cardKey)
+
 -- | Send the top N cards of the named player's deck to their
 -- discard pile (the canonical "mill" effect — Infiltrate!).
 millFromDeck :: HasQueue Message m => PlayerKey -> Int -> m ()

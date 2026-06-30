@@ -296,6 +296,9 @@ data Message where
     -- the SAME player. No-op if the destination equals the unit's
     -- current zone. Used by Pistoliers, Forced March, Temple of
     -- Shallya, Johannes Broheim.
+  PutHandCardOnTopOfDeck :: PlayerKey -> UnitKey -> Message
+    -- ^ Move a card from the player's hand onto the top of their deck
+    -- (P'tarix). No-op if the card isn't in hand.
   ReturnUnitToTopOfDeck :: UnitKey -> Message
     -- ^ Bounce an in-play unit onto the top of its owner's deck
     -- (Bladesinger). Like 'ReturnUnitToHand' but the card lands on the
