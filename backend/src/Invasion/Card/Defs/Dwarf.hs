@@ -1231,6 +1231,43 @@ beleaguredScout = unitCard "signs-in-the-stars-061" "Beleaguered Scout" do
   actionWith "Snipe" 0 [SacrificeDevelopment] \usage ->
     withTarget usage.user attackingUnit \k -> dealDamage k 1
 
+dureganThorgrimson :: CardDef Unit
+dureganThorgrimson = unitCard "the-fourth-waystone-081" "Duregan Thorgrimson" do
+  race Dwarf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 5
+  hero
+  body
+    "Limit one Hero per zone. Action: At the beginning of your turn, this unit \
+    \deals damage equal to its power to target unit. Then, the target unit \
+    \deals damage equal to its power to this unit."
+  onMyTurnBegin \_owner self ->
+    withTarget self.controller AnyUnit \k -> do
+      g <- getGame
+      whenJust (findUnit self.key g) \me ->
+        whenJust (findUnit k g) \tgt -> do
+          when (me.effectivePower > 0) $ dealDamage k me.effectivePower
+          when (tgt.effectivePower > 0) $ dealDamage self.key tgt.effectivePower
+
+reclaimingTheFallen :: CardDef Tactic
+reclaimingTheFallen = tacticCard "the-silent-forge-042" "Reclaiming the Fallen" do
+  race Dwarf
+  cost 5
+  loyalty 2
+  body
+    "Action: Choose one of your zones. Put into play all units in your discard \
+    \pile into that zone. Sacrifice those units at the end of the phase."
+  -- "end of the phase" is modelled as end of turn.
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk MyAnyZone \zone -> do
+      me <- playerOf pk <$> getGame
+      for_ [c | c <- me.discard, isJust (asUnit c.def)] \c -> do
+        putUnitIntoPlay pk FromDiscard c.key zone
+        queueEoTSacrifice c.key
+
 gyrocopter :: CardDef Support
 gyrocopter = supportCard "signs-in-the-stars-063" "Gyrocopter" do
   race Dwarf

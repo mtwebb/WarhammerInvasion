@@ -1329,6 +1329,37 @@ smashEm = tacticCard "fiery-dawn-106" "Smash 'Em!" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+gobboLoot :: CardDef Tactic
+gobboLoot = tacticCard "the-silent-forge-051" "Gobbo Loot" do
+  race Orc
+  cost 2
+  loyalty 2
+  body
+    "Action: Sacrifice a unit to destroy up to X target developments in one \
+    \zone. X is the printed cost of the sacrificed unit."
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    let mine = [u.key | u <- g.units, u.controller == pk]
+        zoneDevs owner z gg =
+          let p = playerOf owner gg
+              Developments d = case z of
+                KingdomZone -> p.capital.kingdom.developments
+                QuestZone -> p.capital.quest.developments
+                BattlefieldZone -> p.capital.battlefield.developments
+           in d
+    forcePickUnit pk mine "Sacrifice a unit." \sk -> do
+      g2 <- getGame
+      let x = maybe 0 (\u -> someCardCost (UnitCardDef u.cardDef)) (findUnit sk g2)
+      destroyUnit sk
+      when (x > 0) $
+        withTarget pk AnyDevelopmentZone \(o, zk) -> do
+          g3 <- getGame
+          let cap = min x (zoneDevs o zk g3)
+          when (cap > 0) do
+            n <- chooseAmount pk 1 cap "Destroy how many developments?"
+            replicateM_ n (destroyDevelopment o zk)
+
 greatCaveSquig :: CardDef Unit
 greatCaveSquig = unitCard "the-burning-of-derricksburg-009" "Great Cave Squig" do
   race Orc
