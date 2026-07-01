@@ -366,6 +366,7 @@ allCards =
       ("bleeding-sun-109", SupportCardDef dragonArmour),
       ("bleeding-sun-110", UnitCardDef madShaman),
       ("bleeding-sun-111", UnitCardDef giantSpider),
+      ("bleeding-sun-112", SupportCardDef oneOrcsScrap),
       ("bleeding-sun-113", TacticCardDef smashDerBeards),
       ("bleeding-sun-114", UnitCardDef beastOfRot),
       ("bleeding-sun-115", SupportCardDef necroticSpasms),
@@ -425,12 +426,14 @@ allCards =
       -- The Enemy cycle — Redemption of a Mage (061-080)
       ("redemption-of-a-mage-061", UnitCardDef grombrindalsElite),
       ("redemption-of-a-mage-065", SupportCardDef higherGround),
+      ("redemption-of-a-mage-066", TacticCardDef tacticalMisdirection),
       ("redemption-of-a-mage-068", UnitCardDef dreamerOfDragons),
       ("redemption-of-a-mage-069", TacticCardDef courageOfAenarion),
       ("redemption-of-a-mage-070", UnitCardDef githitFroatcutta),
       ("redemption-of-a-mage-071", SupportCardDef tooArdToDie),
       ("redemption-of-a-mage-072", UnitCardDef heraldOfChange),
       ("redemption-of-a-mage-073", UnitCardDef disgracedChampion),
+      ("redemption-of-a-mage-076", UnitCardDef sorceressOfGhrond),
       ("redemption-of-a-mage-078", SupportCardDef ancientAlliance),
       ("redemption-of-a-mage-079", SupportCardDef evilAlliance),
       -- March of the Damned (deluxe expansion)

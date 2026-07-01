@@ -1329,6 +1329,17 @@ smashEm = tacticCard "fiery-dawn-106" "Smash 'Em!" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+oneOrcsScrap :: CardDef Support
+oneOrcsScrap = supportCard "bleeding-sun-112" "One Orc's Scrap..." do
+  race Orc
+  cost 2
+  loyalty 1
+  power 1
+  trait Building
+  body "Kingdom. Action: Sacrifice a development to draw a card."
+  kingdom $ actionWith "Scavenge" 0 [SacrificeDevelopment] \usage ->
+    drawCard usage.user
+
 madShaman :: CardDef Unit
 madShaman = unitCard "bleeding-sun-110" "Mad Shaman" do
   race Orc

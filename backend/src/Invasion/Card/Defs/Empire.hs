@@ -1492,6 +1492,19 @@ duelistTraining = supportCard "fiery-dawn-109" "Duelist Training" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+tacticalMisdirection :: CardDef Tactic
+tacticalMisdirection = tacticCard "redemption-of-a-mage-066" "Tactical Misdirection" do
+  race Empire
+  cost 2
+  loyalty 2
+  body "Action: Choose a zone. Units in that zone may defend any zone this turn."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk MyAnyZone \zk -> do
+      g <- getGame
+      for_ [u | u <- g.units, u.controller == pk, u.zone == zk] \u ->
+        until EndOfTurn $ PendingBuff u.key CanDefendAnyZone
+
 brightWizardAcolyte :: CardDef Unit
 brightWizardAcolyte = unitCard "the-fourth-waystone-083" "Bright Wizard Acolyte" do
   race Empire

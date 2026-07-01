@@ -1317,6 +1317,25 @@ anointedCauldron = supportCard "the-twin-tailed-comet-057" "Anointed Cauldron" d
 
 -- The Enemy cycle -------------------------------------------------------
 
+sorceressOfGhrond :: CardDef Unit
+sorceressOfGhrond = unitCard "redemption-of-a-mage-076" "Sorceress of Ghrond" do
+  race DarkElf
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Sorceror
+  body
+    "Action: When this unit enters play, choose a Hex card in your discard pile \
+    \and return it to your hand."
+  onEnterPlay \_owner self -> do
+    let pk = self.controller
+    me <- playerOf pk <$> getGame
+    let hexes = [c | c <- me.discard, Hex `elem` someCardTraits c.def]
+    chooseFromCards pk 0 1 hexes
+      "Choose a Hex card to return to your hand." \chosen ->
+        for_ chosen \c -> returnFromDiscardToHand pk [c.key]
+
 druchiiNoble :: CardDef Unit
 druchiiNoble = unitCard "the-burning-of-derricksburg-016" "Druchii Noble" do
   race DarkElf
