@@ -1250,6 +1250,19 @@ garrisoned = supportCard "cataclysm-022" "Garrisoned" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+luthorHuss :: CardDef Unit
+luthorHuss = unitCard "signs-in-the-stars-067" "Luthor Huss" do
+  race Empire
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 3
+  hero
+  traits [Warrior, Priest]
+  body "Limit one Hero per zone. Each unit in this zone gains Counterstrike 1."
+  counterstrikeAura \_g self u ->
+    if u.controller == self.controller && u.zone == self.zone then 1 else 0
+
 waitingInAmbush :: CardDef Tactic
 waitingInAmbush = tacticCard "signs-in-the-stars-069" "Waiting In Ambush" do
   race Empire

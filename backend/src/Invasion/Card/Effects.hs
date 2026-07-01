@@ -957,6 +957,19 @@ until :: HasQueue Message m => ModifierScope -> PendingBuff -> m ()
 until scope (PendingBuff target details) =
   push (InstallModifier (UnitRef target) (Modifier details scope))
 
+-- | "This unit becomes a development until the end of the turn (it no
+-- longer counts as a unit)." (Tree Kin, Thornflesh Dryad, Treeman
+-- Ancient.) Disables attack/defend, zeroes power, makes it untargetable,
+-- and marks it 'ActingAsDevelopment' so it adds to its zone's burn
+-- threshold as a development.
+becomeDevelopmentUntilEndOfTurn :: HasQueue Message m => UnitKey -> m ()
+becomeDevelopmentUntilEndOfTurn k = do
+  until EndOfTurn $ disableAttack k
+  until EndOfTurn $ disableDefend k
+  until EndOfTurn $ losesAllPower k
+  until EndOfTurn $ untargetable False k
+  until EndOfTurn $ PendingBuff k ActingAsDevelopment
+
 -- | Look up an in-play unit by its 'UnitKey'. Mirror of the Engine-side
 -- helper so card receive bodies can resolve their attachment hosts
 -- without importing 'Invasion.Engine'.

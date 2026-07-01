@@ -362,6 +362,10 @@ data UnitExtras = UnitExtras
     -- both are in play (Mountain Sentry: +2 HP to Rangers in its
     -- zone). The unit-side mirror of 'supportAuraHP'; folded into the
     -- target's 'effectiveMaxHP' alongside 'unitAuraToughness'.
+  , unitAuraCounterstrike :: Game -> InPlay Unit -> InPlay Unit -> Int
+    -- ^ Counterstrike this in-play unit grants another unit while both
+    -- are in play (Luthor Huss: +1 to units in his zone). Folded into
+    -- the target's 'totalCounterstrike'.
   , preDamageRedirect :: Game -> InPlay Unit -> Int -> Maybe PreDamageRedirect
     -- ^ Consulted by the engine's 'DealDamageToUnit' handler BEFORE
     -- the damage lands. Args: game, the unit about to take damage,
@@ -551,6 +555,10 @@ data SupportExtras = SupportExtras
     -- ^ "While attached unit is attacking, double all damage dealt to
     -- the defending opponent's capital." (Basha's Bloodaxe.) Args:
     -- game, this support, the player whose capital is being damaged.
+  , grantsHostAttackAnyZone :: Bool
+    -- ^ "Attached unit may attack while in any of your zones."
+    -- (Gyrocopter.) Consulted by 'eligibleAttacker' via the attacker's
+    -- attachments — a static grant that clears when the attachment leaves.
   , hostCannotAttack :: Bool
     -- ^ "Attached unit cannot attack." (Word of Pain.) Consulted by
     -- 'eligibleAttacker' by scanning the would-be attacker's
@@ -722,6 +730,7 @@ instance HasDefaultExtras Unit where
     , unitCostAdjustment = \_ _ _ _ -> 0
     , unitAuraToughness = \_ _ _ -> 0
     , unitAuraHp = \_ _ _ -> 0
+    , unitAuraCounterstrike = \_ _ _ -> 0
     , preDamageRedirect = \_ _ _ -> Nothing
     , selfToughnessBonus = \_ _ -> 0
     , selfCounterstrikeBonus = \_ _ -> 0
@@ -759,6 +768,7 @@ instance HasDefaultExtras Support where
     , searchDepthBonus = \_ _ _ -> 0
     , tacticDamageBonus = \_ _ _ -> 0
     , capitalDamageDoubler = \_ _ _ -> False
+    , grantsHostAttackAnyZone = False
     , hostCannotAttack = False
     , blanksHost = False
     , hostDestroyRansom = Nothing

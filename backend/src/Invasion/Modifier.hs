@@ -78,6 +78,10 @@ data ModifierDetails
     -- ^ "This unit can defend any of its controller's zones." (Shield of
     -- the Gods.) Expands the defender candidate pool past the attacked
     -- zone, like the quester-defends-any-zone quest extra.
+  | CanAttackAnyZone
+    -- ^ "This unit may attack from any of its controller's zones."
+    -- (Grudgeborn Fury.) Expands the attacker pool past the unit's
+    -- printed 'attackEligibleZones'.
   | SavageDefenseBonus
     -- ^ "While defending, this unit deals +X combat damage where X is
     -- its Savage value." (Shield of the Gods.) Read by 'combatDamageOf'
@@ -97,6 +101,12 @@ data ModifierDetails
     -- ^ "This unit gains [keyword] until the scope expires."
     -- (Swift-moving Storm grants Scout.) Folded into 'unitKeywords'
     -- via the unit's cached 'grantedKeywords' during recompute.
+  | ActingAsDevelopment
+    -- ^ "This unit becomes a development (no longer counts as a unit)"
+    -- until the scope expires (Tree Kin, Thornflesh Dryad, Treeman
+    -- Ancient). Pairs with disable-attack/defend, lose-all-power, and
+    -- untargetable modifiers; this marker adds it to its zone's burn
+    -- threshold as a development.
   deriving stock (Show, Eq)
 
 -- TODO: add an 'EndOfPhase' scope. Many cards read "until the end of

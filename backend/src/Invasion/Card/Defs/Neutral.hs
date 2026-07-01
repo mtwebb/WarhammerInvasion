@@ -1125,6 +1125,72 @@ aPromiseOfWar = tacticCard "the-imperial-throne-118" "A Promise of War" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+theWildHunt :: CardDef Tactic
+theWildHunt = tacticCard "fiery-dawn-120" "The Wild Hunt" do
+  cost 4
+  loyalty 0
+  trait WoodElf
+  orderOnly
+  body
+    "Order only. Action: Choose a target unit. That unit's controller \
+    \sacrifices it. Then, that player may put into play facedown up to X \
+    \developments from the top of his deck. X is the sacrificed unit's power."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk AnyUnit \k -> do
+      g <- getGame
+      whenJust (findUnit k g) \u -> do
+        let owner = u.controller
+            x = u.effectivePower
+        destroyUnit k
+        when (x > 0) $
+          withTarget owner MyDevZone \zone -> do
+            n <- chooseAmount owner 0 x "Put how many developments from the top of your deck?"
+            replicateM_ n (addDevelopment owner zone)
+
+treeKin :: CardDef Unit
+treeKin = unitCard "omens-of-ruin-018" "Tree Kin" do
+  cost 3
+  loyalty 0
+  power 1
+  hitPoints 2
+  traits [WoodElf, ForestSpirit]
+  orderOnly
+  body
+    "Order only. Action: Spend 2 resources to have this unit become a \
+    \development until the end of the turn. It no longer counts as a unit."
+  action "Take root" 2 \usage -> becomeDevelopmentUntilEndOfTurn usage.self.key
+
+thornfleshDryad :: CardDef Unit
+thornfleshDryad = unitCard "the-chaos-moon-038" "Thornflesh Dryad" do
+  cost 4
+  loyalty 0
+  power 1
+  hitPoints 4
+  traits [WoodElf, ForestSpirit]
+  orderOnly
+  counterstrike 2
+  body
+    "Order only. Counterstrike 2. Action: Spend 2 resources to have this unit \
+    \become a development until the end of the turn. It no longer counts as a \
+    \unit."
+  action "Take root" 2 \usage -> becomeDevelopmentUntilEndOfTurn usage.self.key
+
+treemanAncient :: CardDef Unit
+treemanAncient = unitCard "the-twin-tailed-comet-058" "Treeman Ancient" do
+  cost 5
+  loyalty 0
+  power 2
+  hitPoints 4
+  traits [WoodElf, ForestSpirit]
+  orderOnly
+  toughness 1
+  body
+    "Order only. Toughness 1. Action: Spend 2 resources to have this unit \
+    \become a development until the end of the turn. It no longer counts as a \
+    \unit."
+  action "Take root" 2 \usage -> becomeDevelopmentUntilEndOfTurn usage.self.key
+
 asraiLongbow :: CardDef Support
 asraiLongbow = supportCard "the-eclipse-of-hope-100" "Asrai Longbow" do
   cost 2

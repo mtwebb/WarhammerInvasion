@@ -3769,7 +3769,17 @@ landZoneDamage targetPlayer zoneKind amount =
             | s <- allInPlaySupports g
             , s.controller == targetPlayer
             ]
-        zoneHp = zoneHpBase + extraDev
+        -- Units that have temporarily become developments (Tree Kin,
+        -- Thornflesh Dryad, Treeman Ancient) also count here.
+        actingDevs =
+          length
+            [ u
+            | u <- g.units
+            , u.controller == targetPlayer
+            , u.zone == zoneKind
+            , hasModifier g.modifiers u.key ActingAsDevelopment
+            ]
+        zoneHp = zoneHpBase + extraDev + actingDevs
         total = existing + amount
         (newDmg, justBurned) =
           if total >= zoneHp && not zoneL.burned
@@ -4220,7 +4230,9 @@ eligibleAttacker g defender zone declaredKeys ukey = case findUnit ukey g of
     -- it controls is co-declared in this same attack.
     (u.zone `elem` (unitExtrasOf u).attackEligibleZones
        || rovingAttacker u ukey
-       || bodyguardActive u)
+       || bodyguardActive u
+       || hasModifier g.modifiers ukey CanAttackAnyZone
+       || any (.cardDef.extras.grantsHostAttackAnyZone) u.attachments)
       && not u.corrupted
       && not (hasModifier g.modifiers ukey CannotAttack)
       && not (any (.cardDef.extras.hostCannotAttack) u.attachments)
@@ -5648,6 +5660,7 @@ totalCounterstrike g u =
     + (unitExtrasOf u).selfCounterstrikeBonus g u
     + sum [s.cardDef.extras.attachmentCounterstrikeBonus | s <- u.attachments]
     + sum [n | Modifier (GainCounterstrike n) _ <- mods]
+    + sum [(unitExtrasOf v).unitAuraCounterstrike g v u | v <- g.units]
   where
     mods = fromMaybe [] (Map.lookup (UnitRef u.key) g.modifiers)
 

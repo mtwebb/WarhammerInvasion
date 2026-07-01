@@ -857,6 +857,26 @@ arcanePurifier = unitCard "cataclysm-028" "Arcane Purifier" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+barracksOfChrace :: CardDef Support
+barracksOfChrace = supportCard "fiery-dawn-111" "Barracks of Chrace" do
+  race HighElf
+  cost 2
+  loyalty 1
+  power 1
+  trait Building
+  body
+    "Action: When you play a development from your hand, look at the top card of \
+    \your deck. You may put it on the top or bottom of your deck."
+  onYouPlayDevelopment \_owner self -> do
+    let pk = self.controller
+    searchTopOfDeck pk 1 \result ->
+      case result.cards of
+        (c : _) -> do
+          push (RevealCards pk [c])
+          bottom <- askYesNo pk "Put the top card on the bottom of your deck?"
+          when bottom $ moveTopToBottomOfDeck pk 1
+        _ -> pure ()
+
 dragonsLair :: CardDef Support
 dragonsLair = supportCard "the-chaos-moon-030" "Dragon's Lair" do
   race HighElf

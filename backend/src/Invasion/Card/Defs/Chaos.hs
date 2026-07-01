@@ -1673,6 +1673,28 @@ doomBearer = unitCard "the-inevitable-city-005" "Doom Bearer" do
 
 -- The Morrslieb cycle (additional) -------------------------------------
 
+keeperOfSecrets :: CardDef Unit
+keeperOfSecrets = unitCard "fiery-dawn-113" "Keeper of Secrets" do
+  race Chaos
+  cost 6
+  loyalty 3
+  power 3
+  hitPoints 4
+  trait Daemon
+  body
+    "Action: At the beginning of your turn, corrupt target unit. Action: Spend \
+    \2 resources to have target corrupted unit an opponent controls deal damage \
+    \equal to its power to another target unit."
+  onMyTurnBegin \_owner self ->
+    withTarget self.controller AnyUnit \k -> corrupt k
+  action "Puppet strings" 2 \usage -> do
+    let pk = usage.user
+    withTarget pk (UnitMatching \p _g u -> u.controller /= p && u.corrupted) \src -> do
+      g <- getGame
+      whenJust (findUnit src g) \srcU ->
+        when (srcU.effectivePower > 0) $
+          withTarget pk AnyUnit \tgt -> dealDamage tgt srcU.effectivePower
+
 emptyingTheWastes :: CardDef Quest
 emptyingTheWastes = questCard "the-twin-tailed-comet-054" "Emptying the Wastes" do
   race Chaos
