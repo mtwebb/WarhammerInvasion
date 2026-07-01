@@ -1125,6 +1125,32 @@ aPromiseOfWar = tacticCard "the-imperial-throne-118" "A Promise of War" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+pureWarpstone :: CardDef Support
+pureWarpstone = supportCard "fiery-dawn-119" "Pure Warpstone" do
+  cost 4
+  loyalty 0
+  power 2
+  trait Warpstone
+  body "Corrupted units in this zone gain {power}."
+  supportAura \_g s u -> if u.zone == s.zone && u.corrupted then 1 else 0
+
+forestDragon :: CardDef Unit
+forestDragon = unitCard "fiery-dawn-118" "Forest Dragon" do
+  cost 6
+  loyalty 0
+  power 3
+  hitPoints 4
+  traits [WoodElf, Dragon]
+  orderOnly
+  body
+    "Order only. Action: Spend 3 resources to double this unit's power until \
+    \the end of the turn."
+  action "Ancient fury" 3 \usage -> do
+    g <- getGame
+    whenJust (findUnit usage.self.key g) \u ->
+      when (u.effectivePower > 0) $
+        until EndOfTurn $ buffPower usage.self.key u.effectivePower
+
 nimbleSpearman :: CardDef Unit
 nimbleSpearman = unitCard "omens-of-ruin-019" "Nimble Spearman" do
   cost 2

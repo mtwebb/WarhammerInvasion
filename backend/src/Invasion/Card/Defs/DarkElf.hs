@@ -1032,6 +1032,26 @@ crimsonBrides = unitCard "cataclysm-042" "Crimson Brides" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+darkBlessing :: CardDef Tactic
+darkBlessing = tacticCard "fiery-dawn-116" "Dark Blessing" do
+  race DarkElf
+  cost 2
+  loyalty 2
+  trait Spell
+  body
+    "Spell. Action: Discard the top card of your deck to have target unit gain \
+    \{power} equal to the printed cost of the discarded card."
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    case (playerOf pk g).deck of
+      [] -> pure ()
+      (top : _) -> do
+        millFromDeck pk 1
+        let x = someCardCost top.def
+        withTarget pk AnyUnit \k ->
+          when (x > 0) $ until EndOfTurn $ buffPower k x
+
 frenziedWitchElf :: CardDef Unit
 frenziedWitchElf = unitCard "the-chaos-moon-035" "Frenzied Witch Elf" do
   race DarkElf

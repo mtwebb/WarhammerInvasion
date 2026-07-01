@@ -577,6 +577,9 @@ allCards =
       ("fiery-dawn-109", SupportCardDef duelistTraining),
       ("fiery-dawn-112", TacticCardDef furyOfAenarion),
       ("fiery-dawn-114", TacticCardDef callTheBrayherd),
+      ("fiery-dawn-116", TacticCardDef darkBlessing),
+      ("fiery-dawn-118", UnitCardDef forestDragon),
+      ("fiery-dawn-119", SupportCardDef pureWarpstone),
       -- The Capital Cycle — The Inevitable City (001-020)
       ("the-inevitable-city-002", UnitCardDef squigTrackers),
       ("the-inevitable-city-003", UnitCardDef vanKlumpfsBuccaneers),
