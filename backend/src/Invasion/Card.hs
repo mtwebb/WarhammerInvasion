@@ -712,6 +712,7 @@ allCards =
       ("the-accursed-dead-046", TacticCardDef purgedByFlame),
       ("the-accursed-dead-049", UnitCardDef roamingShaman),
       ("the-accursed-dead-055", UnitCardDef bladesinger),
+      ("the-accursed-dead-056", SupportCardDef drakenhofCastle),
       ("the-accursed-dead-058", QuestCardDef rebuildTheHold),
       ("the-accursed-dead-059", QuestCardDef hiddenOperative),
       ("the-accursed-dead-060", QuestCardDef beastmanIncursion),

@@ -2375,6 +2375,37 @@ borderPatrol = questCard "portent-of-doom-100" "Border Patrol" do
           "Turn a development in the attacked zone faceup." \chosen ->
             for_ chosen \c -> push (FlipDevelopmentDefender pk zone c.key WoodElf)
 
+drakenhofCastle :: CardDef Support
+drakenhofCastle = supportCard "the-accursed-dead-056" "Drakenhof Castle" do
+  cost 3
+  loyalty 0
+  power 2
+  traits [Undead, Location]
+  destructionOnly
+  body
+    "Destruction only. Action: Move a non-Undead unit in any player's discard \
+    \pile to the bottom of his deck to cancel the next 2 damage assigned to \
+    \target Undead unit this turn."
+  action "Ancient wards" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    let hasUndeadTarget = any (\u -> Undead `elem` u.cardDef.traits) g.units
+        discardUnits owner =
+          [ (owner, c)
+          | c <- (playerOf owner g).discard
+          , Just cd <- [asUnit c.def]
+          , Undead `notElem` cd.traits
+          ]
+        candidates = discardUnits pk <> discardUnits pk.next
+    when (hasUndeadTarget && not (null candidates)) $
+      chooseFromCards pk 1 1 (map snd candidates)
+        "Move a non-Undead unit from a discard pile to the bottom of its deck." \chosen ->
+          for_ chosen \c -> do
+            let owner = maybe pk fst (find ((== c.key) . (.key) . snd) candidates)
+            moveDiscardCardToDeckBottom owner c.key
+            withTarget pk (UnitMatching \_p _g u -> Undead `elem` u.cardDef.traits) \k ->
+              until EndOfTurn $ damageShield k 2
+
 shieldOfAeons :: CardDef Support
 shieldOfAeons = supportCard "shield-of-the-gods-101" "Shield of Aeons" do
   cost 4

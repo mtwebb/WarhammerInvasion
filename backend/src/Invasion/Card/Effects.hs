@@ -756,6 +756,11 @@ revealTopOfDeck pk n body =
 moveTopToBottomOfDeck :: HasQueue Message m => PlayerKey -> Int -> m ()
 moveTopToBottomOfDeck pk n = push (MoveTopToBottomOfDeck pk n)
 
+-- | "Move a card from a player's discard pile to the bottom of their
+-- deck." (Drakenhof Castle.) @owner@ is the discard/deck's owner.
+moveDiscardCardToDeckBottom :: HasQueue Message m => PlayerKey -> UnitKey -> m ()
+moveDiscardCardToDeckBottom owner cardKey = push (MoveDiscardCardToDeckBottom owner cardKey)
+
 -- | "Return these cards to the top (and these to the bottom) of your
 -- deck in this order." Drives the scry "in any order" effects after the
 -- player has chosen an order (Scroll of Asur, Advanced Engineering).

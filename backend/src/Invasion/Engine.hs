@@ -2728,6 +2728,16 @@ instance Run Game where
                 , ("card", T.pack u.cardDef.title)
                 , ("zone", zoneParam newZone)
                 ]
+    MoveDiscardCardToDeckBottom owner cardKey -> do
+      g <- get
+      let player = lookupPlayer owner g
+      case partition ((== cardKey) . (.key)) player.discard of
+        ([card], rest) -> do
+          modify (setPlayer owner (player {discard = rest, deck = player.deck <> [card]}))
+          logIt LogSystem
+            "log.card.to_deck_bottom"
+            [("player", playerParam owner), ("card", T.pack (someCardTitle card.def))]
+        _ -> pure ()
     PutHandCardOnTopOfDeck pk cardKey -> do
       g <- get
       let player = lookupPlayer pk g

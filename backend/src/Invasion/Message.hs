@@ -67,6 +67,10 @@ data Message where
     -- ^ Move the top N cards of the player's deck to the bottom, order
     -- preserved (Comet of Casandora's "put the revealed cards on the
     -- bottom of your deck").
+  MoveDiscardCardToDeckBottom :: PlayerKey -> UnitKey -> Message
+    -- ^ Move a specific card from the named player's discard pile to the
+    -- bottom of that player's deck (Drakenhof Castle). No-op if the card
+    -- isn't in that discard.
   ArrangeDeckCards :: PlayerKey -> [UnitKey] -> [UnitKey] -> Message
     -- ^ Reorder named deck cards after a scry: the keys in the first
     -- list are pulled to the TOP of the deck in the given order, the
