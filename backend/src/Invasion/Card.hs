@@ -726,6 +726,7 @@ allCards =
       ("vessel-of-the-winds-073", UnitCardDef ptarix),
       ("vessel-of-the-winds-076", UnitCardDef magePriestOfItza),
       ("vessel-of-the-winds-077", UnitCardDef clanEshinMutant),
+      ("vessel-of-the-winds-063", UnitCardDef bromLongbellow),
       ("vessel-of-the-winds-064", SupportCardDef aleHall),
       ("vessel-of-the-winds-065", TacticCardDef honouringTheAncestors),
       ("vessel-of-the-winds-068", UnitCardDef masterEngineer),

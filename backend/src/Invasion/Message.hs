@@ -269,6 +269,11 @@ data Message where
   DealDamageToZoneUncancellable :: PlayerKey -> ZoneKind -> Int -> Message
     -- ^ Like 'DealDamageToZone' but bypasses capital shields, redirects,
     -- and cancel-1 supports (Pigeon Bombs). A burned zone still wastes it.
+  CapitalDealtCombatDamage :: PlayerKey -> ZoneKind -> Message
+    -- ^ Narration: the named player's capital section was dealt combat
+    -- damage (the same event the Grudge keyword keys off). Broadcast so
+    -- in-play cards can react (Brom Longbellow). Not otherwise handled
+    -- by the engine.
   -- Free unit summons (Iron Throneroom payoff, Reckless Attack, …).
   PutUnitIntoPlay :: PlayerKey -> UnitKey -> ZoneKind -> Message
     -- ^ Like 'PlayUnit' but skips the cost check / payment and pulls

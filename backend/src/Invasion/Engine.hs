@@ -1726,7 +1726,8 @@ instance Run Game where
           landZoneDamage targetPlayer zoneKind amount
           -- Grudge: when this capital section is dealt combat damage, the
           -- owner may put any Grudge support from hand into play.
-          when (amount > 0 && isJust g0.combat) $
+          when (amount > 0 && isJust g0.combat) $ do
+            send (CapitalDealtCombatDamage targetPlayer zoneKind)
             offerGrudgeResponses targetPlayer zoneKind
     DealDamageToZoneUncancellable targetPlayer zoneKind raw -> do
       -- Like 'DealDamageToZone' but bypasses capital shields, redirects,

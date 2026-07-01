@@ -600,6 +600,19 @@ onMyAnyZoneAttacked handler = onReceive $ Receive \msg owner self -> case msg of
     | attacker /= self.controller -> handler owner self zone
   _ -> pure ()
 
+-- | "When your capital is dealt combat damage." Fires for an in-play
+-- card whose controller's capital section just took combat damage — the
+-- same event the Grudge keyword keys off (Brom Longbellow).
+onMyCapitalDealtCombatDamage
+  :: forall k
+   . HasField "controller" (InPlay k) PlayerKey
+  => (forall m. TriggerM m => Player -> InPlay k -> m ())
+  -> CardBuilder k ()
+onMyCapitalDealtCombatDamage handler = onReceive $ Receive \msg owner self -> case msg of
+  CapitalDealtCombatDamage pk _zone
+    | pk == self.controller -> handler owner self
+  _ -> pure ()
+
 -- | "When the given action window opens." Used by cards (Vicious
 -- Marauder) that force their controller's action choice at a specific
 -- phase boundary.

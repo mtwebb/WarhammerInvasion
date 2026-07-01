@@ -866,6 +866,28 @@ rebuildTheHold = questCard "the-accursed-dead-058" "Rebuild the Hold" do
 
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
+bromLongbellow :: CardDef Unit
+bromLongbellow = unitCard "vessel-of-the-winds-063" "Brom Longbellow" do
+  race Dwarf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  hero
+  trait Slayer
+  body
+    "Limit one Hero per zone. Action: When your capital is dealt combat \
+    \damage, deal X damage to target attacking unit. X is the number of Grudge \
+    \support cards you control."
+  onMyCapitalDealtCombatDamage \_owner self -> do
+    g <- getGame
+    let pk = self.controller
+        grudges =
+          length
+            [s | s <- allInPlaySupports g, s.controller == pk, Grudge `elem` s.cardDef.keywords]
+    when (grudges > 0) $
+      withTarget pk attackingUnit \k -> dealDamage k grudges
+
 aleHall :: CardDef Support
 aleHall = supportCard "vessel-of-the-winds-064" "Ale Hall" do
   race Dwarf
