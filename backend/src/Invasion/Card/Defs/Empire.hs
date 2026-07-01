@@ -1250,6 +1250,34 @@ garrisoned = supportCard "cataclysm-022" "Garrisoned" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+celestialWizard :: CardDef Unit
+celestialWizard = unitCard "the-twin-tailed-comet-047" "Celestial Wizard" do
+  race Empire
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Mage
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this unit. Then, you may remove 2 resource tokens from this unit to deal 1 \
+    \damage to each unit in any corresponding zone."
+  onYouPlayDevelopment \_owner self -> do
+    push (AdjustUnitTokens self.key 1)
+    g <- getGame
+    -- 'AdjustUnitTokens' is queued, so 'u.tokens' is still pre-increment;
+    -- >= 1 here means >= 2 after the token lands.
+    whenJust (findUnit self.key g) \u ->
+      when (u.tokens >= 1) do
+        let pk = self.controller
+        yes <- askYesNo pk
+          "Remove 2 resource tokens to deal 1 damage to each unit in a corresponding zone?"
+        when yes do
+          push (AdjustUnitTokens self.key (-2))
+          withTarget pk MyAnyZone \zk -> do
+            g2 <- getGame
+            for_ [x | x <- g2.units, x.zone == zk] \x -> dealDamage x.key 1
+
 visitTheHauntedCity :: CardDef Quest
 visitTheHauntedCity = questCard "omens-of-ruin-008" "Visit the Haunted City" do
   race Empire

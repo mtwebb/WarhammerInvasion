@@ -857,6 +857,37 @@ arcanePurifier = unitCard "cataclysm-028" "Arcane Purifier" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+followThePortent :: CardDef Quest
+followThePortent = questCard "the-chaos-moon-031" "Follow the Portent" do
+  race HighElf
+  cost 0
+  loyalty 2
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this card if a unit is questing here. Action: Discard a resource token on \
+    \this card to look at the top 3 cards of your deck and rearrange them in any \
+    \order."
+  accrueTokenOnDevelopmentWhileQuesting
+  spendTokens "Read the omens" 1 \u -> do
+    let pk = u.user
+    searchTopOfDeck pk 3 \result ->
+      unless (null result.cards) $
+        chooseOrdering pk result.cards
+          "Order these cards on top of your deck (first pick = top)." \ordered ->
+            arrangeDeckCards pk ordered []
+
+starwoodStaff :: CardDef Support
+starwoodStaff = supportCard "the-eclipse-of-hope-090" "Starwood Staff" do
+  race HighElf
+  cost 0
+  loyalty 2
+  trait Attachment
+  body
+    "Attach to a target [High Elf] unit you control. Action: When you play a \
+    \Spell card, attached unit gains {power} until the end of the turn."
+  onMySpellPlayed \_owner self ->
+    whenJust self.attachedTo \h -> until EndOfTurn $ buffPower h 1
+
 valorousMage :: CardDef Unit
 valorousMage = unitCard "the-eclipse-of-hope-089" "Valorous Mage" do
   race HighElf
