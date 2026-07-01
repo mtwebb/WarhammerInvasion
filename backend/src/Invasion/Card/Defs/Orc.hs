@@ -1127,6 +1127,28 @@ zoneDamaged g pk zk =
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+skarsnikAndGobbla :: CardDef Unit
+skarsnikAndGobbla = unitCard "the-twin-tailed-comet-044" "Skarsnik and Gobbla" do
+  race Orc
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  hero
+  trait Goblin
+  body
+    "Limit one Hero per zone. Action: Remove 3 damage from this unit to deal 1 \
+    \damage to each section of an opponent's capital. Then, draw a card."
+  action "Gobbla's dinner" 0 \usage -> do
+    g <- getGame
+    whenJust (findUnit usage.self.key g) \u -> do
+      let Damage d = u.damage
+      when (d >= 3) do
+        healUnit usage.self.key 3
+        let opp = usage.user.next
+        for_ [KingdomZone, QuestZone, BattlefieldZone] \z -> dealZoneDamage opp z 1
+        drawCard usage.user
+
 lootedUmieTown :: CardDef Support
 lootedUmieTown = supportCard "the-chaos-moon-025" "Looted Umie Town" do
   race Orc

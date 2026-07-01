@@ -857,6 +857,38 @@ arcanePurifier = unitCard "cataclysm-028" "Arcane Purifier" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+dragonsLair :: CardDef Support
+dragonsLair = supportCard "the-chaos-moon-030" "Dragon's Lair" do
+  race HighElf
+  cost 4
+  loyalty 2
+  power 2
+  trait Building
+  body
+    "Action: At the beginning of your turn, put a resource token on this card. \
+    \Then, you may remove 2 resource tokens on this card to search the top five \
+    \cards of your deck for a Dragon unit and put it into play. Then, shuffle \
+    \your deck."
+  onMyTurnBegin \_owner self -> do
+    adjustSupportTokens self.key 1
+    g <- getGame
+    -- 'adjustSupportTokens' is queued: 'me.tokens' is pre-increment, so
+    -- >= 1 here means >= 2 after the token lands.
+    whenJust (findSupport self.key g) \me ->
+      when (me.tokens >= 1) do
+        let pk = self.controller
+        yes <- askYesNo pk
+          "Remove 2 resource tokens to summon a Dragon from the top 5 of your deck?"
+        when yes do
+          adjustSupportTokens self.key (-2)
+          searchTopOfDeck pk 5 \result -> do
+            let dragons =
+                  [c | c <- result.cards, Just cd <- [asUnit c.def], Dragon `elem` cd.traits]
+            chooseFromCards pk 0 1 dragons
+              "Choose a Dragon unit to put into play." \chosen ->
+                for_ chosen \c -> withTarget pk MyAnyZone \z -> putUnitIntoPlay pk FromDeck c.key z
+            shuffleDeck pk
+
 perfectingTheSpell :: CardDef Tactic
 perfectingTheSpell = tacticCard "the-eclipse-of-hope-091" "Perfecting the Spell" do
   race HighElf

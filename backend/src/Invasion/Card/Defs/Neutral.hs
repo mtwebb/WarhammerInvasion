@@ -1125,6 +1125,26 @@ aPromiseOfWar = tacticCard "the-imperial-throne-118" "A Promise of War" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+forgottenCairn :: CardDef Support
+forgottenCairn = supportCard "the-twin-tailed-comet-059" "Forgotten Cairn" do
+  cost 2
+  loyalty 0
+  power 1
+  traits [WoodElf, Location]
+  orderOnly
+  body
+    "Order only. Action: When a Wood Elf unit you control leaves play, put the \
+    \top card of your deck into this zone as a development."
+  -- Inline: the leave-play trigger only surfaces the code, so match on
+  -- 'UnitLeftPlay' directly to read the departed unit's traits.
+  onReceive $ Receive \msg _owner self -> case msg of
+    UnitLeftPlay du
+      | du.controller == self.controller
+      , du.key /= self.key
+      , WoodElf `elem` du.cardDef.traits ->
+          addDevelopment self.controller self.zone
+    _ -> pure ()
+
 bribery :: CardDef Tactic
 bribery = tacticCard "omens-of-ruin-020" "Bribery" do
   cost 2
