@@ -1492,6 +1492,32 @@ duelistTraining = supportCard "fiery-dawn-109" "Duelist Training" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+knightsOfTheBlazingSun :: CardDef Unit
+knightsOfTheBlazingSun = unitCard "the-burning-of-derricksburg-003" "Knights of the Blazing Sun" do
+  race Empire
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Knight
+  body "This unit cannot be corrupted."
+  onEnterPlay \_owner self -> until Permanent (shieldFromCorruption self.key)
+
+gryphonLegionnaire :: CardDef Unit
+gryphonLegionnaire = unitCard "the-burning-of-derricksburg-004" "Gryphon Legionnaire" do
+  race Empire
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Knight
+  keyword PlayAnytime
+  counterstrike 2
+  body
+    "You may play this unit from your hand any time you could take an action \
+    \(paying all costs). Counterstrike 2 (this unit deals 2 combat damage \
+    \immediately when defending)."
+
 tacticalMisdirection :: CardDef Tactic
 tacticalMisdirection = tacticCard "redemption-of-a-mage-066" "Tactical Misdirection" do
   race Empire

@@ -1347,6 +1347,19 @@ wardancer = unitCard "the-eclipse-of-hope-098" "Wardancer" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+doomsayerOfMorr :: CardDef Unit
+doomsayerOfMorr = unitCard "redemption-of-a-mage-080" "Doomsayer of Morr" do
+  cost 3
+  loyalty 0
+  power 1
+  hitPoints 3
+  trait Warrior
+  orderOnly
+  body "Order only. Action: When an opponent's unit is destroyed, draw a card."
+  -- Approximation: fires on any opponent unit leaving play (the usual
+  -- path is destruction).
+  onOpponentUnitLeavePlay \_owner self _k _z _code -> drawCard self.controller
+
 mountainBrigands :: CardDef Unit
 mountainBrigands = unitCard "the-fourth-waystone-100" "Mountain Brigands" do
   cost 2

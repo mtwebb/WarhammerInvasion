@@ -376,6 +376,8 @@ allCards =
       -- The Enemy cycle — The Burning of Derricksburg (001-020)
       ("the-burning-of-derricksburg-001", UnitCardDef bodyguardOfBelegar),
       ("the-burning-of-derricksburg-002", SupportCardDef miningTunnels),
+      ("the-burning-of-derricksburg-003", UnitCardDef knightsOfTheBlazingSun),
+      ("the-burning-of-derricksburg-004", UnitCardDef gryphonLegionnaire),
       ("the-burning-of-derricksburg-005", SupportCardDef derricksburgForge),
       ("the-burning-of-derricksburg-006", SupportCardDef griffonStandard),
       ("the-burning-of-derricksburg-008", TacticCardDef doYouKnowWhoIAm),
@@ -434,6 +436,7 @@ allCards =
       ("redemption-of-a-mage-072", UnitCardDef heraldOfChange),
       ("redemption-of-a-mage-073", UnitCardDef disgracedChampion),
       ("redemption-of-a-mage-076", UnitCardDef sorceressOfGhrond),
+      ("redemption-of-a-mage-080", UnitCardDef doomsayerOfMorr),
       ("redemption-of-a-mage-078", SupportCardDef ancientAlliance),
       ("redemption-of-a-mage-079", SupportCardDef evilAlliance),
       -- March of the Damned (deluxe expansion)
