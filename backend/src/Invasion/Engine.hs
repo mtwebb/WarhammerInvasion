@@ -2040,6 +2040,9 @@ instance Run Game where
           [("player", playerParam pk), ("amount", tshow amount)]
     GrantNecromancyToDiscardCard cardKey ->
       modify \gx -> gx {grantedNecromancy = cardKey : gx.grantedNecromancy}
+    GrantExtraLimitedPlay pk -> do
+      recordEvent \h -> h {limitedWaivers = h.limitedWaivers + 1}
+      logIt LogSystem "log.limited.waived" [("player", playerParam pk)]
     GrantLoyaltyWaiver pk race -> do
       g <- get
       let snapshot = racePlaysThisTurn g pk race
@@ -5472,7 +5475,10 @@ controlsCopyInPlay pk code g =
 canPlayCard :: PlayerKey -> CardDef k -> Game -> Bool
 canPlayCard pk cd g =
   (not cd.unique || not (controlsCopyInPlay pk cd.code g))
-    && (not (isLimitedCard cd) || (historyOfScope ThisTurn g).limitedPlayed == 0)
+    && ( not (isLimitedCard cd)
+           || (historyOfScope ThisTurn g).limitedPlayed
+                <= (historyOfScope ThisTurn g).limitedWaivers
+       )
     && cd.canPlay g pk
 
 -- | Zone-entry restriction keywords ("Battlefield only." etc.). These
@@ -5559,7 +5565,9 @@ assessLegend g pk cd = case assessNonTactic g pk cd of
 baseUnplayable :: Game -> PlayerKey -> CardDef k -> Maybe PlayabilityIssue
 baseUnplayable g pk cd
   | cd.unique && controlsCopyInPlay pk cd.code g = Just UniqueAlreadyInPlay
-  | isLimitedCard cd && (historyOfScope ThisTurn g).limitedPlayed > 0 =
+  | isLimitedCard cd
+      && (historyOfScope ThisTurn g).limitedPlayed
+           > (historyOfScope ThisTurn g).limitedWaivers =
       Just LimitedAlreadyPlayed
   | not (cd.canPlay g pk) = Just NoValidTarget
   | otherwise = case cd.cost of

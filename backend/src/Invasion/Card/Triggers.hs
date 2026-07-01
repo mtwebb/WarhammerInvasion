@@ -320,6 +320,19 @@ onFriendlyUnitEnterPlay handler = onReceive $ Receive \msg owner self -> case ms
         handler owner self uk
   _ -> pure ()
 
+-- | "When a quest enters play under your control." Fires off
+-- 'QuestEnteredPlay' (both the from-hand play and put-into-play paths).
+-- Used by Master of Maps ("when you play a quest from your hand").
+onFriendlyQuestEnterPlay
+  :: forall k
+   . HasField "controller" (InPlay k) PlayerKey
+  => (forall m. TriggerM m => Player -> InPlay k -> m ())
+  -> CardBuilder k ()
+onFriendlyQuestEnterPlay handler = onReceive $ Receive \msg owner self -> case msg of
+  QuestEnteredPlay pk _uk
+    | pk == self.controller -> handler owner self
+  _ -> pure ()
+
 -- | "When a unit enters this zone." Fires off 'UnitEnteredPlay' when
 -- the entering unit lands in the host's own zone (same controller,
 -- same zone kind), skipping the host's own entry. Body receives the

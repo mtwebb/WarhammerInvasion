@@ -209,6 +209,10 @@ adjustUnitTokens k n = push (AdjustUnitTokens k n)
 gainResources :: HasQueue Message m => PlayerKey -> Int -> m ()
 gainResources pk n = push (GainResources pk n)
 
+-- | "You can play an additional Limited card this turn." (Master of Maps.)
+grantExtraLimitedPlay :: HasQueue Message m => PlayerKey -> m ()
+grantExtraLimitedPlay pk = push (GrantExtraLimitedPlay pk)
+
 -- | "Ignore the loyalty cost of the next [Race] card you play this turn."
 -- (Embassy / Offering supports.)
 grantLoyaltyWaiver :: HasQueue Message m => PlayerKey -> Race -> m ()

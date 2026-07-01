@@ -776,6 +776,20 @@ bloodVengeance = supportCard "fragments-of-power-024" "Blood Vengeance" do
   supportCombat \_g s u ->
     if u.zone == s.zone && Dwarf `elem` u.cardDef.races then 1 else 0
 
+masterOfMaps :: CardDef Unit
+masterOfMaps = unitCard "fragments-of-power-023" "Master of Maps" do
+  race Dwarf
+  cost 0
+  loyalty 2
+  power 0
+  hitPoints 1
+  trait Priest
+  limited
+  body
+    "Limited. Action: When you play a quest from your hand, you can play an \
+    \additional Limited card this turn."
+  onFriendlyQuestEnterPlay \_owner self -> grantExtraLimitedPlay self.controller
+
 ungrimBaragor :: CardDef Legend
 ungrimBaragor = legendCard "fragments-of-power-022" "Ungrim Baragor" do
   race Dwarf

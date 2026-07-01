@@ -390,6 +390,10 @@ data History = History
     -- ^ Total damage landed on each unit in this scope.
   , limitedPlayed :: Int
     -- ^ How many Limited cards have been played in this scope.
+  , limitedWaivers :: Int
+    -- ^ Extra Limited plays granted this scope (Master of Maps: +1 when
+    -- you play a quest). The Limited restriction blocks a play only once
+    -- 'limitedPlayed' exceeds 'limitedWaivers'.
   , supportsPlayedBy :: Map PlayerKey Int
     -- ^ Per-player count of Support cards that player has played in
     -- this scope. Read by cost-discount cards that fire on the
@@ -423,6 +427,7 @@ instance Semigroup History where
     , damagedUnits = a.damagedUnits <> b.damagedUnits
     , damageTaken = Map.unionWith (+) a.damageTaken b.damageTaken
     , limitedPlayed = a.limitedPlayed + b.limitedPlayed
+    , limitedWaivers = a.limitedWaivers + b.limitedWaivers
     , supportsPlayedBy = Map.unionWith (+) a.supportsPlayedBy b.supportsPlayedBy
     , unitsPlayedBy = Map.unionWith (+) a.unitsPlayedBy b.unitsPlayedBy
     , drawnBy = Map.unionWith (+) a.drawnBy b.drawnBy
@@ -438,6 +443,7 @@ instance Monoid History where
     , damagedUnits = []
     , damageTaken = Map.empty
     , limitedPlayed = 0
+    , limitedWaivers = 0
     , supportsPlayedBy = Map.empty
     , unitsPlayedBy = Map.empty
     , drawnBy = Map.empty

@@ -580,6 +580,9 @@ data Message where
     -- ^ Credit N resources to the named player's pool. Used by tactic
     -- effects (Burying the Grudge, …) that bypass the kingdom-phase
     -- collection step.
+  GrantExtraLimitedPlay :: PlayerKey -> Message
+    -- ^ Allow one additional Limited card to be played this turn
+    -- (Master of Maps). Bumps 'History.limitedWaivers' for the turn.
   GrantLoyaltyWaiver :: PlayerKey -> Race -> Message
     -- ^ "Ignore the loyalty cost of the next [Race] card you play this
     -- turn." (Embassy / Offering supports.) Records a turn-scoped waiver

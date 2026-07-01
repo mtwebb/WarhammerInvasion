@@ -684,6 +684,7 @@ allCards =
       ("fragments-of-power-021", SupportCardDef starCrownFragments),
       ("fragments-of-power-024", SupportCardDef bloodVengeance),
       ("fragments-of-power-022", LegendCardDef ungrimBaragor),
+      ("fragments-of-power-023", UnitCardDef masterOfMaps),
       ("fragments-of-power-025", UnitCardDef arachnarokSpider),
       ("fragments-of-power-026", TacticCardDef daGreatLeader),
       ("fragments-of-power-027", UnitCardDef averheimSoldiers),
