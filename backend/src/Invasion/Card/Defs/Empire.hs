@@ -1250,6 +1250,25 @@ garrisoned = supportCard "cataclysm-022" "Garrisoned" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+masteringTheSpell :: CardDef Tactic
+masteringTheSpell = tacticCard "the-eclipse-of-hope-088" "Mastering the Spell" do
+  race Empire
+  cost 2
+  loyalty 3
+  trait Spell
+  body
+    "Spell. Action: Put the top card of your deck into play facedown as a \
+    \development. Then, move target unit with a printed cost of X or lower to \
+    \another zone controlled by the same player. X is the number of \
+    \developments you control."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk MyDevZone \zone -> addDevelopment pk zone
+    g <- getGame
+    let x = developmentsControlled (playerOf pk g) + 1
+    withTarget pk (UnitMatching \_p _g u -> costAtMost x u.cardDef) \k ->
+      withTarget pk MyAnyZone \zk -> moveUnit k zk
+
 helstormRocketBattery :: CardDef Support
 helstormRocketBattery = supportCard "fiery-dawn-108" "Helstorm Rocket Battery" do
   race Empire

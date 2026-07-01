@@ -857,6 +857,30 @@ arcanePurifier = unitCard "cataclysm-028" "Arcane Purifier" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+perfectingTheSpell :: CardDef Tactic
+perfectingTheSpell = tacticCard "the-eclipse-of-hope-091" "Perfecting the Spell" do
+  race HighElf
+  cost 2
+  loyalty 3
+  trait Spell
+  body
+    "Spell. Action: Put the top card of your deck into play facedown as a \
+    \development. Then, look at the top X cards of your deck and put them back \
+    \on the top or bottom of your deck in any order. X is the number of \
+    \developments you control."
+  -- Approximation: the "top or bottom in any order" scry is modelled as
+  -- an all-on-top reorder.
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk MyDevZone \zone -> addDevelopment pk zone
+    g <- getGame
+    let x = developmentsControlled (playerOf pk g) + 1
+    searchTopOfDeck pk x \result ->
+      unless (null result.cards) $
+        chooseOrdering pk result.cards
+          "Order these cards on top of your deck (first pick = top)." \ordered ->
+            arrangeDeckCards pk ordered []
+
 followThePortent :: CardDef Quest
 followThePortent = questCard "the-chaos-moon-031" "Follow the Portent" do
   race HighElf
