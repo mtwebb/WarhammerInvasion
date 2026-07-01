@@ -619,6 +619,57 @@ treasureThieves = unitCard "the-accursed-dead-053" "Treasure Thieves" do
         when (diff > 0) $ gainResources pk diff
       _ -> pure ()
 
+jealousEyes :: CardDef Tactic
+jealousEyes = tacticCard "the-accursed-dead-054" "Jealous Eyes" do
+  race DarkElf
+  cost 0
+  loyalty 2
+  body
+    "When this card is played, immediately end and resolve the current action \
+    \chain. Action: Move up to 2 resource tokens from target opponent's card to \
+    \a card you control."
+  -- The "end the action chain" clause is not modelled — the engine
+  -- resolves tactics immediately rather than stacking a chain.
+  whenResolved \self -> do
+    let pk = self.controller
+        opp = pk.next
+    g <- getGame
+    let tokensOfKey k =
+          maximum $
+            0
+              : [u.tokens | u <- g.units, u.key == k]
+              <> [s.tokens | s <- g.supports, s.key == k]
+              <> [q.tokens | q <- g.quests, q.key == k]
+        adjustAnyTokens k n = do
+          gg <- getGame
+          if any ((== k) . (.key)) gg.units
+            then adjustUnitTokens k n
+            else
+              if any ((== k) . (.key)) gg.supports
+                then adjustSupportTokens k n
+                else addQuestToken k n
+        oppCards =
+          [mkCard u.key (UnitCardDef u.cardDef) | u <- g.units, u.controller == opp, u.tokens >= 1]
+            <> [mkCard s.key (SupportCardDef s.cardDef) | s <- g.supports, s.controller == opp, s.tokens >= 1]
+            <> [mkCard q.key (QuestCardDef q.cardDef) | q <- g.quests, q.controller == opp, q.tokens >= 1]
+    unless (null oppCards) $
+      chooseFromCards pk 1 1 oppCards
+        "Move up to 2 tokens from which opponent's card?" \srcSel ->
+          for_ srcSel \src -> do
+            let amount = min 2 (tokensOfKey src.key)
+            when (amount >= 1) do
+              g2 <- getGame
+              let dstCards =
+                    [mkCard u.key (UnitCardDef u.cardDef) | u <- g2.units, u.controller == pk]
+                      <> [mkCard s.key (SupportCardDef s.cardDef) | s <- g2.supports, s.controller == pk]
+                      <> [mkCard q.key (QuestCardDef q.cardDef) | q <- g2.quests, q.controller == pk]
+              unless (null dstCards) $
+                chooseFromCards pk 1 1 dstCards
+                  "Move the tokens onto which card you control?" \dstSel ->
+                    for_ dstSel \dst -> do
+                      adjustAnyTokens src.key (negate amount)
+                      adjustAnyTokens dst.key amount
+
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
 pleasureCults :: CardDef Quest

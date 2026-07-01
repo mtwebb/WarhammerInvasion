@@ -707,6 +707,7 @@ allCards =
       ("the-accursed-dead-051", UnitCardDef strickenWarrior),
       ("the-accursed-dead-052", SupportCardDef riftOfBattle),
       ("the-accursed-dead-053", UnitCardDef treasureThieves),
+      ("the-accursed-dead-054", TacticCardDef jealousEyes),
       ("the-accursed-dead-046", TacticCardDef purgedByFlame),
       ("the-accursed-dead-049", UnitCardDef roamingShaman),
       ("the-accursed-dead-055", UnitCardDef bladesinger),
