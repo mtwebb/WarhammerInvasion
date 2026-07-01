@@ -1492,6 +1492,28 @@ duelistTraining = supportCard "fiery-dawn-109" "Duelist Training" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+friedrichHemmler :: CardDef Unit
+friedrichHemmler = unitCard "redemption-of-a-mage-063" "Friedrich Hemmler" do
+  race Empire
+  cost 5
+  loyalty 2
+  power 5
+  hitPoints 5
+  hero
+  trait Mage
+  body
+    "Limit one Hero per zone. Forced: When this unit is opposed in combat, deal \
+    \1 uncancellable damage to all attacking and defending units."
+  onReceive $ Receive \msg _owner self -> case msg of
+    DeclareDefenders ks -> do
+      g <- getGame
+      case g.combat of
+        Just cs
+          | (self.key `elem` cs.attackers && not (null ks)) || self.key `elem` ks ->
+              for_ (cs.attackers <> ks) \k -> dealUncancellableDamage k 1
+        _ -> pure ()
+    _ -> pure ()
+
 wilhelmOfTheOsterknacht :: CardDef Unit
 wilhelmOfTheOsterknacht = unitCard "the-fall-of-karak-grimaz-025" "Wilhelm of the Osterknacht" do
   race Empire

@@ -384,10 +384,12 @@ allCards =
       ("the-burning-of-derricksburg-008", TacticCardDef doYouKnowWhoIAm),
       ("the-burning-of-derricksburg-009", UnitCardDef greatCaveSquig),
       ("the-burning-of-derricksburg-011", UnitCardDef schemingCultist),
+      ("the-burning-of-derricksburg-012", UnitCardDef brayingGor),
       ("the-burning-of-derricksburg-013", UnitCardDef wingedFury),
       ("the-burning-of-derricksburg-014", TacticCardDef spreadingDarkness),
       ("the-burning-of-derricksburg-016", UnitCardDef druchiiNoble),
       ("the-burning-of-derricksburg-017", TacticCardDef whipTheSlaves),
+      ("the-burning-of-derricksburg-018", TacticCardDef orderInChaos),
       ("the-burning-of-derricksburg-020", UnitCardDef nightRunners),
       ("the-burning-of-derricksburg-019", TacticCardDef entropy),
       -- The Enemy cycle — The Fall of Karak Grimaz (021-040)
@@ -436,6 +438,7 @@ allCards =
       ("the-fourth-waystone-100", UnitCardDef mountainBrigands),
       -- The Enemy cycle — Redemption of a Mage (061-080)
       ("redemption-of-a-mage-061", UnitCardDef grombrindalsElite),
+      ("redemption-of-a-mage-063", UnitCardDef friedrichHemmler),
       ("redemption-of-a-mage-065", SupportCardDef higherGround),
       ("redemption-of-a-mage-066", TacticCardDef tacticalMisdirection),
       ("redemption-of-a-mage-068", UnitCardDef dreamerOfDragons),

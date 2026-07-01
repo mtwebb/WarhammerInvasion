@@ -1347,6 +1347,18 @@ wardancer = unitCard "the-eclipse-of-hope-098" "Wardancer" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+orderInChaos :: CardDef Tactic
+orderInChaos = tacticCard "the-burning-of-derricksburg-018" "Order in Chaos" do
+  cost 1
+  loyalty 0
+  orderOnly
+  body
+    "Order only. Action: Put the top two cards of target player's discard pile \
+    \on top of his deck."
+  whenResolved \self ->
+    withTarget self.controller TargetPlayer \target ->
+      push (MoveDiscardTopToDeckTop target 2)
+
 nightRunners :: CardDef Unit
 nightRunners = unitCard "the-burning-of-derricksburg-020" "Night Runners" do
   cost 2
