@@ -3,7 +3,7 @@
 module Invasion.Message (module Invasion.Message) where
 
 import Invasion.Card.Types (Card)
-import Invasion.CardDef (ActionTarget, CardDef)
+import Invasion.CardDef (ActionTarget, CardDef, Trait)
 import Invasion.Game (ActionWindowTrigger, Prompt, PromptResult)
 import Invasion.Modifier (Modifier, ModifierScope)
 import Invasion.Player (Drawing, EliminationReason)
@@ -67,6 +67,10 @@ data Message where
     -- ^ Move the top N cards of the player's deck to the bottom, order
     -- preserved (Comet of Casandora's "put the revealed cards on the
     -- bottom of your deck").
+  MoveDiscardCardToDeckBottom :: PlayerKey -> UnitKey -> Message
+    -- ^ Move a specific card from the named player's discard pile to the
+    -- bottom of that player's deck (Drakenhof Castle). No-op if the card
+    -- isn't in that discard.
   ArrangeDeckCards :: PlayerKey -> [UnitKey] -> [UnitKey] -> Message
     -- ^ Reorder named deck cards after a scry: the keys in the first
     -- list are pulled to the TOP of the deck in the given order, the
@@ -218,6 +222,16 @@ data Message where
     -- via its schema, discards it, and resolves it at cost 0 — bypassing
     -- the play-timing / payment gates of 'PlayTactic'. No-op if the card
     -- isn't a tactic in hand or no legal target is chosen.
+  PlayTacticFreeFromDiscard :: PlayerKey -> UnitKey -> Message
+    -- ^ Like 'PlayTacticFree' but the tactic is played from the
+    -- player's discard pile (Gathering the Winds). It resolves at cost
+    -- 0 and stays in the discard afterwards. No-op if the card isn't a
+    -- tactic in discard or no legal target is chosen.
+  PlayTacticFreeFromDeck :: PlayerKey -> UnitKey -> Message
+    -- ^ Like 'PlayTacticFree' but the tactic is played from the
+    -- player's deck (Xirat'p reveals the top card). It resolves at cost
+    -- 0 — the caller charges any separate price first — and lands in the
+    -- discard. No-op if the card isn't a tactic in the deck.
   TacticResolved :: PlayerKey -> CardCode -> ActionTarget -> Int -> Message
     -- ^ Dispatch hook fired exactly once when a tactic resolves. The
     -- tactic's CardDef.receive is invoked with this message; cards
@@ -259,6 +273,11 @@ data Message where
   DealDamageToZoneUncancellable :: PlayerKey -> ZoneKind -> Int -> Message
     -- ^ Like 'DealDamageToZone' but bypasses capital shields, redirects,
     -- and cancel-1 supports (Pigeon Bombs). A burned zone still wastes it.
+  CapitalDealtCombatDamage :: PlayerKey -> ZoneKind -> Message
+    -- ^ Narration: the named player's capital section was dealt combat
+    -- damage (the same event the Grudge keyword keys off). Broadcast so
+    -- in-play cards can react (Brom Longbellow). Not otherwise handled
+    -- by the engine.
   -- Free unit summons (Iron Throneroom payoff, Reckless Attack, …).
   PutUnitIntoPlay :: PlayerKey -> UnitKey -> ZoneKind -> Message
     -- ^ Like 'PlayUnit' but skips the cost check / payment and pulls
@@ -291,6 +310,13 @@ data Message where
     -- the SAME player. No-op if the destination equals the unit's
     -- current zone. Used by Pistoliers, Forced March, Temple of
     -- Shallya, Johannes Broheim.
+  PutHandCardOnTopOfDeck :: PlayerKey -> UnitKey -> Message
+    -- ^ Move a card from the player's hand onto the top of their deck
+    -- (P'tarix). No-op if the card isn't in hand.
+  ReturnUnitToTopOfDeck :: UnitKey -> Message
+    -- ^ Bounce an in-play unit onto the top of its owner's deck
+    -- (Bladesinger). Like 'ReturnUnitToHand' but the card lands on the
+    -- deck rather than in hand; attachments still leave play.
   ReturnUnitToHand :: UnitKey -> Message
     -- ^ Remove a unit from play and put its card into its owner's
     -- hand (not discard). Triggers 'UnitLeftPlay' the same way
@@ -511,6 +537,10 @@ data Message where
     -- zones are not healed.
   HealZone :: PlayerKey -> ZoneKind -> Int -> Message
     -- ^ Remove up to N damage tokens from one specific zone.
+  RemoveBurnToken :: PlayerKey -> ZoneKind -> Message
+    -- ^ "Remove a burn token from your capital." Restores a burned
+    -- zone to play (clears 'burned' and its damage). No-op if the
+    -- named zone isn't burned (Rebuild the Hold).
   AddDevelopment :: PlayerKey -> ZoneKind -> Message
     -- ^ Place a facedown development in the named zone. Bypasses the
     -- once-per-turn limit (used by Dwarf Masons, Wake the Mountain).
@@ -550,6 +580,9 @@ data Message where
     -- ^ Credit N resources to the named player's pool. Used by tactic
     -- effects (Burying the Grudge, …) that bypass the kingdom-phase
     -- collection step.
+  GrantExtraLimitedPlay :: PlayerKey -> Message
+    -- ^ Allow one additional Limited card to be played this turn
+    -- (Master of Maps). Bumps 'History.limitedWaivers' for the turn.
   GrantLoyaltyWaiver :: PlayerKey -> Race -> Message
     -- ^ "Ignore the loyalty cost of the next [Race] card you play this
     -- turn." (Embassy / Offering supports.) Records a turn-scoped waiver
@@ -598,6 +631,12 @@ data Message where
     -- ambush per firing; flipping re-sends this message to offer the
     -- next, then 'AdvanceCombatToDefenders' once the defender declines
     -- or nothing is affordable.
+  FlipDevelopmentDefender :: PlayerKey -> ZoneKind -> UnitKey -> Trait -> Message
+    -- ^ Turn a specific facedown development in @zk@ faceup (Border
+    -- Patrol). If it is a unit carrying the required 'Trait' it enters
+    -- play there as a compelled defender ('MustDefend'); otherwise the
+    -- card is sacrificed to the discard pile. Either way the zone's
+    -- development count drops by one.
   AmbushDevelopment :: PlayerKey -> ZoneKind -> UnitKey -> Message
     -- ^ Flip a specific facedown development faceup as an ambush: pay
     -- its 'Ambush' X, pop it from the zone, put the card into play as

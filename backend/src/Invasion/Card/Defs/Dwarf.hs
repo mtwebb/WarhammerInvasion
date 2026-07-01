@@ -776,6 +776,37 @@ bloodVengeance = supportCard "fragments-of-power-024" "Blood Vengeance" do
   supportCombat \_g s u ->
     if u.zone == s.zone && Dwarf `elem` u.cardDef.races then 1 else 0
 
+masterOfMaps :: CardDef Unit
+masterOfMaps = unitCard "fragments-of-power-023" "Master of Maps" do
+  race Dwarf
+  cost 0
+  loyalty 2
+  power 0
+  hitPoints 1
+  trait Priest
+  limited
+  body
+    "Limited. Action: When you play a quest from your hand, you can play an \
+    \additional Limited card this turn."
+  onFriendlyQuestEnterPlay \_owner self -> grantExtraLimitedPlay self.controller
+
+ungrimBaragor :: CardDef Legend
+ungrimBaragor = legendCard "fragments-of-power-022" "Ungrim Baragor" do
+  race Dwarf
+  cost 7
+  loyalty 4
+  legendPower 3 3 3
+  hitPoints 5
+  body
+    "Action: When this legend attacks or defends, choose a Trait. All units \
+    \with that Trait lose {power}{power} until the end of the turn."
+  onMyAttackOrDefend \_owner self -> do
+    g <- getGame
+    chooseTrait self.controller (traitsInPlay g) "Choose a Trait." \tr -> do
+      g2 <- getGame
+      for_ [u | u <- g2.units, tr `elem` u.cardDef.traits] \u ->
+        until EndOfTurn (buffPower u.key (-2))
+
 -- Bloodquest: The Accursed Dead -----------------------------------------
 
 ancientVengeance :: CardDef Support
@@ -796,6 +827,157 @@ ancientVengeance = supportCard "the-accursed-dead-044" "Ancient Vengeance" do
     if pk == s.controller && filt.cfKind == Unit && Dwarf `elem` filt.cfRaces
       then -1
       else 0
+
+rebuildTheHold :: CardDef Quest
+rebuildTheHold = questCard "the-accursed-dead-058" "Rebuild the Hold" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  trait Epic
+  body
+    "Quest. Action: Sacrifice a development to put 1 resource token on this \
+    \card if a unit is questing here. Quest. Action: Remove 8 resource tokens \
+    \from this card to remove a burn token from your capital. Then, sacrifice \
+    \this card."
+  action "Lay the foundations" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    let p = playerOf pk g
+        devZones =
+          [ zk
+          | (zk, Developments n) <-
+              [ (KingdomZone, p.capital.kingdom.developments)
+              , (QuestZone, p.capital.quest.developments)
+              , (BattlefieldZone, p.capital.battlefield.developments)
+              ]
+          , n > 0
+          ]
+    unless (null devZones) $
+      withTarget pk (CapitalMatching \_ (o, zk) -> o == pk && zk `elem` devZones) \(o, zk) -> do
+        destroyDevelopment o zk
+        whenJust (findQuest usage.self.key g) \me ->
+          when (isJust me.questingUnit) $ addQuestToken usage.self.key 1
+  action "Remove a burn token" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    whenJust (findQuest usage.self.key g) \me ->
+      when (me.tokens >= 8) do
+        let p = playerOf pk g
+            burnedZones =
+              [ zk
+              | (zk, z) <-
+                  [ (KingdomZone, p.capital.kingdom)
+                  , (QuestZone, p.capital.quest)
+                  , (BattlefieldZone, p.capital.battlefield)
+                  ]
+              , z.burned
+              ]
+        unless (null burnedZones) $
+          withTarget pk (CapitalMatching \_ (o, zk) -> o == pk && zk `elem` burnedZones) \(o, zk) -> do
+            addQuestToken usage.self.key (-8)
+            removeBurnToken o zk
+            destroyQuest usage.self.key
+
+-- Bloodquest: Vessel of the Winds ---------------------------------------
+
+bromLongbellow :: CardDef Unit
+bromLongbellow = unitCard "vessel-of-the-winds-063" "Brom Longbellow" do
+  race Dwarf
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  hero
+  trait Slayer
+  body
+    "Limit one Hero per zone. Action: When your capital is dealt combat \
+    \damage, deal X damage to target attacking unit. X is the number of Grudge \
+    \support cards you control."
+  onMyCapitalDealtCombatDamage \_owner self -> do
+    g <- getGame
+    let pk = self.controller
+        grudges =
+          length
+            [s | s <- allInPlaySupports g, s.controller == pk, Grudge `elem` s.cardDef.keywords]
+    when (grudges > 0) $
+      withTarget pk attackingUnit \k -> dealDamage k grudges
+
+aleHall :: CardDef Support
+aleHall = supportCard "vessel-of-the-winds-064" "Ale Hall" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  power 1
+  trait Building
+  body
+    "Action: Discard a quest or Grudge support card from your hand to have \
+    \this card gain {power} until the end of the turn."
+  action "Rally the hold" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    let isQuestOrGrudge sd = case sd of
+          QuestCardDef _ -> True
+          SupportCardDef cd -> Grudge `elem` cd.keywords
+          _ -> False
+        fodder = [c | c <- (playerOf pk g).hand, isQuestOrGrudge c.def]
+    unless (null fodder) $
+      chooseFromCards pk 1 1 fodder
+        "Discard a quest or Grudge support to boost Ale Hall." \chosen ->
+          for_ chosen \c -> do
+            push (DiscardCardsFromHand pk [c.key])
+            until EndOfTurn $ buffPower usage.self.key 1
+
+honouringTheAncestors :: CardDef Tactic
+honouringTheAncestors = tacticCard "vessel-of-the-winds-065" "Honouring the Ancestors" do
+  race Dwarf
+  cost 1
+  loyalty 1
+  body
+    "Action: Put a [Dwarf] unit into play in one of your attacked zones from \
+    \your hand, declared as a defender. Sacrifice it at the end of the turn."
+  -- Only playable while one of your zones is under attack, so there is an
+  -- attacked zone to summon the defender into.
+  playableWhen \g pk -> case g.combat of
+    Just cs -> cs.defendingPlayer == pk
+    Nothing -> False
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    case g.combat of
+      Just cs | cs.defendingPlayer == pk -> do
+        me <- playerOf pk <$> getGame
+        let dwarves =
+              [ c
+              | c <- me.hand
+              , Just cd <- [asUnit c.def]
+              , Dwarf `elem` cd.races
+              ]
+        chooseFromCards pk 0 1 dwarves
+          "Choose a Dwarf unit to summon as a defender." \chosen ->
+            for_ chosen \c -> do
+              summonDefender pk FromHand c.key cs.targetZone
+              queueEoTSacrifice c.key
+      _ -> pure ()
+
+-- Bloodquest: Portent of Doom -------------------------------------------
+
+spiritSlayer :: CardDef Unit
+spiritSlayer = unitCard "portent-of-doom-083" "Spirit Slayer" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Slayer
+  body
+    "Action: When this unit attacks, choose a Trait. All units with that trait \
+    \must defend this turn, if able."
+  onMyAttackDeclared \_owner self _zone _attackers -> do
+    g <- getGame
+    chooseTrait self.controller (traitsInPlay g) "Choose a Trait." \tr -> do
+      g2 <- getGame
+      for_ [u | u <- g2.units, tr `elem` u.cardDef.traits] \u ->
+        until EndOfTurn (mustDefend u.key)
 
 -- Bloodquest: Shield of the Gods ----------------------------------------
 

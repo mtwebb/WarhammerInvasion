@@ -372,6 +372,14 @@ canDefend f = modifyUnitExtras \e -> e {canDefendZone = f}
 cannotBeRestored :: CardBuilder Unit ()
 cannotBeRestored = modifyUnitExtras \e -> e {cannotBeRestored = True}
 
+-- | "Action: When one of your zones [matching @pred@] is attacked, put
+-- this unit into play in that zone from your hand, declared as a
+-- defender." (Bladesinger.) The engine offers it at 'BeginCombat' and
+-- compels it with 'MustDefend'.
+defenderFromHandWhen
+  :: (Game -> PlayerKey -> ZoneKind -> Bool) -> CardBuilder Unit ()
+defenderFromHandWhen f = modifyUnitExtras \e -> e {defenderFromHandWhen = Just f}
+
 -- | Per-turn damage cap (Daemonettes of Slaanesh).
 perTurnDamageCap :: Int -> CardBuilder Unit ()
 perTurnDamageCap n = modifyUnitExtras \e -> e {damageCap = Just n}
@@ -549,6 +557,14 @@ attachedTo body = modifySupportExtras \e -> e
 -- (Lighthouse of Lothern, Rift of Chaos).
 zonePowerAura :: (Game -> SupportDetails -> ZoneKind -> Int) -> CardBuilder Support ()
 zonePowerAura f = modifySupportExtras \e -> e {zonePowerBonus = f}
+
+-- | "These cards also count as developments." Contributes extra
+-- developments to a zone of the support's controller, raising that
+-- zone's burn threshold (The Oak of Ages, Higher Learning). Args:
+-- game, this support, the zone being queried.
+countsAsDevelopments
+  :: (Game -> SupportDetails -> ZoneKind -> Int) -> CardBuilder Support ()
+countsAsDevelopments f = modifySupportExtras \e -> e {developmentBonusInZone = f}
 
 -- | Cost-of-play adjustment this support imposes on other cards being
 -- played (Imperial Crown, Master Rune of Dismay).

@@ -36,6 +36,7 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.UUID (UUID)
 import GHC.Generics (Generic)
+import Invasion.CardDef (Trait)
 import Invasion.Game (TargetOption)
 import Invasion.Prelude
 import Invasion.Types (CardCode, PlayerKey, Race, UnitKey, ZoneKind)
@@ -276,6 +277,7 @@ data PromptResultWire
   | PromptBoolWire { yes :: Bool }
   | PromptTargetOptionWire { option :: TargetOption }
   | PromptAmountWire { amount :: Int }
+  | PromptTraitWire { trait :: Trait }
   | PromptNoneWire
   deriving stock (Show, Generic)
 

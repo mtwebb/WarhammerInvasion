@@ -170,6 +170,9 @@ export interface EngineUnit {
   // True while an attached support blanks the unit's printed text box
   // (Witch Hag's Curse). Traits are unaffected.
   blanked: boolean
+  // Keywords granted by modifiers (Swift-moving Storm: Scout until end
+  // of turn), folded in alongside the printed keywords.
+  grantedKeywords: string[]
 }
 
 export interface EngineSupport {
@@ -465,6 +468,12 @@ export type PromptKind =
       maxAmount: number
       description: string
     }
+  | {
+      tag: 'ChooseTrait'
+      // Traits serialize as bare strings (Aeson allNullaryToStringTag).
+      traitOptions: string[]
+      description: string
+    }
 
 export type TargetOption =
   | { tag: 'TargetUnitOption'; contents: number }
@@ -486,6 +495,7 @@ export type PromptResultWire =
   | { tag: 'PromptBoolWire'; yes: boolean }
   | { tag: 'PromptTargetOptionWire'; option: TargetOption }
   | { tag: 'PromptAmountWire'; amount: number }
+  | { tag: 'PromptTraitWire'; trait: string }
   | { tag: 'PromptNoneWire' }
 
 // Derived helpers — keep alongside the wire types so they stay in sync.

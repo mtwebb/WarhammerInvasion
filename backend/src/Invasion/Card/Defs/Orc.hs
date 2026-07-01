@@ -1537,6 +1537,33 @@ daGreatLeader = tacticCard "fragments-of-power-026" "Da Great Leader" do
       [u | u <- g.units, u.controller == self.controller, Orc `elem` u.cardDef.races]
       \u -> until EndOfTurn $ buffPower u.key 2
 
+arachnarokSpider :: CardDef Unit
+arachnarokSpider = unitCard "fragments-of-power-025" "Arachnarok Spider" do
+  race Orc
+  cost 7
+  loyalty 4
+  power 4
+  hitPoints 5
+  trait Creature
+  battlefieldOnly
+  feared 1
+  body
+    "Battlefield only. Feared 1. Action: When you play this unit from your \
+    \hand, put up to 2 Goblin units into play in your battlefield from your hand."
+  -- "When you play this unit from your hand" — Arachnarok is Battlefield
+  -- only, so it can normally only enter from hand; 'onEnterPlay' is the
+  -- faithful trigger.
+  onEnterPlay \_owner self -> do
+    let pk = self.controller
+    me <- playerOf pk <$> getGame
+    let isGoblin c = case c.def of
+          UnitCardDef cd -> Goblin `elem` cd.traits
+          _ -> False
+        goblins = filter isGoblin me.hand
+    chooseFromCards pk 0 2 goblins
+      "Choose up to 2 Goblin units from your hand to put into your battlefield." \chosen ->
+        for_ chosen \c -> putUnitIntoPlay pk FromHand c.key BattlefieldZone
+
 snotlingInvasion :: CardDef Quest
 snotlingInvasion = questCard "fragments-of-power-038" "Snotling Invasion" do
   race Orc

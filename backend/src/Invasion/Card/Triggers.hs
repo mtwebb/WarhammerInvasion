@@ -320,6 +320,19 @@ onFriendlyUnitEnterPlay handler = onReceive $ Receive \msg owner self -> case ms
         handler owner self uk
   _ -> pure ()
 
+-- | "When a quest enters play under your control." Fires off
+-- 'QuestEnteredPlay' (both the from-hand play and put-into-play paths).
+-- Used by Master of Maps ("when you play a quest from your hand").
+onFriendlyQuestEnterPlay
+  :: forall k
+   . HasField "controller" (InPlay k) PlayerKey
+  => (forall m. TriggerM m => Player -> InPlay k -> m ())
+  -> CardBuilder k ()
+onFriendlyQuestEnterPlay handler = onReceive $ Receive \msg owner self -> case msg of
+  QuestEnteredPlay pk _uk
+    | pk == self.controller -> handler owner self
+  _ -> pure ()
+
 -- | "When a unit enters this zone." Fires off 'UnitEnteredPlay' when
 -- the entering unit lands in the host's own zone (same controller,
 -- same zone kind), skipping the host's own entry. Body receives the
@@ -429,6 +442,26 @@ onResolve handler = onReceive $ Receive \msg owner self -> case msg of
   TacticResolved pk _code target _x
     | pk == self.controller ->
         handler owner self target
+  _ -> pure ()
+
+-- | "When you play a Spell card, …" Fires for any in-play card
+-- (quest/support/unit) when its controller resolves a tactic carrying
+-- the Spell trait. Spell-ness is read off the turn's play history
+-- ('cardsPlayedThisTurn' carries each play's traits), so no card
+-- registry lookup is needed at the trigger site. Backs Gathering the
+-- Winds and Unstable Flux.
+onMySpellPlayed
+  :: forall k
+   . HasField "controller" (InPlay k) PlayerKey
+  => (forall m. TriggerM m => Player -> InPlay k -> m ())
+  -> CardBuilder k ()
+onMySpellPlayed handler = onReceive $ Receive \msg owner self -> case msg of
+  TacticResolved pk _code _target _x
+    | pk == self.controller -> do
+        g <- getGame
+        case cardsPlayedThisTurn g pk of
+          (cf : _) | Spell `elem` cf.cfTraits -> handler owner self
+          _ -> pure ()
   _ -> pure ()
 
 -- | "When this tactic resolves." Slim version that only exposes
@@ -562,6 +595,35 @@ onMyZoneAttacked handler = onReceive $ Receive \msg owner self -> case msg of
               , pendingAssignments = []
               }
         handler owner self cs
+  _ -> pure ()
+
+-- | "When one of your zones is attacked." Fires off 'BeginCombat' for
+-- this quest's controller whenever an opponent attacks any of their
+-- zones (not just the quest's own zone), handing the attacked
+-- 'ZoneKind' to the body. Backs the reactive defender-summon quests
+-- (Summon the Reserves).
+onMyAnyZoneAttacked
+  :: ( forall m
+      . TriggerM m
+     => Player -> QuestDetails -> ZoneKind -> m ()
+     )
+  -> CardBuilder Quest ()
+onMyAnyZoneAttacked handler = onReceive $ Receive \msg owner self -> case msg of
+  BeginCombat attacker zone _attackers
+    | attacker /= self.controller -> handler owner self zone
+  _ -> pure ()
+
+-- | "When your capital is dealt combat damage." Fires for an in-play
+-- card whose controller's capital section just took combat damage — the
+-- same event the Grudge keyword keys off (Brom Longbellow).
+onMyCapitalDealtCombatDamage
+  :: forall k
+   . HasField "controller" (InPlay k) PlayerKey
+  => (forall m. TriggerM m => Player -> InPlay k -> m ())
+  -> CardBuilder k ()
+onMyCapitalDealtCombatDamage handler = onReceive $ Receive \msg owner self -> case msg of
+  CapitalDealtCombatDamage pk _zone
+    | pk == self.controller -> handler owner self
   _ -> pure ()
 
 -- | "When the given action window opens." Used by cards (Vicious

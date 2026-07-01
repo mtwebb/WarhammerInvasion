@@ -498,6 +498,37 @@ lothernSeaMaster = unitCard "rising-dawn-009" "Lothern Sea Master" do
         indirectDamage usage.user.next u.tokens
         push (AdjustUnitTokens u.key (-1))
 
+gatheringTheWinds :: CardDef Support
+gatheringTheWinds = supportCard "rising-dawn-010" "Gathering the Winds" do
+  race HighElf
+  cost 0
+  loyalty 2
+  trait Condition
+  body
+    "Condition. Forced: When you play a Spell card, put 1 resource token on \
+    \this card. Action: Remove resource tokens from this card equal to the \
+    \printed cost of a target Spell card in your discard pile to play it at no \
+    \cost. Then, sacrifice this card."
+  onMySpellPlayed \_owner self -> adjustSupportTokens self.key 1
+  action "Echo the winds" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    whenJust (findSupport usage.self.key g) \me -> do
+      let p = playerOf pk g
+          spells =
+            [ c
+            | c <- p.discard
+            , Just cd <- [asTactic c.def]
+            , Spell `elem` cd.traits
+            , someCardCost c.def <= me.tokens
+            ]
+      chooseFromCards pk 0 1 spells
+        "Choose a Spell in your discard pile to play at no cost." \chosen ->
+          for_ chosen \c -> do
+            adjustSupportTokens usage.self.key (negate (someCardCost c.def))
+            push (PlayTacticFreeFromDiscard pk c.key)
+            destroySupport usage.self.key
+
 -- Bloodquest: Fragments of Power ----------------------------------------
 
 ellyrianPatron :: CardDef Unit
@@ -517,6 +548,29 @@ ellyrianPatron = unitCard "fragments-of-power-029" "Ellyrian Patron" do
         "Choose a quest to put into play." \chosen ->
           for_ chosen \c -> putQuestIntoPlayFromDeck pk c.key
       shuffleDeck pk
+
+summonTheReserves :: CardDef Quest
+summonTheReserves = questCard "fragments-of-power-039" "Summon the Reserves" do
+  race HighElf
+  cost 1
+  loyalty 2
+  trait Epic
+  body
+    "Quest. Action: If a unit is questing here when one of your zones is \
+    \attacked, reveal the top card of your deck. If the revealed card is a \
+    \non-Dragon [High Elf] unit, put it into play in the attacked zone. That \
+    \unit must defend this turn if able."
+  onMyAnyZoneAttacked \_owner self zone ->
+    when (isJust self.questingUnit) do
+      let pk = self.controller
+      revealTopOfDeck pk 1 \r ->
+        case r.cards of
+          (c : _)
+            | Just cd <- asUnit c.def
+            , HighElf `elem` cd.races
+            , Dragon `notElem` cd.traits ->
+                summonDefender pk FromDeck c.key zone
+          _ -> pure ()
 
 -- Bloodquest: The Accursed Dead -----------------------------------------
 

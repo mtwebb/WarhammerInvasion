@@ -87,6 +87,10 @@ data UnitDetails = UnitDetails
     -- text box (Witch Hag's Curse). Recomputed each engine step; the
     -- engine suppresses the unit's receive, actions, keywords, and
     -- extras slices while set. Traits are unaffected.
+  , grantedKeywords :: [Keyword]
+    -- ^ Keywords granted by modifiers (Swift-moving Storm: Scout until
+    -- end of turn). Recomputed each step from 'GainKeyword' modifiers;
+    -- folded into 'unitKeywords' alongside the printed keyword list.
   }
   deriving stock Show
 

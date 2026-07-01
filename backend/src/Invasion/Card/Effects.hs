@@ -107,6 +107,11 @@ dealZoneDamage pk zone n = push (DealDamageToZone pk zone n)
 healCapital :: HasQueue Message m => PlayerKey -> Int -> m ()
 healCapital pk n = push (HealCapital pk n)
 
+-- | "Remove a burn token from your capital." Restores the named burned
+-- zone to play (Rebuild the Hold). No-op if the zone isn't burned.
+removeBurnToken :: HasQueue Message m => PlayerKey -> ZoneKind -> m ()
+removeBurnToken pk zone = push (RemoveBurnToken pk zone)
+
 -- | "Heal N damage from a unit." (Trolls regenerate, Bloodsworn.)
 healUnit :: HasQueue Message m => UnitKey -> Int -> m ()
 healUnit k n = push (HealUnit k n)
@@ -162,6 +167,23 @@ putUnitIntoPlay pk origin uk z = push $ case origin of
   FromDiscard -> PutUnitIntoPlayFromDiscard pk uk z
   FromDeck -> PutUnitIntoPlayFromDeck pk uk z
 
+-- | "Put a unit into play in @zone@, declared as a defender." Backs the
+-- summon-a-defender effects (Summon the Reserves, Honouring the
+-- Ancestors). The unit enters via the normal play path, then gains a
+-- turn-scoped 'MustDefend' marker so the defender-declaration step
+-- force-includes it (the same compelled-defender path Animosity uses).
+--
+-- This is effective only while defenders have not yet been locked in —
+-- i.e. the unit is summoned during the attack / 'AfterDeclareAttackers'
+-- window, before the 'DeclareDefenders' prompt. A unit summoned after
+-- defenders are declared cannot retro-join the current combat.
+summonDefender
+  :: HasQueue Message m
+  => PlayerKey -> PlayUnitOrigin -> UnitKey -> ZoneKind -> m ()
+summonDefender pk origin uk z = do
+  putUnitIntoPlay pk origin uk z
+  until EndOfTurn (mustDefend uk)
+
 -- | "Use the Necromancy ability on a card in your discard pile without
 -- paying its cost." (Lord of the Dead.) Puts the unit into play for
 -- free; it returns to the deck bottom at end of turn.
@@ -187,6 +209,10 @@ adjustUnitTokens k n = push (AdjustUnitTokens k n)
 gainResources :: HasQueue Message m => PlayerKey -> Int -> m ()
 gainResources pk n = push (GainResources pk n)
 
+-- | "You can play an additional Limited card this turn." (Master of Maps.)
+grantExtraLimitedPlay :: HasQueue Message m => PlayerKey -> m ()
+grantExtraLimitedPlay pk = push (GrantExtraLimitedPlay pk)
+
 -- | "Ignore the loyalty cost of the next [Race] card you play this turn."
 -- (Embassy / Offering supports.)
 grantLoyaltyWaiver :: HasQueue Message m => PlayerKey -> Race -> m ()
@@ -209,6 +235,14 @@ moveUnit ukey zk = push (MoveUnit ukey zk)
 -- standard 'UnitLeftPlay' hook so on-leaves-play handlers see it.
 returnUnitToHand :: HasQueue Message m => UnitKey -> m ()
 returnUnitToHand ukey = push (ReturnUnitToHand ukey)
+
+-- | "Return this unit to the top of its owner's deck." (Bladesinger.)
+returnUnitToTopOfDeck :: HasQueue Message m => UnitKey -> m ()
+returnUnitToTopOfDeck ukey = push (ReturnUnitToTopOfDeck ukey)
+
+-- | "Put a card from your hand on top of your deck." (P'tarix.)
+putHandCardOnTopOfDeck :: HasQueue Message m => PlayerKey -> UnitKey -> m ()
+putHandCardOnTopOfDeck pk cardKey = push (PutHandCardOnTopOfDeck pk cardKey)
 
 -- | Send the top N cards of the named player's deck to their
 -- discard pile (the canonical "mill" effect — Infiltrate!).
@@ -582,6 +616,35 @@ chooseFromCards pk minN maxN cards desc k = do
         _ -> []
   k chosen
 
+-- | "Choose a Trait, then …" Prompts @pk@ to pick one Trait from
+-- @options@ and runs the continuation with it. With no options the
+-- continuation is skipped (the card simply does nothing). Backs Spirit
+-- Slayer and Ungrim Baragor; pass 'traitsInPlay' for the usual "any
+-- Trait currently on a unit" option set.
+--
+-- > chooseTrait pk (traitsInPlay g) "Choose a Trait." \tr -> ...
+chooseTrait
+  :: HasPromptIO m
+  => PlayerKey -> [Trait] -> Text -> (Trait -> m ()) -> m ()
+chooseTrait _ [] _ _ = pure ()
+chooseTrait pk options desc k = do
+  answer <- askPrompt Prompt
+    { player = pk
+    , kind = ChooseTrait {traitOptions = options, description = desc}
+    , callback = CallbackInlinePrompt
+    }
+  case answer of
+    PickTrait tr | tr `elem` options -> k tr
+    _ -> pure ()
+
+-- | Distinct Traits currently carried by any in-play unit (either
+-- player's). The natural option set for 'chooseTrait' — a "choose a
+-- Trait" card only matters for Traits actually on the board.
+traitsInPlay :: Game -> [Trait]
+traitsInPlay g =
+  foldr (\tr acc -> if tr `elem` acc then acc else tr : acc) []
+    [tr | u <- g.units, tr <- u.cardDef.traits]
+
 -- | "Discard a card from your hand with X loyalty to …" Prompts the
 -- player to discard exactly one card from hand, then runs the body
 -- with that card's printed loyalty as X. The whole-line idiom shared
@@ -696,6 +759,11 @@ revealTopOfDeck pk n body =
 -- Casandora.)
 moveTopToBottomOfDeck :: HasQueue Message m => PlayerKey -> Int -> m ()
 moveTopToBottomOfDeck pk n = push (MoveTopToBottomOfDeck pk n)
+
+-- | "Move a card from a player's discard pile to the bottom of their
+-- deck." (Drakenhof Castle.) @owner@ is the discard/deck's owner.
+moveDiscardCardToDeckBottom :: HasQueue Message m => PlayerKey -> UnitKey -> m ()
+moveDiscardCardToDeckBottom owner cardKey = push (MoveDiscardCardToDeckBottom owner cardKey)
 
 -- | "Return these cards to the top (and these to the bottom) of your
 -- deck in this order." Drives the scry "in any order" effects after the
@@ -839,6 +907,11 @@ buffSavage target n = PendingBuff target (GainSavage n)
 -- Alluring Daemonettes.
 mustDefend :: UnitKey -> PendingBuff
 mustDefend target = PendingBuff target MustDefend
+
+-- | "This unit gains [keyword]." Pair with 'until' for the duration
+-- (Swift-moving Storm: @until EndOfTurn $ gainKeyword Scout k@).
+gainKeyword :: Keyword -> UnitKey -> PendingBuff
+gainKeyword kw target = PendingBuff target (GainKeyword kw)
 
 -- | "This card cannot be targeted by card effects." @opponentOnly@ True
 -- blocks only the opponent (Shield of Saphery, Ghostly Apparition);

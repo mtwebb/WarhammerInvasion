@@ -727,6 +727,83 @@ hiddenSorceress = unitCard "rising-dawn-017" "Hidden Sorceress" do
     when (qController == self.controller.next) $
       addQuestToken qkey (-1)
 
+-- Bloodquest: Fragments of Power ----------------------------------------
+
+arkayneVampire :: CardDef Unit
+arkayneVampire = unitCard "fragments-of-power-035" "Arkayne Vampire" do
+  cost 3
+  loyalty 0
+  power 0
+  hitPoints 2
+  traits [Undead, Vampire]
+  destructionOnly
+  body
+    "Destruction only. This unit gains +1 hit point for each damage on it. \
+    \Action: At the beginning of your turn, move 1 damage from target unit to \
+    \this unit. That unit gets -1 hit point until the end of the turn."
+  -- Each point of damage on the Vampire raises its own max HP by 1, so
+  -- siphoning damage onto it never kills it on its own.
+  selfHP \_g u -> case u.damage of Damage d -> d
+  onMyTurnBegin \_owner self -> do
+    let pk = self.controller
+    withTarget pk AnyUnit \k -> do
+      moveDamage k self.key 1
+      until EndOfTurn $ debuffHP k 1
+
+danceToLoec :: CardDef Tactic
+danceToLoec = tacticCard "fragments-of-power-037" "Dance to Loec" do
+  cost 0
+  loyalty 0
+  trait WoodElf
+  orderOnly
+  body
+    "Wood Elf. Order only. Action: Play this card as a development (it does \
+    \not count against your development limit)."
+  -- Modelled as adding a facedown development to a chosen zone; the
+  -- engine's per-turn develop limit doesn't apply to effect-driven
+  -- developments, matching "does not count against your limit."
+  playableWhen \g pk -> canDevelop g pk
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk MyDevZone \zone -> addDevelopment pk zone
+
+weHatesThemAll :: CardDef Quest
+weHatesThemAll = questCard "fragments-of-power-040" "We Hates Them All" do
+  cost 1
+  loyalty 0
+  trait Skaven
+  destructionOnly
+  body
+    "Destruction only. Quest. Action: When a Skaven unit enters play under \
+    \your control, put 1 resource token on this card if a unit is questing \
+    \here. Quest. Action: Remove 1 resource token from this card to have \
+    \target attacking Skaven unit gain {power} for each resource token on \
+    \this card."
+  onFriendlyUnitEnterPlay \_owner self uk -> do
+    g <- getGame
+    case findUnit uk g of
+      Just u
+        | Skaven `elem` u.cardDef.traits ->
+            withQuest self.key \q ->
+              when (isJust q.questingUnit) $ addQuestToken self.key 1
+      _ -> pure ()
+  action "Stir the swarm" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    whenJust (findQuest usage.self.key g) \me ->
+      when (me.tokens >= 1) do
+        addQuestToken usage.self.key (-1)
+        -- "gain {power} for each resource token on this card" — the
+        -- tokens remaining after the one just spent.
+        g2 <- getGame
+        whenJust (findQuest usage.self.key g2) \me2 ->
+          withTarget pk
+            ( UnitMatching \_p gg u -> case gg.combat of
+                Just cs -> u.key `elem` cs.attackers && Skaven `elem` u.cardDef.traits
+                Nothing -> False
+            )
+            \k -> until EndOfTurn $ buffPower k me2.tokens
+
 -- Bloodquest: Vessel of the Winds ---------------------------------------
 
 secretCrypts :: CardDef Quest
@@ -773,6 +850,38 @@ magePriestOfItza = unitCard "vessel-of-the-winds-076" "Mage-Priest of Itza" do
     \pile back into your deck."
   onEnterPlay \_owner self -> recycleDiscard self.controller 5
 
+clanEshinMutant :: CardDef Unit
+clanEshinMutant = unitCard "vessel-of-the-winds-077" "Clan Eshin Mutant" do
+  cost 6
+  loyalty 0
+  power 2
+  hitPoints 4
+  traits [Skaven, Mutant, Assassin]
+  destructionOnly
+  battlefieldOnly
+  body
+    "Destruction only. Battlefield only. This unit enters play corrupted. \
+    \Action: When this unit enters or leaves play, deal 2 damage to target \
+    \unit. Then, destroy that unit if it has 1 remaining hit point."
+  onEnterPlay \_owner self -> do
+    corrupt self.key
+    -- "deal 2 damage to target unit; destroy if 1 remaining hit point".
+    -- 'dealDamage' is queued, so the re-fetched snapshot still shows the
+    -- pre-damage total: 1 remaining after this strike is maxHP - d - 2.
+    withTarget self.controller AnyUnit \k -> do
+      dealDamage k 2
+      g <- getGame
+      whenJust (findUnit k g) \u -> do
+        let Damage d = u.damage
+        when (u.effectiveMaxHP - d - 2 == 1) $ destroyUnit k
+  onSelfLeavesPlay \_owner self ->
+    withTarget self.controller AnyUnit \k -> do
+      dealDamage k 2
+      g <- getGame
+      whenJust (findUnit k g) \u -> do
+        let Damage d = u.damage
+        when (u.effectiveMaxHP - d - 2 == 1) $ destroyUnit k
+
 -- Bloodquest: Shield of the Gods ----------------------------------------
 
 deathInTheShadows :: CardDef Tactic
@@ -796,6 +905,40 @@ deathInTheShadows = tacticCard "shield-of-the-gods-116" "Death in the Shadows" d
         whenJust (findUnit k g2) \u -> do
           let Damage d = u.damage
           when (u.effectiveMaxHP - d - 1 == 1) $ destroyUnit k
+
+talismanicTatoos :: CardDef Support
+talismanicTatoos = supportCard "shield-of-the-gods-117" "Talismanic Tatoos" do
+  cost 2
+  loyalty 0
+  traits [WoodElf, Attachment]
+  orderOnly
+  body
+    "Wood Elf. Order only. Attach to a target Wood Elf unit. Attached unit \
+    \gains {power} for each development in this zone."
+  supportAura \g s u ->
+    if s.attachedTo == Just u.key then devsInZone g u else 0
+
+trinketsOfGold :: CardDef Support
+trinketsOfGold = supportCard "shield-of-the-gods-115" "Trinkets of Gold" do
+  cost 1
+  loyalty 0
+  traits [Lizardmen, Treasure, Attachment]
+  orderOnly
+  body
+    "Lizardmen. Order only. Attach to a target Lizardmen unit you control. \
+    \Action: When attached unit attacks or defends, draw cards equal to the \
+    \number of Treasure and Artefact cards you control."
+  onAttachedHostAttackOrDefend \_owner self _host -> do
+    g <- getGame
+    let pk = self.controller
+        n =
+          length
+            [ s
+            | s <- allInPlaySupports g
+            , s.controller == pk
+            , Treasure `elem` s.cardDef.traits || Artefact `elem` s.cardDef.traits
+            ]
+    when (n > 0) $ drawCards pk n
 
 -- The Capital Cycle ----------------------------------------------------
 
@@ -1751,6 +1894,26 @@ shroudedWaywatcher = unitCard "hidden-kingdoms-013" "Shrouded Waywatcher" do
   ambush 3
   counterstrike 4
 
+oakOfAges :: CardDef Support
+oakOfAges = supportCard "hidden-kingdoms-016" "The Oak of Ages" do
+  cost 3
+  loyalty 0
+  power 2
+  traits [WoodElf, Location]
+  body "Wood Elf only. Each Wood Elf unit in play also counts as a development."
+  -- Modelled as raising the burn threshold of each of the controller's
+  -- zones by the number of their Wood Elf units in that zone. (Cards that
+  -- literally count "developments in this zone" still read the printed
+  -- count; this covers the primary HP effect.)
+  countsAsDevelopments \g s zone ->
+    length
+      [ u
+      | u <- g.units
+      , u.controller == s.controller
+      , WoodElf `elem` u.cardDef.traits
+      , u.zone == zone
+      ]
+
 chameleonStalker :: CardDef Unit
 chameleonStalker = unitCard "hidden-kingdoms-003" "Chameleon Stalker" do
   cost 1
@@ -2158,6 +2321,90 @@ arcanePower = tacticCard "the-accursed-dead-057" "Arcane Power" do
       chooseFromCards pk 0 1 me.discard
         "Choose a card to return from your discard pile to your hand." \chosen ->
           for_ chosen \c -> returnFromDiscardToHand pk [c.key]
+
+bladesinger :: CardDef Unit
+bladesinger = unitCard "the-accursed-dead-055" "Bladesinger" do
+  cost 5
+  loyalty 0
+  power 3
+  hitPoints 2
+  traits [WoodElf, Elite]
+  orderOnly
+  body
+    "Wood Elf. Order only. Action: When one of your zones with at least 3 \
+    \developments is attacked, put this unit into play in that zone from your \
+    \hand, declared as a defender. Action: If this unit has 2 or less damage \
+    \on it or assigned to it, return this unit to the top of its owner's deck."
+  defenderFromHandWhen \g pk zone ->
+    let p = playerOf pk g
+        Developments n = case zone of
+          KingdomZone -> p.capital.kingdom.developments
+          QuestZone -> p.capital.quest.developments
+          BattlefieldZone -> p.capital.battlefield.developments
+     in n >= 3
+  action "Slip away" 0 \usage -> do
+    g <- getGame
+    whenJust (findUnit usage.self.key g) \u -> do
+      let Damage d = u.damage
+      when (d <= 2) $ returnUnitToTopOfDeck u.key
+
+borderPatrol :: CardDef Quest
+borderPatrol = questCard "portent-of-doom-100" "Border Patrol" do
+  cost 1
+  loyalty 0
+  trait WoodElf
+  orderOnly
+  body
+    "Wood Elf. Order only. Quest. Action: When one of your zones is attacked, \
+    \if a Wood Elf unit is questing here, sacrifice this quest to turn target \
+    \development in the attacked zone faceup. If it is a Wood Elf unit, leave it \
+    \in play and that unit must defend this turn, if able. Otherwise, sacrifice \
+    \it immediately."
+  onMyAnyZoneAttacked \_owner self zone -> do
+    g <- getGame
+    let woodElfQuesting =
+          case findQuest self.key g >>= (.questingUnit) of
+            Just uk -> maybe False (\u -> WoodElf `elem` u.cardDef.traits) (findUnit uk g)
+            Nothing -> False
+    when woodElfQuesting do
+      let pk = self.controller
+          devs = Map.findWithDefault [] zone (playerOf pk g).developmentCards
+      unless (null devs) do
+        destroyQuest self.key
+        chooseFromCards pk 1 1 devs
+          "Turn a development in the attacked zone faceup." \chosen ->
+            for_ chosen \c -> push (FlipDevelopmentDefender pk zone c.key WoodElf)
+
+drakenhofCastle :: CardDef Support
+drakenhofCastle = supportCard "the-accursed-dead-056" "Drakenhof Castle" do
+  cost 3
+  loyalty 0
+  power 2
+  traits [Undead, Location]
+  destructionOnly
+  body
+    "Destruction only. Action: Move a non-Undead unit in any player's discard \
+    \pile to the bottom of his deck to cancel the next 2 damage assigned to \
+    \target Undead unit this turn."
+  action "Ancient wards" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    let hasUndeadTarget = any (\u -> Undead `elem` u.cardDef.traits) g.units
+        discardUnits owner =
+          [ (owner, c)
+          | c <- (playerOf owner g).discard
+          , Just cd <- [asUnit c.def]
+          , Undead `notElem` cd.traits
+          ]
+        candidates = discardUnits pk <> discardUnits pk.next
+    when (hasUndeadTarget && not (null candidates)) $
+      chooseFromCards pk 1 1 (map snd candidates)
+        "Move a non-Undead unit from a discard pile to the bottom of its deck." \chosen ->
+          for_ chosen \c -> do
+            let owner = maybe pk fst (find ((== c.key) . (.key) . snd) candidates)
+            moveDiscardCardToDeckBottom owner c.key
+            withTarget pk (UnitMatching \_p _g u -> Undead `elem` u.cardDef.traits) \k ->
+              until EndOfTurn $ damageShield k 2
 
 shieldOfAeons :: CardDef Support
 shieldOfAeons = supportCard "shield-of-the-gods-101" "Shield of Aeons" do

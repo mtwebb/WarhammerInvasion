@@ -18,73 +18,6 @@ import {-# SOURCE #-} Invasion.Engine (HasPromptIO)
 import {-# SOURCE #-} Invasion.Game (Game, HasGame)
 import {-# SOURCE #-} Invasion.Message (Message)
 
-data Keyword
-  = Toughness Number
-  | BattlefieldOnly
-  | KingdomOnly
-  | QuestOnly
-  | Scout
-  | Limited
-  | DamageCannotBeCancelled
-  | Counterstrike Int
-  | Raider Int
-    -- ^ Raider X (Eternal War cycle): after combat damage is applied,
-    -- the attacking player gains resources equal to the combined
-    -- Raider X of all his attacking units that survived combat.
-    -- Multiple instances on one unit (e.g. printed + an attachment)
-    -- add together. Handled centrally by the combat pipeline
-    -- ('FireRaiderResources'), mirroring 'Scout'.
-  | PlayInOpponentArea
-    -- ^ Quest enters play in the opponent's play area while remaining
-    -- under the playing player's control. Used by Dominion of Chaos.
-  | PlayInOpponentControl
-    -- ^ "Invasion" quests: the card is played from your hand but enters
-    -- play in an opponent's area AND under that opponent's control
-    -- (controller = zoneOwner = opponent). Its Forced drawbacks then key
-    -- off the controller's (opponent's) turn. Used by Snotling Invasion,
-    -- Beastman Incursion, Pleasure Cults.
-  | Ambush Int
-    -- ^ Ambush X (Hidden Kingdoms): the card may be played facedown as a
-    -- development, then flipped faceup for X resources during the combat
-    -- Ambush step (after Declare Attackers, before Declare Defenders) on
-    -- a development in the defending zone. The card becomes its printed
-    -- type; a flipped unit must be declared as a defender that step.
-  | Savage Int
-    -- ^ Savage X (Lizardmen): after this unit is dealt damage and
-    -- survives, its controller may deal X damage to a target unit in a
-    -- corresponding zone (any unit sharing this unit's zone kind). The
-    -- engine dispatches this generically off 'totalSavage', so the value
-    -- can be granted dynamically (Savage Rush, Cloak of Feathers).
-  | OrderOnly
-    -- ^ Neutral-card restriction: cannot be included in a Destruction
-    -- (Chaos / Orc / Dark Elf) deck.
-  | DestructionOnly
-    -- ^ Neutral-card restriction: cannot be included in an Order
-    -- (Empire / Dwarf / High Elf) deck.
-  | LimitOneHeroPerZone
-    -- ^ Hero restriction. While a player controls a Hero in a given
-    -- zone, neither player may put, play, or move another Hero into
-    -- that same zone (FAQ 2.2 clarification).
-  | PlayAnytime
-    -- ^ "You may play this unit from your hand any time you could
-    -- take an action." (Nordland Halberdiers.) The engine relaxes the
-    -- capital-window gate to tactic timing for cards carrying this.
-  | Necromancy
-    -- ^ "You may play this card from your discard pile. If you do, put
-    -- it on the bottom of your deck at the end of the turn." (March of
-    -- the Damned Undead.) Adds a discard-pile play path that pays the
-    -- printed cost and schedules an end-of-turn return to the deck.
-  | Feared Int
-    -- ^ "Feared X (while this unit is attacking, blank the text box of X
-    -- target units except for Traits)." (Zombie Dragon, Spawn of
-    -- Kintearer.) Implemented per-card via an attack-declared trigger.
-  | Grudge
-    -- ^ "Grudge" supports (Stone / Blood / Ancient Vengeance): "When
-    -- your capital is dealt combat damage, you may put this card into
-    -- play from your hand." The engine offers each Grudge support in the
-    -- damaged player's hand after combat damage lands on a capital zone.
-  deriving stock (Show, Eq)
-
 data Cost = PayResources Number | NoCost
 
 data Trait
@@ -222,11 +155,19 @@ data Trait
     -- Pleasure Cults) — played into an opponent's area under their
     -- control. The mechanic itself rides the 'PlayInOpponentControl'
     -- keyword.
+  | Treasure
+    -- ^ Treasure attachment trait (Trinkets of Gold) — counted
+    -- alongside Artefact cards for draw payoffs.
+  | Mutant
+    -- ^ Mutant trait (Clan Eshin Mutant).
+  | Assassin
+    -- ^ Assassin trait (Clan Eshin Mutant).
   deriving stock (Show, Eq)
 
 mconcat
-  [ deriveToJSON defaultOptions ''Keyword
-  , deriveToJSON defaultOptions ''Trait
+  [ -- Trait needs FromJSON too: it rides the wire back inside the
+    -- trait-picker prompt result (PickTrait / PromptTraitWire).
+    deriveJSON defaultOptions ''Trait
   ]
 
 -- | Open type family of in-play self-references, indexed by card kind.
@@ -476,6 +417,13 @@ data UnitExtras = UnitExtras
     -- ^ "When this unit defends, it deals its combat damage to all
     -- attacking units." (Juvenile Wyvern.) The assign step gives each
     -- attacker the unit's full combat damage instead of pooling it.
+  , defenderFromHandWhen :: Maybe (Game -> PlayerKey -> ZoneKind -> Bool)
+    -- ^ "Action: When one of your zones [matching the predicate] is
+    -- attacked, put this unit into play in that zone from your hand,
+    -- declared as a defender." (Bladesinger.) When 'Just pred', the
+    -- engine offers this unit from the defending player's hand at
+    -- 'BeginCombat' for any attacked @zone@ where @pred g pk zone@
+    -- holds, then compels it via 'MustDefend'.
   }
 
 -- | Card-supplied redirect plan returned from 'preDamageRedirect'.
@@ -546,6 +494,11 @@ data SupportExtras = SupportExtras
   , zonePowerBonus :: Game -> InPlay Support -> ZoneKind -> Int
     -- ^ Extra power this support contributes to a zone of its
     -- controller (Lighthouse of Lothern, Rift of Chaos).
+  , developmentBonusInZone :: Game -> InPlay Support -> ZoneKind -> Int
+    -- ^ Extra developments this support confers on the named zone of
+    -- its controller — cards that "also count as a development" (The
+    -- Oak of Ages: each Wood Elf unit; Higher Learning). Folded into the
+    -- zone's burn threshold in 'landZoneDamage'.
   , globalCostAdjustment :: Game -> InPlay Support -> PlayerKey -> CardCodeFilter -> Int
     -- ^ Adjustment this support imposes on the printed cost of
     -- another card being played. Args: game, this support, playing
@@ -779,6 +732,7 @@ instance HasDefaultExtras Unit where
     , bodyguardLegendRace = Nothing
     , destroyedToZone = \_ _ -> Nothing
     , defenderDamageToAllAttackers = False
+    , defenderFromHandWhen = Nothing
     }
 
 instance HasDefaultExtras Support where
@@ -807,6 +761,7 @@ instance HasDefaultExtras Support where
     , blanksHost = False
     , hostDestroyRansom = Nothing
     , revertToUnit = Nothing
+    , developmentBonusInZone = \_ _ _ -> 0
     , grantsHostDamageImmunity = \_ _ _ -> False
     , imposesNoPowerOn = \_ _ _ -> False
     , imposesCannotDefendOn = \_ _ _ -> False

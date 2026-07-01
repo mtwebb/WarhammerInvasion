@@ -250,6 +250,16 @@ function targetOptionKey(o: TargetOption): string {
 function submitTargetOption(o: TargetOption) {
   game.resolvePromptTargetOption(o)
 }
+
+// Trait enum constructors arrive as bare PascalCase strings; space them
+// for display (e.g. "WoodElf" -> "Wood Elf", "WarMachine" -> "War Machine").
+function traitLabel(tr: string): string {
+  return tr.replace(/([a-z])([A-Z])/g, '$1 $2')
+}
+
+function submitTrait(tr: string) {
+  game.resolvePromptTrait(tr)
+}
 </script>
 
 <template>
@@ -378,6 +388,29 @@ function submitTargetOption(o: TargetOption) {
             {{ targetOptionLabel(o) }}
           </button>
           <p v-if="prompt.kind.options.length === 0" class="empty">
+            {{ t('game.prompt.no_targets') }}
+          </p>
+        </div>
+      </template>
+      <template v-else>
+        <em>{{ t('game.prompt.waiting') }}</em>
+      </template>
+    </div>
+
+    <!-- ChooseTrait -->
+    <div v-else-if="prompt.kind.tag === 'ChooseTrait'" class="actions">
+      <template v-if="itsMine">
+        <div class="picks">
+          <button
+            v-for="tr in prompt.kind.traitOptions"
+            :key="tr"
+            type="button"
+            class="pick"
+            @click="submitTrait(tr)"
+          >
+            {{ traitLabel(tr) }}
+          </button>
+          <p v-if="prompt.kind.traitOptions.length === 0" class="empty">
             {{ t('game.prompt.no_targets') }}
           </p>
         </div>

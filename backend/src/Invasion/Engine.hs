@@ -1533,6 +1533,48 @@ instance Run Game where
                 "log.tactic.played"
                 [("player", playerParam pk), ("card", T.pack cd.title), ("cost", "0")]
               send (TacticResolved pk cd.code tgt 0)
+    PlayTacticFreeFromDiscard pk cardKey -> do
+      g <- get
+      let mcardDef =
+            find ((== cardKey) . (.key)) (lookupPlayer pk g).discard >>= (asTactic . (.def))
+      whenJust mcardDef \cardDef -> do
+        let schema = tacticTargetSchema cardDef
+        mtgt <- promptSchemaTarget pk schema
+        whenJust mtgt \tgt -> do
+          g' <- get
+          when (validateTarget pk schema tgt g') $
+            whenJust (takeTacticFromDiscard cardKey (lookupPlayer pk g')) \(cd, playerWithoutCard) -> do
+              let paidPlayer =
+                    playerWithoutCard
+                      {discard = mkCard cardKey (TacticCardDef cd) : playerWithoutCard.discard}
+              modify (setPlayer pk paidPlayer)
+              recordEvent \h -> h
+                {playedBy = Map.insertWith (<>) pk [cardCodeFilter cd] h.playedBy}
+              logIt LogPlayerAction
+                "log.tactic.played"
+                [("player", playerParam pk), ("card", T.pack cd.title), ("cost", "0")]
+              send (TacticResolved pk cd.code tgt 0)
+    PlayTacticFreeFromDeck pk cardKey -> do
+      g <- get
+      let mcardDef =
+            find ((== cardKey) . (.key)) (lookupPlayer pk g).deck >>= (asTactic . (.def))
+      whenJust mcardDef \cardDef -> do
+        let schema = tacticTargetSchema cardDef
+        mtgt <- promptSchemaTarget pk schema
+        whenJust mtgt \tgt -> do
+          g' <- get
+          when (validateTarget pk schema tgt g') $
+            whenJust (takeTacticFromDeck cardKey (lookupPlayer pk g')) \(cd, playerWithoutCard) -> do
+              let paidPlayer =
+                    playerWithoutCard
+                      {discard = mkCard cardKey (TacticCardDef cd) : playerWithoutCard.discard}
+              modify (setPlayer pk paidPlayer)
+              recordEvent \h -> h
+                {playedBy = Map.insertWith (<>) pk [cardCodeFilter cd] h.playedBy}
+              logIt LogPlayerAction
+                "log.tactic.played"
+                [("player", playerParam pk), ("card", T.pack cd.title), ("cost", "0")]
+              send (TacticResolved pk cd.code tgt 0)
     TacticResolved pk code target xVal -> do
       g <- get
       case Map.lookup code allCards of
@@ -1684,7 +1726,8 @@ instance Run Game where
           landZoneDamage targetPlayer zoneKind amount
           -- Grudge: when this capital section is dealt combat damage, the
           -- owner may put any Grudge support from hand into play.
-          when (amount > 0 && isJust g0.combat) $
+          when (amount > 0 && isJust g0.combat) $ do
+            send (CapitalDealtCombatDamage targetPlayer zoneKind)
             offerGrudgeResponses targetPlayer zoneKind
     DealDamageToZoneUncancellable targetPlayer zoneKind raw -> do
       -- Like 'DealDamageToZone' but bypasses capital shields, redirects,
@@ -1753,6 +1796,17 @@ instance Run Game where
             , ("zone", zoneParam zone)
             , ("amount", tshow taken)
             ]
+    RemoveBurnToken pk zone -> do
+      g <- get
+      let player = lookupPlayer pk g
+          zoneL = getZone zone player
+      when zoneL.burned $ do
+        let zoneL' = (zoneL {burned = False, damage = Damage 0}) :: Zone
+            player' = setZone zone zoneL' player
+        modify (setPlayer pk player')
+        logIt LogSystem
+          "log.zone.unburned"
+          [("player", playerParam pk), ("zone", zoneParam zone)]
     AddDevelopment pk zone -> do
       g <- get
       let player = lookupPlayer pk g
@@ -1986,6 +2040,9 @@ instance Run Game where
           [("player", playerParam pk), ("amount", tshow amount)]
     GrantNecromancyToDiscardCard cardKey ->
       modify \gx -> gx {grantedNecromancy = cardKey : gx.grantedNecromancy}
+    GrantExtraLimitedPlay pk -> do
+      recordEvent \h -> h {limitedWaivers = h.limitedWaivers + 1}
+      logIt LogSystem "log.limited.waived" [("player", playerParam pk)]
     GrantLoyaltyWaiver pk race -> do
       g <- get
       let snapshot = racePlaysThisTurn g pk race
@@ -2124,6 +2181,9 @@ instance Run Game where
                     [("attacker", playerParam attacker)]
                 _ -> pure ()
             Nothing -> pure ()
+          -- Bladesinger and kin: offer from-hand defenders for the
+          -- attacked zone before defenders are declared.
+          offerDefenderAmbushFromHand defender zone
           openAutoCombatWindow AfterDeclareCombatTarget
     AdvanceCombatToAttackers ->
       openAutoCombatWindow AfterDeclareAttackers
@@ -2174,6 +2234,46 @@ instance Run Game where
                   | any ((== ck) . (.key)) eligible ->
                       send (AmbushDevelopment pk zk ck)
                 _ -> send AdvanceCombatToDefenders
+    FlipDevelopmentDefender pk zk cardKey reqTrait -> do
+      g <- get
+      let player = lookupPlayer pk g
+          zoneCards = Map.findWithDefault [] zk player.developmentCards
+      whenJust (find ((== cardKey) . (.key)) zoneCards) \c -> do
+        let rest = filter ((/= cardKey) . (.key)) zoneCards
+            cap = player.capital
+            cap' = Capital
+              { kingdom = decrementDev zk cap.kingdom
+              , quest = decrementDev zk cap.quest
+              , battlefield = decrementDev zk cap.battlefield
+              }
+        case c.def of
+          UnitCardDef cardDef
+            | reqTrait `elem` cardDef.traits -> do
+                let player' = player
+                      { developmentCards = Map.insert zk rest player.developmentCards
+                      , capital = cap'
+                      }
+                    unit = freshUnit cardKey pk zk cardDef
+                modify \gx -> (setPlayer pk player' gx) {units = unit : gx.units}
+                send (InstallModifier (UnitRef cardKey) (Modifier MustDefend EndOfTurn))
+                logIt LogSystem
+                  "log.development.flipped"
+                  [ ("player", playerParam pk)
+                  , ("zone", zoneParam zk)
+                  , ("card", T.pack cardDef.title)
+                  ]
+                send (UnitEnteredPlay pk cardKey)
+          _ -> do
+            -- Not a matching unit: sacrifice the flipped development.
+            let player' = player
+                  { developmentCards = Map.insert zk rest player.developmentCards
+                  , capital = cap'
+                  , discard = c : player.discard
+                  }
+            modify (setPlayer pk player')
+            logIt LogSystem
+              "log.development.flipped"
+              [("player", playerParam pk), ("zone", zoneParam zk)]
     AmbushDevelopment pk zk cardKey -> do
       -- Flip one specific facedown development faceup as an ambush:
       -- pay Ambush X, pop it, put the unit into play (no end-of-turn
@@ -2631,6 +2731,48 @@ instance Run Game where
                 , ("card", T.pack u.cardDef.title)
                 , ("zone", zoneParam newZone)
                 ]
+    MoveDiscardCardToDeckBottom owner cardKey -> do
+      g <- get
+      let player = lookupPlayer owner g
+      case partition ((== cardKey) . (.key)) player.discard of
+        ([card], rest) -> do
+          modify (setPlayer owner (player {discard = rest, deck = player.deck <> [card]}))
+          logIt LogSystem
+            "log.card.to_deck_bottom"
+            [("player", playerParam owner), ("card", T.pack (someCardTitle card.def))]
+        _ -> pure ()
+    PutHandCardOnTopOfDeck pk cardKey -> do
+      g <- get
+      let player = lookupPlayer pk g
+      case partition ((== cardKey) . (.key)) player.hand of
+        ([card], rest) -> do
+          modify (setPlayer pk (player {hand = rest, deck = card : player.deck}))
+          logIt LogSystem
+            "log.card.to_deck_top"
+            [("player", playerParam pk), ("card", T.pack (someCardTitle card.def))]
+        _ -> pure ()
+    ReturnUnitToTopOfDeck ukey -> do
+      g <- get
+      whenJust (findUnit ukey g) \u -> do
+        -- Like 'ReturnUnitToHand' but the card lands on top of the deck.
+        let player = lookupPlayer u.controller g
+            deckCard = mkCard u.key (UnitCardDef u.cardDef)
+            player' = player {deck = deckCard : player.deck}
+        modify (setPlayer u.controller player')
+        for_ u.attachments discardAttachment
+        modify \gx -> gx {units = removeById ukey gx.units}
+        recordEvent \h -> h {unitsDiscarded = h.unitsDiscarded + 1}
+        logIt LogSystem
+          "log.unit.returned"
+          [ ("player", playerParam u.controller)
+          , ("card", T.pack u.cardDef.title)
+          ]
+        send $ UnitLeftPlay DepartedUnit
+          { key = ukey
+          , controller = u.controller
+          , zone = u.zone
+          , cardDef = u.cardDef
+          }
     ReturnUnitToHand ukey -> do
       g <- get
       whenJust (findUnit ukey g) \u -> do
@@ -3548,6 +3690,7 @@ freshUnit key controller zone cardDef = UnitDetails
   , defending = False
   , tokens = 0
   , blanked = False
+  , grantedKeywords = []
   }
 
 -- | The unit's extras with Witch Hag's Curse blanking applied: a
@@ -3562,7 +3705,7 @@ unitExtrasOf u
 
 -- | The unit's printed keywords, blank while text-boxed-out.
 unitKeywords :: UnitDetails -> [Keyword]
-unitKeywords u = if u.blanked then [] else u.cardDef.keywords
+unitKeywords u = if u.blanked then [] else u.cardDef.keywords <> u.grantedKeywords
 
 -- | The unit's printed action abilities, blank while text-boxed-out.
 unitActions :: UnitDetails -> [ActionDef 'Unit]
@@ -3604,7 +3747,16 @@ landZoneDamage targetPlayer zoneKind amount =
     let target = lookupPlayer targetPlayer g
         zoneL = getZone zoneKind target
         Damage existing = zoneL.damage
-        HitPoints zoneHp = zoneL.hitPoints
+        HitPoints zoneHpBase = zoneL.hitPoints
+        -- Cards that "also count as a development" (The Oak of Ages,
+        -- Higher Learning) raise this zone's burn threshold.
+        extraDev =
+          sum
+            [ s.cardDef.extras.developmentBonusInZone g s zoneKind
+            | s <- allInPlaySupports g
+            , s.controller == targetPlayer
+            ]
+        zoneHp = zoneHpBase + extraDev
         total = existing + amount
         (newDmg, justBurned) =
           if total >= zoneHp && not zoneL.burned
@@ -4215,6 +4367,30 @@ offerGrudgeResponses pk zone = do
       play <- askYesNo pk
         ("Put '" <> title <> "' into play from your hand? (Grudge)")
       when play $ send (PutSupportIntoPlayFromHand pk k zone)
+
+-- | Bladesinger: when @pk@'s @zone@ is attacked, offer each unit in
+-- @pk@'s hand carrying a 'defenderFromHandWhen' predicate that holds for
+-- this zone to be put into play there, declared as a defender (a
+-- turn-scoped 'MustDefend' marker compels it at the Declare Defenders
+-- step). Mirrors 'offerGrudgeResponses'.
+offerDefenderAmbushFromHand :: PlayerKey -> ZoneKind -> StateT Game GameT ()
+offerDefenderAmbushFromHand pk zone = do
+  g <- get
+  let candidates =
+        [ (c.key, T.pack cd.title)
+        | c <- (lookupPlayer pk g).hand
+        , UnitCardDef cd <- [c.def]
+        , Just predicate <- [cd.extras.defenderFromHandWhen]
+        , predicate g pk zone
+        ]
+  for_ candidates \(k, title) -> do
+    g' <- get
+    when (any ((== k) . (.key)) (lookupPlayer pk g').hand) do
+      play <- askYesNo pk
+        ("Put '" <> title <> "' into play as a defender from your hand?")
+      when play $ do
+        send (PutUnitIntoPlay pk k zone)
+        send (InstallModifier (UnitRef k) (Modifier MustDefend EndOfTurn))
 
 -- | Consume armed capital-shield grants (Flagellants, Gifts of
 -- Aenarion) against inbound capital damage, oldest grant first.
@@ -5299,7 +5475,10 @@ controlsCopyInPlay pk code g =
 canPlayCard :: PlayerKey -> CardDef k -> Game -> Bool
 canPlayCard pk cd g =
   (not cd.unique || not (controlsCopyInPlay pk cd.code g))
-    && (not (isLimitedCard cd) || (historyOfScope ThisTurn g).limitedPlayed == 0)
+    && ( not (isLimitedCard cd)
+           || (historyOfScope ThisTurn g).limitedPlayed
+                <= (historyOfScope ThisTurn g).limitedWaivers
+       )
     && cd.canPlay g pk
 
 -- | Zone-entry restriction keywords ("Battlefield only." etc.). These
@@ -5386,7 +5565,9 @@ assessLegend g pk cd = case assessNonTactic g pk cd of
 baseUnplayable :: Game -> PlayerKey -> CardDef k -> Maybe PlayabilityIssue
 baseUnplayable g pk cd
   | cd.unique && controlsCopyInPlay pk cd.code g = Just UniqueAlreadyInPlay
-  | isLimitedCard cd && (historyOfScope ThisTurn g).limitedPlayed > 0 =
+  | isLimitedCard cd
+      && (historyOfScope ThisTurn g).limitedPlayed
+           > (historyOfScope ThisTurn g).limitedWaivers =
       Just LimitedAlreadyPlayed
   | not (cd.canPlay g pk) = Just NoValidTarget
   | otherwise = case cd.cost of
@@ -5660,6 +5841,11 @@ recomputeUnitStats g = g {units = map update g.units}
             , effectiveMaxHP = computeMaxHP u
             , attacking = u.key `elem` combatAttackers
             , defending = u.key `elem` combatDefenders
+            , grantedKeywords =
+                [ k
+                | Modifier (GainKeyword k) _ <-
+                    fromMaybe [] (Map.lookup (UnitRef u.key) g.modifiers)
+                ]
             }
             :: UnitDetails
     computePower u
@@ -5766,6 +5952,12 @@ takeSupportFromDiscard = takeFromPile discardPile asSupport
 
 takeTacticFromHand :: UnitKey -> Player -> Maybe (CardDef Tactic, Player)
 takeTacticFromHand = takeFromPile handPile asTactic
+
+takeTacticFromDiscard :: UnitKey -> Player -> Maybe (CardDef Tactic, Player)
+takeTacticFromDiscard = takeFromPile discardPile asTactic
+
+takeTacticFromDeck :: UnitKey -> Player -> Maybe (CardDef Tactic, Player)
+takeTacticFromDeck = takeFromPile deckPile asTactic
 
 takeLegendFromHand :: UnitKey -> Player -> Maybe (CardDef Legend, Player)
 takeLegendFromHand = takeFromPile handPile asLegend

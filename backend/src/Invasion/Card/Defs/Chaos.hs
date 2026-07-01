@@ -1351,6 +1351,106 @@ beastmanIncursion = questCard "the-accursed-dead-060" "Beastman Incursion" do
     whenJust (findQuest usage.self.key g) \me ->
       when (isJust me.questingUnit) $ destroyQuest usage.self.key
 
+-- Bloodquest: Vessel of the Winds ---------------------------------------
+
+xiratp :: CardDef Unit
+xiratp = unitCard "vessel-of-the-winds-072" "Xirat'p" do
+  race Chaos
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Daemon
+  body
+    "Action: Corrupt this unit to reveal the top card of your deck. If the \
+    \revealed card is a Spell or Epic Spell tactic, you may play it by spending \
+    \resources equal to its loyalty. Otherwise, discard it."
+  action "Glimpse beyond" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    case (playerOf pk g).deck of
+      [] -> pure ()
+      (top : _) -> do
+        corrupt usage.self.key
+        push (RevealCards pk [top])
+        case asTactic top.def of
+          Just cd
+            | Spell `elem` cd.traits -> do
+                let loy = someCardLoyalty top.def
+                    Resources have = (playerOf pk g).resources
+                if have >= loy
+                  then do
+                    yes <- askYesNo pk
+                      "Play the revealed Spell by spending its loyalty in resources?"
+                    when yes do
+                      payResources pk loy
+                      push (PlayTacticFreeFromDeck pk top.key)
+                  else pure ()
+          -- Not a Spell/Epic Spell tactic: discard it.
+          _ -> millFromDeck pk 1
+
+ptarix :: CardDef Unit
+ptarix = unitCard "vessel-of-the-winds-073" "P'tarix" do
+  race Chaos
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Daemon
+  body
+    "Action: Corrupt this unit to reveal a Spell or Epic Spell tactic from \
+    \your hand and put it on top of your deck."
+  action "Whisper of fate" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    let spells =
+          [ c
+          | c <- (playerOf pk g).hand
+          , Just cd <- [asTactic c.def]
+          , Spell `elem` cd.traits
+          ]
+    unless (null spells) do
+      corrupt usage.self.key
+      chooseFromCards pk 1 1 spells
+        "Reveal a Spell tactic to put on top of your deck." \chosen ->
+          for_ chosen \c -> do
+            push (RevealCards pk [c])
+            putHandCardOnTopOfDeck pk c.key
+
+-- Bloodquest: Portent of Doom -------------------------------------------
+
+unstableFlux :: CardDef Quest
+unstableFlux = questCard "portent-of-doom-099" "Unstable Flux" do
+  race Chaos
+  cost 1
+  loyalty 1
+  trait Epic
+  body
+    "Quest. Forced: When a Spell card is played, put 1 resource token on this \
+    \card if a unit is questing here. Quest. Action: Remove 2 resource tokens \
+    \from this card to discard the top card of each player's deck. Each player \
+    \must deal X uncancellable damage to 1 section of his capital, where X is \
+    \the printed cost of his discarded card."
+  onMySpellPlayed \_owner self -> do
+    g <- getGame
+    whenJust (findQuest self.key g) \me ->
+      when (isJust me.questingUnit) $ addQuestToken self.key 1
+  action "Unleash the flux" 0 \usage -> do
+    g <- getGame
+    whenJust (findQuest usage.self.key g) \me ->
+      when (me.tokens >= 2) do
+        addQuestToken usage.self.key (-2)
+        eachPlayer \pl -> do
+          g2 <- getGame
+          case (playerOf pl g2).deck of
+            [] -> pure ()
+            (top : _) -> do
+              let x = someCardCost top.def
+              millFromDeck pl 1
+              when (x > 0) $
+                withTarget pl (CapitalMatching \_ (o, _) -> o == pl) \(o, zk) ->
+                  push (DealDamageToZoneUncancellable o zk x)
+
 -- Bloodquest: Shield of the Gods ----------------------------------------
 
 necrodomosProphecy :: CardDef Tactic

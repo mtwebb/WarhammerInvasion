@@ -14,7 +14,7 @@ import Data.Text (Text)
 import Data.Time (UTCTime)
 import {-# SOURCE #-} Invasion.Card.Types (Card)
 import Invasion.Capital
-import Invasion.CardDef (ActionTarget, CardCodeFilter)
+import Invasion.CardDef (ActionTarget, CardCodeFilter, Trait)
 import Invasion.Entity (LegendDetails, QuestDetails, SupportDetails, UnitDetails)
 import Invasion.Modifier
 import Invasion.Player
@@ -176,6 +176,14 @@ data PromptKind
     -- ^ Pick an integer in @[minAmount, maxAmount]@. Used by
     -- variable-cost cards (Smash-Go-Boom!, Flames of Tzeentch) to
     -- ask the player how much X to pay; response is the chosen X.
+  | ChooseTrait
+      { traitOptions :: [Trait]
+      , description :: Text
+      }
+    -- ^ Pick one Trait from the offered list. Used by "choose a Trait,
+    -- then …" cards (Spirit Slayer, Ungrim Baragor); the options are
+    -- the Traits currently present among in-play units so the choice
+    -- is always meaningful. Response is the chosen 'Trait'.
   deriving stock Show
 
 -- | A single tagged target option offered to the player by
@@ -382,6 +390,10 @@ data History = History
     -- ^ Total damage landed on each unit in this scope.
   , limitedPlayed :: Int
     -- ^ How many Limited cards have been played in this scope.
+  , limitedWaivers :: Int
+    -- ^ Extra Limited plays granted this scope (Master of Maps: +1 when
+    -- you play a quest). The Limited restriction blocks a play only once
+    -- 'limitedPlayed' exceeds 'limitedWaivers'.
   , supportsPlayedBy :: Map PlayerKey Int
     -- ^ Per-player count of Support cards that player has played in
     -- this scope. Read by cost-discount cards that fire on the
@@ -415,6 +427,7 @@ instance Semigroup History where
     , damagedUnits = a.damagedUnits <> b.damagedUnits
     , damageTaken = Map.unionWith (+) a.damageTaken b.damageTaken
     , limitedPlayed = a.limitedPlayed + b.limitedPlayed
+    , limitedWaivers = a.limitedWaivers + b.limitedWaivers
     , supportsPlayedBy = Map.unionWith (+) a.supportsPlayedBy b.supportsPlayedBy
     , unitsPlayedBy = Map.unionWith (+) a.unitsPlayedBy b.unitsPlayedBy
     , drawnBy = Map.unionWith (+) a.drawnBy b.drawnBy
@@ -430,6 +443,7 @@ instance Monoid History where
     , damagedUnits = []
     , damageTaken = Map.empty
     , limitedPlayed = 0
+    , limitedWaivers = 0
     , supportsPlayedBy = Map.empty
     , unitsPlayedBy = Map.empty
     , drawnBy = Map.empty
@@ -628,6 +642,8 @@ data PromptResult
     -- ^ The chosen tagged option from a 'ChooseTargetOption' prompt.
   | PickAmount Int
     -- ^ Integer answer to a 'ChooseAmount' prompt.
+  | PickTrait Trait
+    -- ^ The chosen Trait from a 'ChooseTrait' prompt.
   | PickNone
     -- ^ Player declined / no eligible target.
   deriving stock Show
