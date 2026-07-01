@@ -531,6 +531,7 @@ allCards =
       ("the-eclipse-of-hope-098", UnitCardDef wardancer),
       ("the-eclipse-of-hope-099", UnitCardDef deadlySalamander),
       -- The Morrslieb cycle — Signs in the Stars (061-080)
+      ("signs-in-the-stars-061", UnitCardDef beleaguredScout),
       ("signs-in-the-stars-062", SupportCardDef karakAzulForge),
       ("signs-in-the-stars-064", UnitCardDef sneakyGit),
       ("signs-in-the-stars-065", UnitCardDef squigHopper),
@@ -552,6 +553,7 @@ allCards =
       ("the-twin-tailed-comet-057", SupportCardDef anointedCauldron),
       -- The Morrslieb cycle — Omens of Ruin (001-020)
       ("omens-of-ruin-001", UnitCardDef ancientLongbeards),
+      ("omens-of-ruin-008", QuestCardDef visitTheHauntedCity),
       ("omens-of-ruin-003", UnitCardDef poisonousWyvern),
       ("omens-of-ruin-004", UnitCardDef riverTroll),
       ("omens-of-ruin-005", SupportCardDef boarPen),
@@ -576,6 +578,7 @@ allCards =
       ("fiery-dawn-107", UnitCardDef veteranGreatsword),
       ("fiery-dawn-109", SupportCardDef duelistTraining),
       ("fiery-dawn-112", TacticCardDef furyOfAenarion),
+      ("fiery-dawn-103", QuestCardDef aidFromTheDepths),
       ("fiery-dawn-114", TacticCardDef callTheBrayherd),
       ("fiery-dawn-116", TacticCardDef darkBlessing),
       ("fiery-dawn-118", UnitCardDef forestDragon),

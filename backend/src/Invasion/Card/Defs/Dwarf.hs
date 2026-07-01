@@ -1207,6 +1207,30 @@ hallOfHeroes = supportCard "cataclysm-006" "Hall of Heroes" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+aidFromTheDepths :: CardDef Quest
+aidFromTheDepths = questCard "fiery-dawn-103" "Aid From The Depths" do
+  race Dwarf
+  cost 0
+  loyalty 2
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this card if a unit is questing here. Action: Discard 2 resources on this \
+    \card to heal 2 damage from your capital."
+  accrueTokenOnDevelopmentWhileQuesting
+  spendTokens "Aid from the depths" 2 \u -> healCapital u.user 2
+
+beleaguredScout :: CardDef Unit
+beleaguredScout = unitCard "signs-in-the-stars-061" "Beleaguered Scout" do
+  race Dwarf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Ranger
+  body "Action: Sacrifice a development to deal 1 damage to target attacking unit."
+  actionWith "Snipe" 0 [SacrificeDevelopment] \usage ->
+    withTarget usage.user attackingUnit \k -> dealDamage k 1
+
 ancientLongbeards :: CardDef Unit
 ancientLongbeards = unitCard "omens-of-ruin-001" "Ancient Longbeards" do
   race Dwarf

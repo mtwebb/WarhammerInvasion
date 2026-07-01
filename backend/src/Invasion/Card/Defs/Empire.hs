@@ -1250,6 +1250,23 @@ garrisoned = supportCard "cataclysm-022" "Garrisoned" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+visitTheHauntedCity :: CardDef Quest
+visitTheHauntedCity = questCard "omens-of-ruin-008" "Visit the Haunted City" do
+  race Empire
+  cost 0
+  loyalty 2
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this card if a unit is questing here. Action: Discard 2 resources on this \
+    \card to move a target unit or support card from its current zone to another \
+    \zone controlled by the same player."
+  accrueTokenOnDevelopmentWhileQuesting
+  -- Partial: models moving a unit you control to another of your zones
+  -- (the common case); the support-card option isn't modelled.
+  spendTokens "Reposition" 2 \u ->
+    withTarget u.user ownUnit \k ->
+      withTarget u.user MyAnyZone \z -> moveUnit k z
+
 chainLightning :: CardDef Tactic
 chainLightning = tacticCard "the-chaos-moon-028" "Chain Lightning" do
   race Empire
