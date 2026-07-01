@@ -4230,7 +4230,9 @@ eligibleAttacker g defender zone declaredKeys ukey = case findUnit ukey g of
     -- it controls is co-declared in this same attack.
     (u.zone `elem` (unitExtrasOf u).attackEligibleZones
        || rovingAttacker u ukey
-       || bodyguardActive u)
+       || bodyguardActive u
+       || hasModifier g.modifiers ukey CanAttackAnyZone
+       || any (.cardDef.extras.grantsHostAttackAnyZone) u.attachments)
       && not u.corrupted
       && not (hasModifier g.modifiers ukey CannotAttack)
       && not (any (.cardDef.extras.hostCannotAttack) u.attachments)

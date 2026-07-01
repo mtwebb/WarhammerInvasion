@@ -1125,6 +1125,29 @@ aPromiseOfWar = tacticCard "the-imperial-throne-118" "A Promise of War" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+theWildHunt :: CardDef Tactic
+theWildHunt = tacticCard "fiery-dawn-120" "The Wild Hunt" do
+  cost 4
+  loyalty 0
+  trait WoodElf
+  orderOnly
+  body
+    "Order only. Action: Choose a target unit. That unit's controller \
+    \sacrifices it. Then, that player may put into play facedown up to X \
+    \developments from the top of his deck. X is the sacrificed unit's power."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk AnyUnit \k -> do
+      g <- getGame
+      whenJust (findUnit k g) \u -> do
+        let owner = u.controller
+            x = u.effectivePower
+        destroyUnit k
+        when (x > 0) $
+          withTarget owner MyDevZone \zone -> do
+            n <- chooseAmount owner 0 x "Put how many developments from the top of your deck?"
+            replicateM_ n (addDevelopment owner zone)
+
 treeKin :: CardDef Unit
 treeKin = unitCard "omens-of-ruin-018" "Tree Kin" do
   cost 3

@@ -1231,6 +1231,30 @@ beleaguredScout = unitCard "signs-in-the-stars-061" "Beleaguered Scout" do
   actionWith "Snipe" 0 [SacrificeDevelopment] \usage ->
     withTarget usage.user attackingUnit \k -> dealDamage k 1
 
+gyrocopter :: CardDef Support
+gyrocopter = supportCard "signs-in-the-stars-063" "Gyrocopter" do
+  race Dwarf
+  cost 2
+  loyalty 2
+  power 0
+  traits [Attachment, WarMachine]
+  body
+    "Attach to a target [Dwarf] unit you control. Attached unit may attack \
+    \while in any of your zones."
+  grantsHostAttackAnyZone
+
+grudgebornFury :: CardDef Tactic
+grudgebornFury = tacticCard "fiery-dawn-102" "Grudgeborn Fury" do
+  race Dwarf
+  cost 4
+  loyalty 3
+  body "Action: Units in all zones may attack during battlefield phases this turn."
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    for_ [u | u <- g.units, u.controller == pk] \u ->
+      until EndOfTurn $ PendingBuff u.key CanAttackAnyZone
+
 ancientLongbeards :: CardDef Unit
 ancientLongbeards = unitCard "omens-of-ruin-001" "Ancient Longbeards" do
   race Dwarf

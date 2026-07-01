@@ -701,6 +701,10 @@ blanksAttachedUnit = modifySupportExtras \e -> e {blanksHost = True}
 preventsHostAttack :: CardBuilder Support ()
 preventsHostAttack = modifySupportExtras \e -> e {hostCannotAttack = True}
 
+-- | "Attached unit may attack while in any of your zones." (Gyrocopter.)
+grantsHostAttackAnyZone :: CardBuilder Support ()
+grantsHostAttackAnyZone = modifySupportExtras \e -> e {grantsHostAttackAnyZone = True}
+
 -- | "This card cannot be targeted by card effects." Unconditional
 -- self-immunity for the artefact attachments (Dawnstar Sword, Eye of
 -- Sheerian, Windcatcher Prism, …). Blocks every player.

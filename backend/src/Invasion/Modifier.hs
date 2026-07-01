@@ -78,6 +78,10 @@ data ModifierDetails
     -- ^ "This unit can defend any of its controller's zones." (Shield of
     -- the Gods.) Expands the defender candidate pool past the attacked
     -- zone, like the quester-defends-any-zone quest extra.
+  | CanAttackAnyZone
+    -- ^ "This unit may attack from any of its controller's zones."
+    -- (Grudgeborn Fury.) Expands the attacker pool past the unit's
+    -- printed 'attackEligibleZones'.
   | SavageDefenseBonus
     -- ^ "While defending, this unit deals +X combat damage where X is
     -- its Savage value." (Shield of the Gods.) Read by 'combatDamageOf'
