@@ -338,6 +338,11 @@ unitAura f = modifyUnitExtras \e -> e {unitAuraPower = f}
 toughnessAura :: (Game -> UnitDetails -> UnitDetails -> Int) -> CardBuilder Unit ()
 toughnessAura f = modifyUnitExtras \e -> e {unitAuraToughness = f}
 
+-- | Counterstrike this unit grants other units (Luthor Huss: +1 to units
+-- in his zone). Source unit is 'self'; the target is the third argument.
+counterstrikeAura :: (Game -> UnitDetails -> UnitDetails -> Int) -> CardBuilder Unit ()
+counterstrikeAura f = modifyUnitExtras \e -> e {unitAuraCounterstrike = f}
+
 -- | Aura hit points granted to other units. Source unit is 'self';
 -- target unit is the third arg. The unit-side mirror of the support
 -- 'supportAuraHP' slot; used by Mountain Sentry ("Ranger units in

@@ -5648,6 +5648,7 @@ totalCounterstrike g u =
     + (unitExtrasOf u).selfCounterstrikeBonus g u
     + sum [s.cardDef.extras.attachmentCounterstrikeBonus | s <- u.attachments]
     + sum [n | Modifier (GainCounterstrike n) _ <- mods]
+    + sum [(unitExtrasOf v).unitAuraCounterstrike g v u | v <- g.units]
   where
     mods = fromMaybe [] (Map.lookup (UnitRef u.key) g.modifiers)
 

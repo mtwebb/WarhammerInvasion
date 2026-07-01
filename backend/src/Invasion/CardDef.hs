@@ -362,6 +362,10 @@ data UnitExtras = UnitExtras
     -- both are in play (Mountain Sentry: +2 HP to Rangers in its
     -- zone). The unit-side mirror of 'supportAuraHP'; folded into the
     -- target's 'effectiveMaxHP' alongside 'unitAuraToughness'.
+  , unitAuraCounterstrike :: Game -> InPlay Unit -> InPlay Unit -> Int
+    -- ^ Counterstrike this in-play unit grants another unit while both
+    -- are in play (Luthor Huss: +1 to units in his zone). Folded into
+    -- the target's 'totalCounterstrike'.
   , preDamageRedirect :: Game -> InPlay Unit -> Int -> Maybe PreDamageRedirect
     -- ^ Consulted by the engine's 'DealDamageToUnit' handler BEFORE
     -- the damage lands. Args: game, the unit about to take damage,
@@ -722,6 +726,7 @@ instance HasDefaultExtras Unit where
     , unitCostAdjustment = \_ _ _ _ -> 0
     , unitAuraToughness = \_ _ _ -> 0
     , unitAuraHp = \_ _ _ -> 0
+    , unitAuraCounterstrike = \_ _ _ -> 0
     , preDamageRedirect = \_ _ _ -> Nothing
     , selfToughnessBonus = \_ _ -> 0
     , selfCounterstrikeBonus = \_ _ -> 0
