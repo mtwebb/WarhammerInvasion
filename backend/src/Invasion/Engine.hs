@@ -3769,7 +3769,17 @@ landZoneDamage targetPlayer zoneKind amount =
             | s <- allInPlaySupports g
             , s.controller == targetPlayer
             ]
-        zoneHp = zoneHpBase + extraDev
+        -- Units that have temporarily become developments (Tree Kin,
+        -- Thornflesh Dryad, Treeman Ancient) also count here.
+        actingDevs =
+          length
+            [ u
+            | u <- g.units
+            , u.controller == targetPlayer
+            , u.zone == zoneKind
+            , hasModifier g.modifiers u.key ActingAsDevelopment
+            ]
+        zoneHp = zoneHpBase + extraDev + actingDevs
         total = existing + amount
         (newDmg, justBurned) =
           if total >= zoneHp && not zoneL.burned

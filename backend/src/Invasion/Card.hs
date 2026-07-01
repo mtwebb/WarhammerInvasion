@@ -512,6 +512,7 @@ allCards =
       ("the-chaos-moon-031", QuestCardDef followThePortent),
       ("the-chaos-moon-032", UnitCardDef doombull),
       ("the-chaos-moon-036", UnitCardDef alluringChosen),
+      ("the-chaos-moon-038", UnitCardDef thornfleshDryad),
       ("the-chaos-moon-033", SupportCardDef desecratedTemple),
       ("the-chaos-moon-034", TacticCardDef plagueBomb),
       ("the-chaos-moon-035", UnitCardDef frenziedWitchElf),
@@ -561,6 +562,7 @@ allCards =
       ("the-twin-tailed-comet-046", SupportCardDef tribalTattoos),
       ("the-twin-tailed-comet-047", UnitCardDef celestialWizard),
       ("the-twin-tailed-comet-054", QuestCardDef emptyingTheWastes),
+      ("the-twin-tailed-comet-058", UnitCardDef treemanAncient),
       ("the-twin-tailed-comet-059", SupportCardDef forgottenCairn),
       ("the-twin-tailed-comet-048", SupportCardDef rallyPoint),
       ("the-twin-tailed-comet-050", UnitCardDef whiteLionVanguard),
@@ -585,6 +587,7 @@ allCards =
       ("omens-of-ruin-015", UnitCardDef witchHag),
       ("omens-of-ruin-016", UnitCardDef darkElfInfiltrator),
       ("omens-of-ruin-017", SupportCardDef malekithsThrone),
+      ("omens-of-ruin-018", UnitCardDef treeKin),
       ("omens-of-ruin-019", UnitCardDef nimbleSpearman),
       ("omens-of-ruin-020", TacticCardDef bribery),
       -- The Morrslieb cycle — Portent of Doom (081-100)
