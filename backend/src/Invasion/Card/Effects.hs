@@ -112,6 +112,12 @@ healCapital pk n = push (HealCapital pk n)
 removeBurnToken :: HasQueue Message m => PlayerKey -> ZoneKind -> m ()
 removeBurnToken pk zone = push (RemoveBurnToken pk zone)
 
+-- | "Move up to N damage from your capital zone onto a unit." (Orc
+-- Shaman, Dreams Uv Conkwest.) Capped at the zone's current damage.
+moveCapitalDamageToUnit
+  :: HasQueue Message m => PlayerKey -> ZoneKind -> UnitKey -> Int -> m ()
+moveCapitalDamageToUnit pk zk uk n = push (MoveCapitalDamageToUnit pk zk uk n)
+
 -- | "Heal N damage from a unit." (Trolls regenerate, Bloodsworn.)
 healUnit :: HasQueue Message m => UnitKey -> Int -> m ()
 healUnit k n = push (HealUnit k n)

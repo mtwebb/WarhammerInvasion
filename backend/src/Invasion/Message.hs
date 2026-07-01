@@ -537,6 +537,10 @@ data Message where
     -- zones are not healed.
   HealZone :: PlayerKey -> ZoneKind -> Int -> Message
     -- ^ Remove up to N damage tokens from one specific zone.
+  MoveCapitalDamageToUnit :: PlayerKey -> ZoneKind -> UnitKey -> Int -> Message
+    -- ^ Move up to N damage from the named player's capital zone onto a
+    -- unit (Orc Shaman, Dreams Uv Conkwest). Capped at the zone's
+    -- current damage; the moved amount is dealt to the unit.
   RemoveBurnToken :: PlayerKey -> ZoneKind -> Message
     -- ^ "Remove a burn token from your capital." Restores a burned
     -- zone to play (clears 'burned' and its damage). No-op if the
