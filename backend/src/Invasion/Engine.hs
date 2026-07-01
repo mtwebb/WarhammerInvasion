@@ -2768,6 +2768,15 @@ instance Run Game where
                 "log.development.from_hand"
                 [("player", playerParam pk), ("zone", zoneParam zone)]
             [] -> pure ()
+    MoveDiscardTopToDeckTop pk n -> do
+      g <- get
+      let player = lookupPlayer pk g
+          (moved, rest) = splitAt n player.discard
+      unless (null moved) $ do
+        modify (setPlayer pk (player {discard = rest, deck = moved <> player.deck}))
+        logIt LogSystem
+          "log.discard.to_deck_top"
+          [("player", playerParam pk), ("amount", tshow (length moved))]
     MoveDiscardCardToDeckBottom owner cardKey -> do
       g <- get
       let player = lookupPlayer owner g

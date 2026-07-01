@@ -1831,6 +1831,23 @@ sorcererOfTzeentch = unitCard "the-twin-tailed-comet-053" "Sorcerer of Tzeentch"
 
 -- The Enemy cycle -------------------------------------------------------
 
+brayingGor :: CardDef Unit
+brayingGor = unitCard "the-burning-of-derricksburg-012" "Braying Gor" do
+  race Chaos
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Warrior
+  body
+    "Action: Corrupt this unit to lower the cost of the next [Chaos] unit you \
+    \play this turn by 1 (to a minimum of 1)."
+  -- Approximation: the discount applies to the next unit played of any
+  -- race, not only [Chaos].
+  action "Bleat" 0 \usage -> do
+    corrupt usage.self.key
+    push (ScheduleNextUnitDiscount usage.user 1)
+
 wingedFury :: CardDef Unit
 wingedFury = unitCard "the-burning-of-derricksburg-013" "Winged Fury" do
   race Chaos

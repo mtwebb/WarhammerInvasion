@@ -1347,6 +1347,92 @@ wardancer = unitCard "the-eclipse-of-hope-098" "Wardancer" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+orderInChaos :: CardDef Tactic
+orderInChaos = tacticCard "the-burning-of-derricksburg-018" "Order in Chaos" do
+  cost 1
+  loyalty 0
+  orderOnly
+  body
+    "Order only. Action: Put the top two cards of target player's discard pile \
+    \on top of his deck."
+  whenResolved \self ->
+    withTarget self.controller TargetPlayer \target ->
+      push (MoveDiscardTopToDeckTop target 2)
+
+nightRunners :: CardDef Unit
+nightRunners = unitCard "the-burning-of-derricksburg-020" "Night Runners" do
+  cost 2
+  loyalty 0
+  power 1
+  hitPoints 1
+  trait Skaven
+  destructionOnly
+  body
+    "Destruction only. Action: Corrupt this unit to deal indirect damage equal \
+    \to its power to target opponent."
+  action "Skitter strike" 0 \usage -> do
+    g <- getGame
+    whenJust (findUnit usage.self.key g) \u -> do
+      let p = u.effectivePower
+      corrupt usage.self.key
+      when (p > 0) $ indirectDamage usage.user.next p
+
+assassinsBlade :: CardDef Support
+assassinsBlade = supportCard "bleeding-sun-120" "Assassin's Blade" do
+  cost 1
+  loyalty 0
+  traits [Attachment, Weapon]
+  keyword PlayAnytime
+  attachmentPower 1
+  body
+    "Attach to a target unit in your battlefield. You may play this card any \
+    \time you could take an action (paying all costs). Attached unit gains \
+    \{power}."
+
+maraudingGiant :: CardDef Unit
+maraudingGiant = unitCard "the-silent-forge-059" "Marauding Giant" do
+  cost 5
+  loyalty 0
+  power 3
+  hitPoints 5
+  trait Giant
+  destructionOnly
+  body "Destruction only. Marauding Giant cannot attack or defend alone."
+  canAttack \g _pk _z u -> hasPeerInZone g u
+  canDefend \g _pk _z u -> hasPeerInZone g u
+
+aNobleQuest :: CardDef Tactic
+aNobleQuest = tacticCard "the-fourth-waystone-098" "A Noble Quest" do
+  cost 0
+  loyalty 0
+  orderOnly
+  body "Order only. Action: Put 1 resource token on a quest if a unit is questing there."
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    let questsWithUnit =
+          [ mkCard q.key (QuestCardDef q.cardDef)
+          | q <- g.quests
+          , q.controller == pk
+          , isJust q.questingUnit
+          ]
+    chooseFromCards pk 0 1 questsWithUnit
+      "Choose a quest to add a resource token to." \chosen ->
+        for_ chosen \c -> addQuestToken c.key 1
+
+doomsayerOfMorr :: CardDef Unit
+doomsayerOfMorr = unitCard "redemption-of-a-mage-080" "Doomsayer of Morr" do
+  cost 3
+  loyalty 0
+  power 1
+  hitPoints 3
+  trait Warrior
+  orderOnly
+  body "Order only. Action: When an opponent's unit is destroyed, draw a card."
+  -- Approximation: fires on any opponent unit leaving play (the usual
+  -- path is destruction).
+  onOpponentUnitLeavePlay \_owner self _k _z _code -> drawCard self.controller
+
 mountainBrigands :: CardDef Unit
 mountainBrigands = unitCard "the-fourth-waystone-100" "Mountain Brigands" do
   cost 2

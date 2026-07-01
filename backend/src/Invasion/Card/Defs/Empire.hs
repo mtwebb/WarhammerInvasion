@@ -1492,6 +1492,85 @@ duelistTraining = supportCard "fiery-dawn-109" "Duelist Training" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+friedrichHemmler :: CardDef Unit
+friedrichHemmler = unitCard "redemption-of-a-mage-063" "Friedrich Hemmler" do
+  race Empire
+  cost 5
+  loyalty 2
+  power 5
+  hitPoints 5
+  hero
+  trait Mage
+  body
+    "Limit one Hero per zone. Forced: When this unit is opposed in combat, deal \
+    \1 uncancellable damage to all attacking and defending units."
+  onReceive $ Receive \msg _owner self -> case msg of
+    DeclareDefenders ks -> do
+      g <- getGame
+      case g.combat of
+        Just cs
+          | (self.key `elem` cs.attackers && not (null ks)) || self.key `elem` ks ->
+              for_ (cs.attackers <> ks) \k -> dealUncancellableDamage k 1
+        _ -> pure ()
+    _ -> pure ()
+
+wilhelmOfTheOsterknacht :: CardDef Unit
+wilhelmOfTheOsterknacht = unitCard "the-fall-of-karak-grimaz-025" "Wilhelm of the Osterknacht" do
+  race Empire
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  hero
+  trait Knight
+  body
+    "Limit one Hero per zone. Action: When this unit attacks, move one unit \
+    \from the defending zone to another zone controlled by the same player."
+  onMyAttackDeclared \_owner self zone _atk -> do
+    let defender = self.controller.next
+    withTarget self.controller
+      (UnitMatching \_p _g u -> u.controller == defender && u.zone == zone) \k ->
+        withTarget self.controller MyAnyZone \zk -> moveUnit k zk
+
+knightsOfTheBlazingSun :: CardDef Unit
+knightsOfTheBlazingSun = unitCard "the-burning-of-derricksburg-003" "Knights of the Blazing Sun" do
+  race Empire
+  cost 2
+  loyalty 1
+  power 1
+  hitPoints 2
+  trait Knight
+  body "This unit cannot be corrupted."
+  onEnterPlay \_owner self -> until Permanent (shieldFromCorruption self.key)
+
+gryphonLegionnaire :: CardDef Unit
+gryphonLegionnaire = unitCard "the-burning-of-derricksburg-004" "Gryphon Legionnaire" do
+  race Empire
+  cost 3
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Knight
+  keyword PlayAnytime
+  counterstrike 2
+  body
+    "You may play this unit from your hand any time you could take an action \
+    \(paying all costs). Counterstrike 2 (this unit deals 2 combat damage \
+    \immediately when defending)."
+
+tacticalMisdirection :: CardDef Tactic
+tacticalMisdirection = tacticCard "redemption-of-a-mage-066" "Tactical Misdirection" do
+  race Empire
+  cost 2
+  loyalty 2
+  body "Action: Choose a zone. Units in that zone may defend any zone this turn."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk MyAnyZone \zk -> do
+      g <- getGame
+      for_ [u | u <- g.units, u.controller == pk, u.zone == zk] \u ->
+        until EndOfTurn $ PendingBuff u.key CanDefendAnyZone
+
 brightWizardAcolyte :: CardDef Unit
 brightWizardAcolyte = unitCard "the-fourth-waystone-083" "Bright Wizard Acolyte" do
   race Empire

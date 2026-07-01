@@ -75,6 +75,9 @@ data Message where
     -- ^ Take a random card from the named player's hand and place it
     -- facedown as a development in that player's named zone (Beastlord
     -- Rakarth). No-op if the hand is empty.
+  MoveDiscardTopToDeckTop :: PlayerKey -> Int -> Message
+    -- ^ Move the top N cards of the named player's discard pile onto the
+    -- top of their deck, order preserved (Order in Chaos).
   ArrangeDeckCards :: PlayerKey -> [UnitKey] -> [UnitKey] -> Message
     -- ^ Reorder named deck cards after a scry: the keys in the first
     -- list are pulled to the TOP of the deck in the given order, the
