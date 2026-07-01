@@ -857,6 +857,31 @@ arcanePurifier = unitCard "cataclysm-028" "Arcane Purifier" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+watchstoneOfAthelTamarha :: CardDef Support
+watchstoneOfAthelTamarha = supportCard "the-fall-of-karak-grimaz-028" "Watchstone of Athel Tamarha" do
+  race HighElf
+  cost 3
+  loyalty 1
+  power 1
+  trait Building
+  body "Kingdom. Action: When you play a Spell card, gain 1 resource."
+  kingdom $ onMySpellPlayed \_owner self -> gainResources self.controller 1
+
+lionChariotOfChrace :: CardDef Unit
+lionChariotOfChrace = unitCard "the-fourth-waystone-088" "Lion Chariot of Chrace" do
+  race HighElf
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Warrior
+  body
+    "Action: This unit takes 1 uncancellable damage. If it does, it gains \
+    \Counterstrike 2 until the end of the turn."
+  action "Charge" 0 \usage -> do
+    dealUncancellableDamage usage.self.key 1
+    until EndOfTurn $ buffCounterstrike usage.self.key 2
+
 hawkeyeArcher :: CardDef Unit
 hawkeyeArcher = unitCard "fiery-dawn-110" "Hawkeye Archer" do
   race HighElf

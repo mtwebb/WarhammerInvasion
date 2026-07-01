@@ -1347,6 +1347,25 @@ wardancer = unitCard "the-eclipse-of-hope-098" "Wardancer" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+aNobleQuest :: CardDef Tactic
+aNobleQuest = tacticCard "the-fourth-waystone-098" "A Noble Quest" do
+  cost 0
+  loyalty 0
+  orderOnly
+  body "Order only. Action: Put 1 resource token on a quest if a unit is questing there."
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    let questsWithUnit =
+          [ mkCard q.key (QuestCardDef q.cardDef)
+          | q <- g.quests
+          , q.controller == pk
+          , isJust q.questingUnit
+          ]
+    chooseFromCards pk 0 1 questsWithUnit
+      "Choose a quest to add a resource token to." \chosen ->
+        for_ chosen \c -> addQuestToken c.key 1
+
 doomsayerOfMorr :: CardDef Unit
 doomsayerOfMorr = unitCard "redemption-of-a-mage-080" "Doomsayer of Morr" do
   cost 3
