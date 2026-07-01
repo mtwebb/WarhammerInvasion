@@ -870,6 +870,45 @@ averheimSoldiers = unitCard "fragments-of-power-027" "Averheim Soldiers" do
       when (toks > 0) $ until EndOfTurn $ buffHP self.key toks
     _ -> pure ()
 
+higherLearning :: CardDef Support
+higherLearning = supportCard "fragments-of-power-028" "Higher Learning" do
+  race Empire
+  cost 1
+  loyalty 2
+  trait Condition
+  body
+    "Kingdom or Quest. Each card with a Kingdom and/or Quest ability in this \
+    \zone is considered to be a development in addition to its printed card \
+    \type."
+  -- Approximation: "Kingdom/Quest ability" is detected as an action gated
+  -- to the kingdom or quest zone (plus quests, which always carry a Quest
+  -- ability). Static zone-gated effects that aren't actions are not
+  -- counted. Raises the burn threshold of the support's own zone.
+  countsAsDevelopments \g s zone ->
+    if zone /= s.zone
+      then 0
+      else
+        let pk = s.controller
+            hasKQAction as =
+              any (\a -> a.availableInZone `elem` [Just KingdomZone, Just QuestZone]) as
+            units' =
+              length
+                [u | u <- g.units, u.controller == pk, u.zone == zone, hasKQAction u.cardDef.actions]
+            supports' =
+              length
+                [ s2
+                | s2 <- allInPlaySupports g
+                , s2.controller == pk
+                , s2.zone == zone
+                , s2.key /= s.key
+                , hasKQAction s2.cardDef.actions
+                ]
+            quests' =
+              if zone == QuestZone
+                then length [q | q <- g.quests, q.controller == pk]
+                else 0
+         in units' + supports' + quests'
+
 -- Bloodquest: The Accursed Dead -----------------------------------------
 
 roamingShaman :: CardDef Unit

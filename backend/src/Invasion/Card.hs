@@ -687,6 +687,7 @@ allCards =
       ("fragments-of-power-025", UnitCardDef arachnarokSpider),
       ("fragments-of-power-026", TacticCardDef daGreatLeader),
       ("fragments-of-power-027", UnitCardDef averheimSoldiers),
+      ("fragments-of-power-028", SupportCardDef higherLearning),
       ("fragments-of-power-029", UnitCardDef ellyrianPatron),
       ("fragments-of-power-031", UnitCardDef swornOfKhorne),
       ("fragments-of-power-032", SupportCardDef stolenSkin),
