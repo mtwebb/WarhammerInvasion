@@ -1250,6 +1250,58 @@ garrisoned = supportCard "cataclysm-022" "Garrisoned" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+waitingInAmbush :: CardDef Tactic
+waitingInAmbush = tacticCard "signs-in-the-stars-069" "Waiting In Ambush" do
+  race Empire
+  cost 0
+  loyalty 3
+  body "Action: Play a unit from your hand (paying all costs)."
+  whenResolved \self -> do
+    let pk = self.controller
+    me <- playerOf pk <$> getGame
+    let handUnits = [c | c <- me.hand, isJust (asUnit c.def)]
+    chooseFromCards pk 0 1 handUnits
+      "Choose a unit to play from your hand." \chosen ->
+        for_ chosen \c ->
+          withTarget pk MyAnyZone \z -> push (PlayUnit pk c.key z)
+
+masteringTheSpell :: CardDef Tactic
+masteringTheSpell = tacticCard "the-eclipse-of-hope-088" "Mastering the Spell" do
+  race Empire
+  cost 2
+  loyalty 3
+  trait Spell
+  body
+    "Spell. Action: Put the top card of your deck into play facedown as a \
+    \development. Then, move target unit with a printed cost of X or lower to \
+    \another zone controlled by the same player. X is the number of \
+    \developments you control."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk MyDevZone \zone -> addDevelopment pk zone
+    g <- getGame
+    let x = developmentsControlled (playerOf pk g) + 1
+    withTarget pk (UnitMatching \_p _g u -> costAtMost x u.cardDef) \k ->
+      withTarget pk MyAnyZone \zk -> moveUnit k zk
+
+helstormRocketBattery :: CardDef Support
+helstormRocketBattery = supportCard "fiery-dawn-108" "Helstorm Rocket Battery" do
+  race Empire
+  cost 1
+  loyalty 2
+  power 0
+  traits [Siege, WarMachine]
+  body
+    "Battlefield. Action: Spend 3 resources to deal 1 damage to target \
+    \attacking unit. Then, move it to another zone controlled by the same \
+    \player."
+  battlefield $ action "Bombard" 3 \usage ->
+    withTarget usage.user attackingUnit \k -> do
+      dealDamage k 1
+      -- The chosen zone kind routes to the (attacking) unit's own
+      -- controller's zone of that kind; 'moveUnit' no-ops on same zone.
+      withTarget usage.user MyAnyZone \zk -> moveUnit k zk
+
 celestialWizard :: CardDef Unit
 celestialWizard = unitCard "the-twin-tailed-comet-047" "Celestial Wizard" do
   race Empire

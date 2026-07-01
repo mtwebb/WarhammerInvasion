@@ -1127,6 +1127,80 @@ zoneDamaged g pk zk =
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+orcShaman :: CardDef Unit
+orcShaman = unitCard "the-twin-tailed-comet-045" "Orc Shaman" do
+  race Orc
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Sorceror
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this unit. Then, you may move up to X damage from this zone of your capital \
+    \to a target unit you control. X is the number of resource tokens on this \
+    \unit."
+  onYouPlayDevelopment \_owner self -> do
+    push (AdjustUnitTokens self.key 1)
+    g <- getGame
+    whenJust (findUnit self.key g) \u -> do
+      let pk = self.controller
+          zk = u.zone
+          p = playerOf pk g
+          Damage zd = case zk of
+            KingdomZone -> p.capital.kingdom.damage
+            QuestZone -> p.capital.quest.damage
+            BattlefieldZone -> p.capital.battlefield.damage
+          -- +1 for the token just queued.
+          cap = min (u.tokens + 1) zd
+      when (cap > 0) do
+        n <- chooseAmount pk 0 cap "Move how much capital damage onto a unit?"
+        when (n > 0) $
+          withTarget pk ownUnit \k -> moveCapitalDamageToUnit pk zk k n
+
+dreamsUvConkwest :: CardDef Quest
+dreamsUvConkwest = questCard "signs-in-the-stars-066" "Dreams Uv Conkwest" do
+  race Orc
+  cost 0
+  loyalty 2
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this card if a unit is questing here. Action: Discard X resource tokens on \
+    \this card to move X damage from your capital to target unit you control."
+  accrueTokenOnDevelopmentWhileQuesting
+  action "Dream of conquest" 0 \usage -> do
+    let pk = usage.user
+    g <- getGame
+    whenJust (findQuest usage.self.key g) \me ->
+      when (me.tokens > 0) do
+        n <- chooseAmount pk 1 me.tokens "Discard how many tokens (moves that much damage)?"
+        when (n > 0) do
+          addQuestToken usage.self.key (negate n)
+          withTarget pk MyAnyZone \zk ->
+            withTarget pk ownUnit \k -> moveCapitalDamageToUnit pk zk k n
+
+skarsnikAndGobbla :: CardDef Unit
+skarsnikAndGobbla = unitCard "the-twin-tailed-comet-044" "Skarsnik and Gobbla" do
+  race Orc
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  hero
+  trait Goblin
+  body
+    "Limit one Hero per zone. Action: Remove 3 damage from this unit to deal 1 \
+    \damage to each section of an opponent's capital. Then, draw a card."
+  action "Gobbla's dinner" 0 \usage -> do
+    g <- getGame
+    whenJust (findUnit usage.self.key g) \u -> do
+      let Damage d = u.damage
+      when (d >= 3) do
+        healUnit usage.self.key 3
+        let opp = usage.user.next
+        for_ [KingdomZone, QuestZone, BattlefieldZone] \z -> dealZoneDamage opp z 1
+        drawCard usage.user
+
 lootedUmieTown :: CardDef Support
 lootedUmieTown = supportCard "the-chaos-moon-025" "Looted Umie Town" do
   race Orc

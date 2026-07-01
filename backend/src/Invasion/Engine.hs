@@ -1796,6 +1796,19 @@ instance Run Game where
             , ("zone", zoneParam zone)
             , ("amount", tshow taken)
             ]
+    MoveCapitalDamageToUnit pk zk unitKey amount -> do
+      g <- get
+      let player = lookupPlayer pk g
+          zoneL = getZone zk player
+          Damage zd = zoneL.damage
+          moved = max 0 (min amount zd)
+      when (moved > 0) $ do
+        let zoneL' = (zoneL {damage = Damage (zd - moved)}) :: Zone
+        modify (setPlayer pk (setZone zk zoneL' player))
+        logIt LogSystem
+          "log.capital.damage_moved"
+          [("player", playerParam pk), ("zone", zoneParam zk), ("amount", tshow moved)]
+        send (DealDamageToUnit unitKey moved)
     RemoveBurnToken pk zone -> do
       g <- get
       let player = lookupPlayer pk g

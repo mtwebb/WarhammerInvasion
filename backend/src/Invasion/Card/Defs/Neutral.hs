@@ -1125,6 +1125,53 @@ aPromiseOfWar = tacticCard "the-imperial-throne-118" "A Promise of War" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+asraiLongbow :: CardDef Support
+asraiLongbow = supportCard "the-eclipse-of-hope-100" "Asrai Longbow" do
+  cost 2
+  loyalty 0
+  traits [WoodElf, Attachment]
+  orderOnly
+  body
+    "Order only. Attach to a target unit you control. Action: When your capital \
+    \is dealt damage, deal 2 damage to target unit in any corresponding zone."
+  -- Approximation: fires on capital combat damage (the common case), and
+  -- targets any unit rather than restricting to a corresponding zone.
+  onMyCapitalDealtCombatDamage \_owner self ->
+    withTarget self.controller AnyUnit \k -> dealDamage k 2
+
+forgottenCairn :: CardDef Support
+forgottenCairn = supportCard "the-twin-tailed-comet-059" "Forgotten Cairn" do
+  cost 2
+  loyalty 0
+  power 1
+  traits [WoodElf, Location]
+  orderOnly
+  body
+    "Order only. Action: When a Wood Elf unit you control leaves play, put the \
+    \top card of your deck into this zone as a development."
+  -- Inline: the leave-play trigger only surfaces the code, so match on
+  -- 'UnitLeftPlay' directly to read the departed unit's traits.
+  onReceive $ Receive \msg _owner self -> case msg of
+    UnitLeftPlay du
+      | du.controller == self.controller
+      , du.key /= self.key
+      , WoodElf `elem` du.cardDef.traits ->
+          addDevelopment self.controller self.zone
+    _ -> pure ()
+
+bribery :: CardDef Tactic
+bribery = tacticCard "omens-of-ruin-020" "Bribery" do
+  cost 2
+  loyalty 0
+  body
+    "Action: Choose a target unit or support card in a zone with no \
+    \developments. That card does not count its power this turn."
+  -- Partial: models the unit option (a unit in a development-free zone
+  -- loses its power); the support-card option isn't modelled.
+  whenResolved \self ->
+    withTarget self.controller (UnitMatching \_p g u -> devsInZone g u == 0) \k ->
+      until EndOfTurn $ losesAllPower k
+
 danseMacabre :: CardDef Tactic
 danseMacabre = tacticCard "signs-in-the-stars-080" "Danse Macabre" do
   cost 2

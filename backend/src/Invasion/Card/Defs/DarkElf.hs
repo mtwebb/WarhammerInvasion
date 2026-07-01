@@ -1032,6 +1032,39 @@ crimsonBrides = unitCard "cataclysm-042" "Crimson Brides" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+alluringChosen :: CardDef Unit
+alluringChosen = unitCard "the-chaos-moon-036" "Alluring Chosen" do
+  race DarkElf
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 2
+  trait Sorceror
+  body
+    "Action: When a unit enters an opponent's discard pile, this unit gains \
+    \{power} until the end of the turn."
+  -- Approximation: fires when an opponent's unit leaves play (the common
+  -- path into their discard pile).
+  onOpponentUnitLeavePlay \_owner self _k _z _code ->
+    until EndOfTurn $ buffPower self.key 1
+
+batheInTheCauldron :: CardDef Tactic
+batheInTheCauldron = tacticCard "fiery-dawn-117" "Bathe in the Cauldron" do
+  race DarkElf
+  cost 3
+  loyalty 3
+  body
+    "Action: Choose a target player. That player discards the top 5 cards of \
+    \his deck. Draw a card for each unit discarded this way."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk TargetPlayer \target -> do
+      g <- getGame
+      let top5 = take 5 (playerOf target g).deck
+          unitCount = length [c | c <- top5, isJust (asUnit c.def)]
+      millFromDeck target 5
+      when (unitCount > 0) $ drawCards pk unitCount
+
 witchbrew :: CardDef Support
 witchbrew = supportCard "signs-in-the-stars-077" "Witchbrew" do
   race DarkElf

@@ -1673,6 +1673,28 @@ doomBearer = unitCard "the-inevitable-city-005" "Doom Bearer" do
 
 -- The Morrslieb cycle (additional) -------------------------------------
 
+emptyingTheWastes :: CardDef Quest
+emptyingTheWastes = questCard "the-twin-tailed-comet-054" "Emptying the Wastes" do
+  race Chaos
+  cost 0
+  loyalty 2
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this card if a unit is questing here. Action: Discard 2 resources on this \
+    \card to reveal the top card of your deck. If the revealed card is a unit, \
+    \add it to your hand. Otherwise, put it on the bottom of your deck."
+  accrueTokenOnDevelopmentWhileQuesting
+  spendTokens "Sift the wastes" 2 \u -> do
+    let pk = u.user
+    g <- getGame
+    case (playerOf pk g).deck of
+      [] -> pure ()
+      (top : _) -> do
+        push (RevealCards pk [top])
+        if isJust (asUnit top.def)
+          then drawCard pk
+          else moveTopToBottomOfDeck pk 1
+
 desecratedTemple :: CardDef Support
 desecratedTemple = supportCard "the-chaos-moon-033" "Desecrated Temple" do
   race Chaos
