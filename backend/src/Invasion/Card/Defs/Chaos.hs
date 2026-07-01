@@ -1673,6 +1673,26 @@ doomBearer = unitCard "the-inevitable-city-005" "Doom Bearer" do
 
 -- The Morrslieb cycle (additional) -------------------------------------
 
+denOfIniquity :: CardDef Support
+denOfIniquity = supportCard "omens-of-ruin-014" "Den of Iniquity" do
+  race Chaos
+  cost 2
+  loyalty 2
+  power 1
+  trait Building
+  body "Units in a zone with no developments enter play corrupted."
+  onReceive $ Receive \msg _owner _self -> case msg of
+    UnitEnteredPlay _pk uk -> do
+      g <- getGame
+      whenJust (findUnit uk g) \u -> do
+        let p = playerOf u.controller g
+            Developments d = case u.zone of
+              KingdomZone -> p.capital.kingdom.developments
+              QuestZone -> p.capital.quest.developments
+              BattlefieldZone -> p.capital.battlefield.developments
+        when (d == 0) $ corrupt uk
+    _ -> pure ()
+
 keeperOfSecrets :: CardDef Unit
 keeperOfSecrets = unitCard "fiery-dawn-113" "Keeper of Secrets" do
   race Chaos

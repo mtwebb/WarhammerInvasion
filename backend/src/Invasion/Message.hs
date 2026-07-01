@@ -71,6 +71,10 @@ data Message where
     -- ^ Move a specific card from the named player's discard pile to the
     -- bottom of that player's deck (Drakenhof Castle). No-op if the card
     -- isn't in that discard.
+  PutRandomHandCardAsDevelopment :: PlayerKey -> ZoneKind -> Message
+    -- ^ Take a random card from the named player's hand and place it
+    -- facedown as a development in that player's named zone (Beastlord
+    -- Rakarth). No-op if the hand is empty.
   ArrangeDeckCards :: PlayerKey -> [UnitKey] -> [UnitKey] -> Message
     -- ^ Reorder named deck cards after a scry: the keys in the first
     -- list are pulled to the TOP of the deck in the given order, the

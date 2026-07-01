@@ -1032,6 +1032,21 @@ crimsonBrides = unitCard "cataclysm-042" "Crimson Brides" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+beastlordRakarth :: CardDef Unit
+beastlordRakarth = unitCard "signs-in-the-stars-075" "Beastlord Rakarth" do
+  race DarkElf
+  cost 3
+  loyalty 2
+  power 2
+  hitPoints 2
+  hero
+  body
+    "Limit one Hero per zone. Action: When this unit attacks, put a random card \
+    \from the defending player's hand facedown as a development into the \
+    \defending zone."
+  onMyAttackDeclared \_owner self zone _atk ->
+    push (PutRandomHandCardAsDevelopment self.controller.next zone)
+
 alluringChosen :: CardDef Unit
 alluringChosen = unitCard "the-chaos-moon-036" "Alluring Chosen" do
   race DarkElf
