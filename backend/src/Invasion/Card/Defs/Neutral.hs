@@ -2328,6 +2328,33 @@ bladesinger = unitCard "the-accursed-dead-055" "Bladesinger" do
       let Damage d = u.damage
       when (d <= 2) $ returnUnitToTopOfDeck u.key
 
+borderPatrol :: CardDef Quest
+borderPatrol = questCard "portent-of-doom-100" "Border Patrol" do
+  cost 1
+  loyalty 0
+  trait WoodElf
+  orderOnly
+  body
+    "Wood Elf. Order only. Quest. Action: When one of your zones is attacked, \
+    \if a Wood Elf unit is questing here, sacrifice this quest to turn target \
+    \development in the attacked zone faceup. If it is a Wood Elf unit, leave it \
+    \in play and that unit must defend this turn, if able. Otherwise, sacrifice \
+    \it immediately."
+  onMyAnyZoneAttacked \_owner self zone -> do
+    g <- getGame
+    let woodElfQuesting =
+          case findQuest self.key g >>= (.questingUnit) of
+            Just uk -> maybe False (\u -> WoodElf `elem` u.cardDef.traits) (findUnit uk g)
+            Nothing -> False
+    when woodElfQuesting do
+      let pk = self.controller
+          devs = Map.findWithDefault [] zone (playerOf pk g).developmentCards
+      unless (null devs) do
+        destroyQuest self.key
+        chooseFromCards pk 1 1 devs
+          "Turn a development in the attacked zone faceup." \chosen ->
+            for_ chosen \c -> push (FlipDevelopmentDefender pk zone c.key WoodElf)
+
 shieldOfAeons :: CardDef Support
 shieldOfAeons = supportCard "shield-of-the-gods-101" "Shield of Aeons" do
   cost 4

@@ -3,7 +3,7 @@
 module Invasion.Message (module Invasion.Message) where
 
 import Invasion.Card.Types (Card)
-import Invasion.CardDef (ActionTarget, CardDef)
+import Invasion.CardDef (ActionTarget, CardDef, Trait)
 import Invasion.Game (ActionWindowTrigger, Prompt, PromptResult)
 import Invasion.Modifier (Modifier, ModifierScope)
 import Invasion.Player (Drawing, EliminationReason)
@@ -619,6 +619,12 @@ data Message where
     -- ambush per firing; flipping re-sends this message to offer the
     -- next, then 'AdvanceCombatToDefenders' once the defender declines
     -- or nothing is affordable.
+  FlipDevelopmentDefender :: PlayerKey -> ZoneKind -> UnitKey -> Trait -> Message
+    -- ^ Turn a specific facedown development in @zk@ faceup (Border
+    -- Patrol). If it is a unit carrying the required 'Trait' it enters
+    -- play there as a compelled defender ('MustDefend'); otherwise the
+    -- card is sacrificed to the discard pile. Either way the zone's
+    -- development count drops by one.
   AmbushDevelopment :: PlayerKey -> ZoneKind -> UnitKey -> Message
     -- ^ Flip a specific facedown development faceup as an ambush: pay
     -- its 'Ambush' X, pop it from the zone, put the card into play as

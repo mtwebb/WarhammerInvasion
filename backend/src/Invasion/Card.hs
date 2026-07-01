@@ -745,6 +745,7 @@ allCards =
       ("shield-of-the-gods-110", TacticCardDef valourOfAges),
       ("portent-of-doom-097", TacticCardDef ghostlyApparition),
       ("portent-of-doom-098", TacticCardDef shieldOfTheGods),
+      ("portent-of-doom-100", QuestCardDef borderPatrol),
       -- Bloodquest cycle — Shield of the Gods (pack 6)
       ("shield-of-the-gods-101", SupportCardDef shieldOfAeons),
       ("shield-of-the-gods-103", UnitCardDef dwarfAdventurer),

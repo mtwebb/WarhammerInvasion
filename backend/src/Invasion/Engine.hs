@@ -2230,6 +2230,46 @@ instance Run Game where
                   | any ((== ck) . (.key)) eligible ->
                       send (AmbushDevelopment pk zk ck)
                 _ -> send AdvanceCombatToDefenders
+    FlipDevelopmentDefender pk zk cardKey reqTrait -> do
+      g <- get
+      let player = lookupPlayer pk g
+          zoneCards = Map.findWithDefault [] zk player.developmentCards
+      whenJust (find ((== cardKey) . (.key)) zoneCards) \c -> do
+        let rest = filter ((/= cardKey) . (.key)) zoneCards
+            cap = player.capital
+            cap' = Capital
+              { kingdom = decrementDev zk cap.kingdom
+              , quest = decrementDev zk cap.quest
+              , battlefield = decrementDev zk cap.battlefield
+              }
+        case c.def of
+          UnitCardDef cardDef
+            | reqTrait `elem` cardDef.traits -> do
+                let player' = player
+                      { developmentCards = Map.insert zk rest player.developmentCards
+                      , capital = cap'
+                      }
+                    unit = freshUnit cardKey pk zk cardDef
+                modify \gx -> (setPlayer pk player' gx) {units = unit : gx.units}
+                send (InstallModifier (UnitRef cardKey) (Modifier MustDefend EndOfTurn))
+                logIt LogSystem
+                  "log.development.flipped"
+                  [ ("player", playerParam pk)
+                  , ("zone", zoneParam zk)
+                  , ("card", T.pack cardDef.title)
+                  ]
+                send (UnitEnteredPlay pk cardKey)
+          _ -> do
+            -- Not a matching unit: sacrifice the flipped development.
+            let player' = player
+                  { developmentCards = Map.insert zk rest player.developmentCards
+                  , capital = cap'
+                  , discard = c : player.discard
+                  }
+            modify (setPlayer pk player')
+            logIt LogSystem
+              "log.development.flipped"
+              [("player", playerParam pk), ("zone", zoneParam zk)]
     AmbushDevelopment pk zk cardKey -> do
       -- Flip one specific facedown development faceup as an ambush:
       -- pay Ambush X, pop it, put the unit into play (no end-of-turn
