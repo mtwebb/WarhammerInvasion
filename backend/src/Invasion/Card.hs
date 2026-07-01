@@ -574,6 +574,7 @@ allCards =
       ("omens-of-ruin-016", UnitCardDef darkElfInfiltrator),
       ("omens-of-ruin-017", SupportCardDef malekithsThrone),
       ("omens-of-ruin-019", UnitCardDef nimbleSpearman),
+      ("omens-of-ruin-020", TacticCardDef bribery),
       -- The Morrslieb cycle — Portent of Doom (081-100)
       ("portent-of-doom-081", SupportCardDef eyeOfSheerian),
       ("portent-of-doom-082", LegendCardDef skarbrand),
@@ -585,8 +586,10 @@ allCards =
       ("fiery-dawn-109", SupportCardDef duelistTraining),
       ("fiery-dawn-112", TacticCardDef furyOfAenarion),
       ("fiery-dawn-103", QuestCardDef aidFromTheDepths),
+      ("fiery-dawn-108", SupportCardDef helstormRocketBattery),
       ("fiery-dawn-114", TacticCardDef callTheBrayherd),
       ("fiery-dawn-116", TacticCardDef darkBlessing),
+      ("fiery-dawn-117", TacticCardDef batheInTheCauldron),
       ("fiery-dawn-118", UnitCardDef forestDragon),
       ("fiery-dawn-119", SupportCardDef pureWarpstone),
       -- The Capital Cycle — The Inevitable City (001-020)

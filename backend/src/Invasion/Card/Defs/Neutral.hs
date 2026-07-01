@@ -1125,6 +1125,19 @@ aPromiseOfWar = tacticCard "the-imperial-throne-118" "A Promise of War" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+bribery :: CardDef Tactic
+bribery = tacticCard "omens-of-ruin-020" "Bribery" do
+  cost 2
+  loyalty 0
+  body
+    "Action: Choose a target unit or support card in a zone with no \
+    \developments. That card does not count its power this turn."
+  -- Partial: models the unit option (a unit in a development-free zone
+  -- loses its power); the support-card option isn't modelled.
+  whenResolved \self ->
+    withTarget self.controller (UnitMatching \_p g u -> devsInZone g u == 0) \k ->
+      until EndOfTurn $ losesAllPower k
+
 danseMacabre :: CardDef Tactic
 danseMacabre = tacticCard "signs-in-the-stars-080" "Danse Macabre" do
   cost 2

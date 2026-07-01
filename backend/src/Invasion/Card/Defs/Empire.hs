@@ -1250,6 +1250,24 @@ garrisoned = supportCard "cataclysm-022" "Garrisoned" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+helstormRocketBattery :: CardDef Support
+helstormRocketBattery = supportCard "fiery-dawn-108" "Helstorm Rocket Battery" do
+  race Empire
+  cost 1
+  loyalty 2
+  power 0
+  traits [Siege, WarMachine]
+  body
+    "Battlefield. Action: Spend 3 resources to deal 1 damage to target \
+    \attacking unit. Then, move it to another zone controlled by the same \
+    \player."
+  battlefield $ action "Bombard" 3 \usage ->
+    withTarget usage.user attackingUnit \k -> do
+      dealDamage k 1
+      -- The chosen zone kind routes to the (attacking) unit's own
+      -- controller's zone of that kind; 'moveUnit' no-ops on same zone.
+      withTarget usage.user MyAnyZone \zk -> moveUnit k zk
+
 celestialWizard :: CardDef Unit
 celestialWizard = unitCard "the-twin-tailed-comet-047" "Celestial Wizard" do
   race Empire
