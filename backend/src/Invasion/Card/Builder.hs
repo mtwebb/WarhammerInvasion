@@ -558,6 +558,14 @@ attachedTo body = modifySupportExtras \e -> e
 zonePowerAura :: (Game -> SupportDetails -> ZoneKind -> Int) -> CardBuilder Support ()
 zonePowerAura f = modifySupportExtras \e -> e {zonePowerBonus = f}
 
+-- | "These cards also count as developments." Contributes extra
+-- developments to a zone of the support's controller, raising that
+-- zone's burn threshold (The Oak of Ages, Higher Learning). Args:
+-- game, this support, the zone being queried.
+countsAsDevelopments
+  :: (Game -> SupportDetails -> ZoneKind -> Int) -> CardBuilder Support ()
+countsAsDevelopments f = modifySupportExtras \e -> e {developmentBonusInZone = f}
+
 -- | Cost-of-play adjustment this support imposes on other cards being
 -- played (Imperial Crown, Master Rune of Dismay).
 globalCostAdjust

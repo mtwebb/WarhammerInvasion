@@ -494,6 +494,11 @@ data SupportExtras = SupportExtras
   , zonePowerBonus :: Game -> InPlay Support -> ZoneKind -> Int
     -- ^ Extra power this support contributes to a zone of its
     -- controller (Lighthouse of Lothern, Rift of Chaos).
+  , developmentBonusInZone :: Game -> InPlay Support -> ZoneKind -> Int
+    -- ^ Extra developments this support confers on the named zone of
+    -- its controller — cards that "also count as a development" (The
+    -- Oak of Ages: each Wood Elf unit; Higher Learning). Folded into the
+    -- zone's burn threshold in 'landZoneDamage'.
   , globalCostAdjustment :: Game -> InPlay Support -> PlayerKey -> CardCodeFilter -> Int
     -- ^ Adjustment this support imposes on the printed cost of
     -- another card being played. Args: game, this support, playing
@@ -756,6 +761,7 @@ instance HasDefaultExtras Support where
     , blanksHost = False
     , hostDestroyRansom = Nothing
     , revertToUnit = Nothing
+    , developmentBonusInZone = \_ _ _ -> 0
     , grantsHostDamageImmunity = \_ _ _ -> False
     , imposesNoPowerOn = \_ _ _ -> False
     , imposesCannotDefendOn = \_ _ _ -> False

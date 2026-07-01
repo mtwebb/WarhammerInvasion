@@ -3734,7 +3734,16 @@ landZoneDamage targetPlayer zoneKind amount =
     let target = lookupPlayer targetPlayer g
         zoneL = getZone zoneKind target
         Damage existing = zoneL.damage
-        HitPoints zoneHp = zoneL.hitPoints
+        HitPoints zoneHpBase = zoneL.hitPoints
+        -- Cards that "also count as a development" (The Oak of Ages,
+        -- Higher Learning) raise this zone's burn threshold.
+        extraDev =
+          sum
+            [ s.cardDef.extras.developmentBonusInZone g s zoneKind
+            | s <- allInPlaySupports g
+            , s.controller == targetPlayer
+            ]
+        zoneHp = zoneHpBase + extraDev
         total = existing + amount
         (newDmg, justBurned) =
           if total >= zoneHp && not zoneL.burned

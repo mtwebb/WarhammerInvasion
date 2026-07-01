@@ -1894,6 +1894,26 @@ shroudedWaywatcher = unitCard "hidden-kingdoms-013" "Shrouded Waywatcher" do
   ambush 3
   counterstrike 4
 
+oakOfAges :: CardDef Support
+oakOfAges = supportCard "hidden-kingdoms-016" "The Oak of Ages" do
+  cost 3
+  loyalty 0
+  power 2
+  traits [WoodElf, Location]
+  body "Wood Elf only. Each Wood Elf unit in play also counts as a development."
+  -- Modelled as raising the burn threshold of each of the controller's
+  -- zones by the number of their Wood Elf units in that zone. (Cards that
+  -- literally count "developments in this zone" still read the printed
+  -- count; this covers the primary HP effect.)
+  countsAsDevelopments \g s zone ->
+    length
+      [ u
+      | u <- g.units
+      , u.controller == s.controller
+      , WoodElf `elem` u.cardDef.traits
+      , u.zone == zone
+      ]
+
 chameleonStalker :: CardDef Unit
 chameleonStalker = unitCard "hidden-kingdoms-003" "Chameleon Stalker" do
   cost 1

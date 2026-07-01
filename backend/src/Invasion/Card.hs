@@ -888,6 +888,7 @@ allCards =
       ("hidden-kingdoms-013", UnitCardDef shroudedWaywatcher),
       ("hidden-kingdoms-014", UnitCardDef slumberingTitan),
       ("hidden-kingdoms-015", UnitCardDef highbornChampion),
+      ("hidden-kingdoms-016", SupportCardDef oakOfAges),
       ("hidden-kingdoms-018", TacticCardDef furyOfTheForest),
       ("hidden-kingdoms-019", LegendCardDef queekHeadtaker),
       ("hidden-kingdoms-021", UnitCardDef ratSwarm),
