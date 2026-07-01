@@ -82,6 +82,8 @@ data Trait
     -- excluded from cost-reduction effects like Runefang of Solland.
   | Troll
     -- ^ Troll creature trait (River Troll).
+  | Giant
+    -- ^ Giant creature trait (Marauding Giant).
   | WitchElf
     -- ^ Witch Elf trait (Frenzied Witch Elf).
   | Disease

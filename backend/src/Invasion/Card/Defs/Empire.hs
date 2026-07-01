@@ -1492,6 +1492,24 @@ duelistTraining = supportCard "fiery-dawn-109" "Duelist Training" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+wilhelmOfTheOsterknacht :: CardDef Unit
+wilhelmOfTheOsterknacht = unitCard "the-fall-of-karak-grimaz-025" "Wilhelm of the Osterknacht" do
+  race Empire
+  cost 4
+  loyalty 2
+  power 2
+  hitPoints 4
+  hero
+  trait Knight
+  body
+    "Limit one Hero per zone. Action: When this unit attacks, move one unit \
+    \from the defending zone to another zone controlled by the same player."
+  onMyAttackDeclared \_owner self zone _atk -> do
+    let defender = self.controller.next
+    withTarget self.controller
+      (UnitMatching \_p _g u -> u.controller == defender && u.zone == zone) \k ->
+        withTarget self.controller MyAnyZone \zk -> moveUnit k zk
+
 knightsOfTheBlazingSun :: CardDef Unit
 knightsOfTheBlazingSun = unitCard "the-burning-of-derricksburg-003" "Knights of the Blazing Sun" do
   race Empire

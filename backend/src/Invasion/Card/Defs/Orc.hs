@@ -1329,6 +1329,22 @@ smashEm = tacticCard "fiery-dawn-106" "Smash 'Em!" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+fanaticFrenzy :: CardDef Tactic
+fanaticFrenzy = tacticCard "the-fall-of-karak-grimaz-032" "Fanatic Frenzy" do
+  race Orc
+  cost 1
+  loyalty 2
+  body
+    "Action: Target unit in your battlefield gains {power} for each damaged \
+    \unit you control. Sacrifice that unit at the end of the turn."
+  whenResolved \self -> do
+    let pk = self.controller
+    withTarget pk (UnitMatching \p _g u -> u.controller == p && u.zone == BattlefieldZone) \k -> do
+      g <- getGame
+      let damaged = length [u | u <- g.units, u.controller == pk, isDamaged u]
+      when (damaged > 0) $ until EndOfTurn $ buffPower k damaged
+      queueEoTSacrifice k
+
 oneOrcsScrap :: CardDef Support
 oneOrcsScrap = supportCard "bleeding-sun-112" "One Orc's Scrap..." do
   race Orc

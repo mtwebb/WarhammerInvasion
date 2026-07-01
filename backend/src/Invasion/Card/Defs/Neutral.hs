@@ -1347,6 +1347,18 @@ wardancer = unitCard "the-eclipse-of-hope-098" "Wardancer" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+maraudingGiant :: CardDef Unit
+maraudingGiant = unitCard "the-silent-forge-059" "Marauding Giant" do
+  cost 5
+  loyalty 0
+  power 3
+  hitPoints 5
+  trait Giant
+  destructionOnly
+  body "Destruction only. Marauding Giant cannot attack or defend alone."
+  canAttack \g _pk _z u -> hasPeerInZone g u
+  canDefend \g _pk _z u -> hasPeerInZone g u
+
 aNobleQuest :: CardDef Tactic
 aNobleQuest = tacticCard "the-fourth-waystone-098" "A Noble Quest" do
   cost 0
