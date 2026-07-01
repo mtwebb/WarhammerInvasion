@@ -162,6 +162,8 @@ data Trait
     -- ^ Mutant trait (Clan Eshin Mutant).
   | Assassin
     -- ^ Assassin trait (Clan Eshin Mutant).
+  | ForestSpirit
+    -- ^ Forest Spirit trait (Tree Kin, Thornflesh Dryad, Drycha).
   deriving stock (Show, Eq)
 
 mconcat

@@ -1250,6 +1250,51 @@ garrisoned = supportCard "cataclysm-022" "Garrisoned" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+celestialWizard :: CardDef Unit
+celestialWizard = unitCard "the-twin-tailed-comet-047" "Celestial Wizard" do
+  race Empire
+  cost 3
+  loyalty 1
+  power 1
+  hitPoints 3
+  trait Mage
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this unit. Then, you may remove 2 resource tokens from this unit to deal 1 \
+    \damage to each unit in any corresponding zone."
+  onYouPlayDevelopment \_owner self -> do
+    push (AdjustUnitTokens self.key 1)
+    g <- getGame
+    -- 'AdjustUnitTokens' is queued, so 'u.tokens' is still pre-increment;
+    -- >= 1 here means >= 2 after the token lands.
+    whenJust (findUnit self.key g) \u ->
+      when (u.tokens >= 1) do
+        let pk = self.controller
+        yes <- askYesNo pk
+          "Remove 2 resource tokens to deal 1 damage to each unit in a corresponding zone?"
+        when yes do
+          push (AdjustUnitTokens self.key (-2))
+          withTarget pk MyAnyZone \zk -> do
+            g2 <- getGame
+            for_ [x | x <- g2.units, x.zone == zk] \x -> dealDamage x.key 1
+
+visitTheHauntedCity :: CardDef Quest
+visitTheHauntedCity = questCard "omens-of-ruin-008" "Visit the Haunted City" do
+  race Empire
+  cost 0
+  loyalty 2
+  body
+    "Action: When you play a development from your hand, put a resource token on \
+    \this card if a unit is questing here. Action: Discard 2 resources on this \
+    \card to move a target unit or support card from its current zone to another \
+    \zone controlled by the same player."
+  accrueTokenOnDevelopmentWhileQuesting
+  -- Partial: models moving a unit you control to another of your zones
+  -- (the common case); the support-card option isn't modelled.
+  spendTokens "Reposition" 2 \u ->
+    withTarget u.user ownUnit \k ->
+      withTarget u.user MyAnyZone \z -> moveUnit k z
+
 chainLightning :: CardDef Tactic
 chainLightning = tacticCard "the-chaos-moon-028" "Chain Lightning" do
   race Empire
