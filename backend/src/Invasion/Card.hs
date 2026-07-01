@@ -542,6 +542,9 @@ allCards =
       ("signs-in-the-stars-071", TacticCardDef shieldOfSaphery),
       ("signs-in-the-stars-072", TacticCardDef cometOfCasandora),
       ("signs-in-the-stars-076", UnitCardDef enragedManticore),
+      ("signs-in-the-stars-077", SupportCardDef witchbrew),
+      ("signs-in-the-stars-078", UnitCardDef drycha),
+      ("signs-in-the-stars-080", TacticCardDef danseMacabre),
       -- The Morrslieb cycle — The Twin-Tailed Comet (041-060)
       ("the-twin-tailed-comet-041", UnitCardDef daemonslayer),
       ("the-twin-tailed-comet-043", TacticCardDef theSlayerOath),

@@ -1125,6 +1125,53 @@ aPromiseOfWar = tacticCard "the-imperial-throne-118" "A Promise of War" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+danseMacabre :: CardDef Tactic
+danseMacabre = tacticCard "signs-in-the-stars-080" "Danse Macabre" do
+  cost 2
+  loyalty 0
+  traits [Undead, Spell]
+  destructionOnly
+  body
+    "Destruction only. Action: Target unit gets -1 hit points until the end of \
+    \the turn for each Undead unit in your discard pile."
+  whenResolved \self -> do
+    let pk = self.controller
+    g <- getGame
+    let n =
+          length
+            [ c
+            | c <- (playerOf pk g).discard
+            , Just cd <- [asUnit c.def]
+            , Undead `elem` cd.traits
+            ]
+    when (n > 0) $
+      withTarget pk AnyUnit \k -> until EndOfTurn $ debuffHP k n
+
+drycha :: CardDef Unit
+drycha = unitCard "signs-in-the-stars-078" "Drycha" do
+  cost 4
+  loyalty 0
+  power 2
+  hitPoints 3
+  hero
+  traits [WoodElf, ForestSpirit]
+  orderOnly
+  body
+    "Order only. Limit one Hero per zone. Action: When this unit attacks, spend \
+    \2 resources to have it gain power equal to the number of developments in \
+    \this zone until the end of the turn."
+  onMyAttackDeclared \owner self _z _atk -> do
+    let Resources have = owner.resources
+    when (have >= 2) do
+      yes <- askYesNo self.controller
+        "Spend 2 resources to have Drycha gain power for developments in this zone?"
+      when yes do
+        payResources self.controller 2
+        g <- getGame
+        whenJust (findUnit self.key g) \u ->
+          let d = devsInZone g u
+           in when (d > 0) $ until EndOfTurn $ buffPower self.key d
+
 pureWarpstone :: CardDef Support
 pureWarpstone = supportCard "fiery-dawn-119" "Pure Warpstone" do
   cost 4

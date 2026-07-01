@@ -1032,6 +1032,27 @@ crimsonBrides = unitCard "cataclysm-042" "Crimson Brides" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+witchbrew :: CardDef Support
+witchbrew = supportCard "signs-in-the-stars-077" "Witchbrew" do
+  race DarkElf
+  cost 0
+  loyalty 2
+  trait Attachment
+  body
+    "Attach to a target unit you control. Action: When attached unit attacks, \
+    \discard the top card of target player's deck. If the discarded card is a \
+    \unit, attached unit gains {power} until the end of the turn."
+  -- "target player" approximated as the opponent.
+  onAttachedHostAttack \_owner self _host -> do
+    let opp = self.controller.next
+    g <- getGame
+    case (playerOf opp g).deck of
+      [] -> pure ()
+      (top : _) -> do
+        millFromDeck opp 1
+        when (isJust (asUnit top.def)) $
+          whenJust self.attachedTo \h -> until EndOfTurn $ buffPower h 1
+
 darkBlessing :: CardDef Tactic
 darkBlessing = tacticCard "fiery-dawn-116" "Dark Blessing" do
   race DarkElf
