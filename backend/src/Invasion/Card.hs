@@ -412,9 +412,11 @@ allCards =
       ("the-fall-of-karak-grimaz-040", TacticCardDef longWinter),
       -- The Enemy cycle — The Silent Forge (041-060)
       ("the-silent-forge-041", UnitCardDef sonOfGrungi),
+      ("the-silent-forge-042", TacticCardDef reclaimingTheFallen),
       ("the-silent-forge-043", UnitCardDef blackKnightsOfMorr),
       ("the-silent-forge-046", UnitCardDef descendantOfIndraugnir),
       ("the-silent-forge-050", UnitCardDef fungusbrewGoblin),
+      ("the-silent-forge-051", TacticCardDef gobboLoot),
       ("the-silent-forge-052", UnitCardDef eslian),
       ("the-silent-forge-053", TacticCardDef embersToInferno),
       ("the-silent-forge-054", UnitCardDef dwarfSlaves),
@@ -424,6 +426,7 @@ allCards =
       ("the-silent-forge-059", UnitCardDef maraudingGiant),
       ("the-silent-forge-060", TacticCardDef muck),
       -- The Enemy cycle — The Fourth Waystone (081-100)
+      ("the-fourth-waystone-081", UnitCardDef dureganThorgrimson),
       ("the-fourth-waystone-083", UnitCardDef brightWizardAcolyte),
       ("the-fourth-waystone-084", TacticCardDef douseTheFlames),
       ("the-fourth-waystone-086", UnitCardDef spearhostOfAsuryan),
