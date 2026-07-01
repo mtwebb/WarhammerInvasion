@@ -2744,6 +2744,30 @@ instance Run Game where
                 , ("card", T.pack u.cardDef.title)
                 , ("zone", zoneParam newZone)
                 ]
+    PutRandomHandCardAsDevelopment pk zone -> do
+      g <- get
+      let player = lookupPlayer pk g
+      case player.hand of
+        [] -> pure ()
+        cards -> do
+          idx <- getRandomR (0, length cards - 1)
+          let (before, after) = splitAt idx cards
+          case after of
+            (picked : rest) -> do
+              let zoneL = getZone zone player
+                  Developments d = zoneL.developments
+                  zoneL' = (zoneL {developments = Developments (d + 1)}) :: Zone
+                  existing = Map.findWithDefault [] zone player.developmentCards
+                  player' =
+                    (setZone zone zoneL' player)
+                      { hand = before <> rest
+                      , developmentCards = Map.insert zone (picked : existing) player.developmentCards
+                      }
+              modify (setPlayer pk player')
+              logIt LogSystem
+                "log.development.from_hand"
+                [("player", playerParam pk), ("zone", zoneParam zone)]
+            [] -> pure ()
     MoveDiscardCardToDeckBottom owner cardKey -> do
       g <- get
       let player = lookupPlayer owner g

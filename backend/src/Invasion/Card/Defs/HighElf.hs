@@ -857,6 +857,32 @@ arcanePurifier = unitCard "cataclysm-028" "Arcane Purifier" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+hawkeyeArcher :: CardDef Unit
+hawkeyeArcher = unitCard "fiery-dawn-110" "Hawkeye Archer" do
+  race HighElf
+  cost 2
+  loyalty 2
+  power 1
+  hitPoints 1
+  trait Warrior
+  body
+    "Action: At the beginning of your turn, deal 1 damage to target unit in any \
+    \corresponding zone. That unit's controller may sacrifice a unit he \
+    \controls to cancel the damage."
+  onMyTurnBegin \_owner self ->
+    withTarget self.controller AnyUnit \k -> do
+      g <- getGame
+      whenJust (findUnit k g) \u -> do
+        let owner = u.controller
+            ownUnits = [x.key | x <- g.units, x.controller == owner]
+        cancel <-
+          if null ownUnits
+            then pure False
+            else askYesNo owner "Sacrifice a unit to cancel 1 damage from Hawkeye Archer?"
+        if cancel
+          then forcePickUnit owner ownUnits "Sacrifice a unit to cancel the damage." destroyUnit
+          else dealDamage k 1
+
 barracksOfChrace :: CardDef Support
 barracksOfChrace = supportCard "fiery-dawn-111" "Barracks of Chrace" do
   race HighElf
