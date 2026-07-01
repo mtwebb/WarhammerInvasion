@@ -1347,6 +1347,36 @@ wardancer = unitCard "the-eclipse-of-hope-098" "Wardancer" do
 
 -- The Enemy cycle -------------------------------------------------------
 
+nightRunners :: CardDef Unit
+nightRunners = unitCard "the-burning-of-derricksburg-020" "Night Runners" do
+  cost 2
+  loyalty 0
+  power 1
+  hitPoints 1
+  trait Skaven
+  destructionOnly
+  body
+    "Destruction only. Action: Corrupt this unit to deal indirect damage equal \
+    \to its power to target opponent."
+  action "Skitter strike" 0 \usage -> do
+    g <- getGame
+    whenJust (findUnit usage.self.key g) \u -> do
+      let p = u.effectivePower
+      corrupt usage.self.key
+      when (p > 0) $ indirectDamage usage.user.next p
+
+assassinsBlade :: CardDef Support
+assassinsBlade = supportCard "bleeding-sun-120" "Assassin's Blade" do
+  cost 1
+  loyalty 0
+  traits [Attachment, Weapon]
+  keyword PlayAnytime
+  attachmentPower 1
+  body
+    "Attach to a target unit in your battlefield. You may play this card any \
+    \time you could take an action (paying all costs). Attached unit gains \
+    \{power}."
+
 maraudingGiant :: CardDef Unit
 maraudingGiant = unitCard "the-silent-forge-059" "Marauding Giant" do
   cost 5

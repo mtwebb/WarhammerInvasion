@@ -373,6 +373,7 @@ allCards =
       ("bleeding-sun-117", SupportCardDef soulStealer),
       ("bleeding-sun-118", UnitCardDef grailKnight),
       ("bleeding-sun-119", SupportCardDef advancedEngineering),
+      ("bleeding-sun-120", SupportCardDef assassinsBlade),
       -- The Enemy cycle — The Burning of Derricksburg (001-020)
       ("the-burning-of-derricksburg-001", UnitCardDef bodyguardOfBelegar),
       ("the-burning-of-derricksburg-002", SupportCardDef miningTunnels),
@@ -381,11 +382,13 @@ allCards =
       ("the-burning-of-derricksburg-005", SupportCardDef derricksburgForge),
       ("the-burning-of-derricksburg-006", SupportCardDef griffonStandard),
       ("the-burning-of-derricksburg-008", TacticCardDef doYouKnowWhoIAm),
+      ("the-burning-of-derricksburg-009", UnitCardDef greatCaveSquig),
       ("the-burning-of-derricksburg-011", UnitCardDef schemingCultist),
       ("the-burning-of-derricksburg-013", UnitCardDef wingedFury),
       ("the-burning-of-derricksburg-014", TacticCardDef spreadingDarkness),
       ("the-burning-of-derricksburg-016", UnitCardDef druchiiNoble),
       ("the-burning-of-derricksburg-017", TacticCardDef whipTheSlaves),
+      ("the-burning-of-derricksburg-020", UnitCardDef nightRunners),
       ("the-burning-of-derricksburg-019", TacticCardDef entropy),
       -- The Enemy cycle — The Fall of Karak Grimaz (021-040)
       ("the-fall-of-karak-grimaz-021", TacticCardDef masterRuneOfSpite),
