@@ -1250,6 +1250,21 @@ garrisoned = supportCard "cataclysm-022" "Garrisoned" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+waitingInAmbush :: CardDef Tactic
+waitingInAmbush = tacticCard "signs-in-the-stars-069" "Waiting In Ambush" do
+  race Empire
+  cost 0
+  loyalty 3
+  body "Action: Play a unit from your hand (paying all costs)."
+  whenResolved \self -> do
+    let pk = self.controller
+    me <- playerOf pk <$> getGame
+    let handUnits = [c | c <- me.hand, isJust (asUnit c.def)]
+    chooseFromCards pk 0 1 handUnits
+      "Choose a unit to play from your hand." \chosen ->
+        for_ chosen \c ->
+          withTarget pk MyAnyZone \z -> push (PlayUnit pk c.key z)
+
 masteringTheSpell :: CardDef Tactic
 masteringTheSpell = tacticCard "the-eclipse-of-hope-088" "Mastering the Spell" do
   race Empire

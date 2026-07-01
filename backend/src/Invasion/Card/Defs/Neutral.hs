@@ -1125,6 +1125,20 @@ aPromiseOfWar = tacticCard "the-imperial-throne-118" "A Promise of War" do
 
 -- The Morrslieb cycle ---------------------------------------------------
 
+asraiLongbow :: CardDef Support
+asraiLongbow = supportCard "the-eclipse-of-hope-100" "Asrai Longbow" do
+  cost 2
+  loyalty 0
+  traits [WoodElf, Attachment]
+  orderOnly
+  body
+    "Order only. Attach to a target unit you control. Action: When your capital \
+    \is dealt damage, deal 2 damage to target unit in any corresponding zone."
+  -- Approximation: fires on capital combat damage (the common case), and
+  -- targets any unit rather than restricting to a corresponding zone.
+  onMyCapitalDealtCombatDamage \_owner self ->
+    withTarget self.controller AnyUnit \k -> dealDamage k 2
+
 forgottenCairn :: CardDef Support
 forgottenCairn = supportCard "the-twin-tailed-comet-059" "Forgotten Cairn" do
   cost 2
